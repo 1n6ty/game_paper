@@ -1,0 +1,60 @@
+@import "../styles/variables.css";
+@import "../styles/common.css";
+
+/* Определяем переменные для цветов и базовых значений */
+:root {
+	--card-border-radius: 16px;
+	--card-shadow: 0px 0px 3.4px 0px rgba(151, 194, 236, 0.21);
+}
+
+/* Заголовок страницы */
+.games-title {
+	font-family: 'Roboto', sans-serif;
+	font-weight: 600;
+	font-size: 24px;
+	line-height: 32px;
+	color: var(--color-primary);
+	margin-bottom: 19px;
+}
+
+/* Сетка карточек – две колонки с отступами между карточками */
+.games-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 19px;
+}
+
+/* Базовый стиль для карточек (как и в остальных окнах) */
+.card {
+	background: var(--color-white);
+	color: var(--color-primary);
+	padding: 16px;
+	border-radius: var(--card-border-radius);
+	box-shadow: var(--card-shadow);
+}
+
+/* Специфичные стили для карточек игр */
+.game-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	/* Заголовок карточки можно центрировать */
+}
+
+/* Стили для изображения игры – располагается по центру карточки */
+.game-img {
+	width: 100%;
+	height: auto;
+	border-radius: var(--card-border-radius);
+	margin-bottom: 8px;
+}
+
+/* Заголовок игры в карточке */
+.game-title {
+	font-family: Roboto, sans-serif;
+	font-weight: 600;
+	font-size: 17px;
+	line-height: 26px;
+	margin: 0;
+}

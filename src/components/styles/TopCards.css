@@ -1,0 +1,61 @@
+@import "../../styles/variables.css";
+
+:root {
+    --color-user-bg: #D1E8FF;
+    --color-user-color: #3F6891;
+    --color-user-score-color: var(--color-secondary);
+}
+
+/* Верхние карточки (эмблема и пользовательские данные) */
+.top-cards {
+    display: flex;
+    justify-content: space-between;
+    /* margin: 0 15px 19px 15px; */
+}
+
+.top-cards .card {
+    flex: 1;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+.emblem-card {
+    margin-right: 7.5px;
+    text-align: center;
+}
+
+.user-card {
+    margin-left: 7.5px;
+    display: flex;
+    align-items: center;
+    background: var(--color-user-bg);
+}
+
+/* Изображение стакана молока в карточке пользователя */
+.user-card .milk-img {
+    margin-right: 16px;
+    margin-left: 8px;
+}
+
+/* Информация пользователя */
+.user-info {
+    margin-left: 0px;
+}
+
+.user-info .username {
+    font-family: 'Roboto Semibold';
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0.15px;
+    color: var(--color-user-color);
+}
+
+.user-info .points {
+    font-family: 'Roboto Light';
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 24px;
+    letter-spacing: 0.15px;
+    color: var(--color-user-score-color);
+}

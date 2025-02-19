@@ -1,0 +1,61 @@
+@import "./../../styles/common.css";
+
+/* Общие стили для карточек */
+.card {
+    margin: 0 15px 19px 15px;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0px 0px 3.4px 0px #97C2EC36;
+}
+
+/* Заголовки карточек */
+.card .card-title {
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 32px;
+    margin: 0 0 8px 0;
+}
+
+/* Основной текст карточек */
+.card p {
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 26px;
+    letter-spacing: 0.1px;
+    margin: 0;
+}
+
+.card--qr-primary {
+    background: white;
+    /* color: textColor; */
+}
+
+.card--qr-primary .card-title {
+    color: var(--color-primary);
+}
+
+.card--qr-primary .qr-button {
+    background: var(--color-primary);
+}
+
+.card--qr-primary .qr-svg {
+    fill: var(--color-primary-light);
+}
+
+/* Secondary */
+.card--qr-secondary {
+    background: white;
+    /* color: textColor; */
+}
+
+.card--qr-secondary .card-title {
+    color: var(--color-secondary);
+}
+
+.card--qr-secondary .qr-button {
+    background: var(--color-secondary);
+}
+
+.card--qr-secondary .qr-svg {
+    fill: var(--color-secondary-light);
+}

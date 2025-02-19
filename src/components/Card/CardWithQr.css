@@ -1,0 +1,31 @@
+@import "../../styles/variables.css";
+
+.card {
+  position: relative;
+}
+
+.card-text {
+  font-family: 'Roboto';
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 26px;
+  letter-spacing: 0.1px;
+}
+
+.qr-button {
+  position: absolute;
+  top: 13px;
+  right: 16px;
+  border: none;
+  border-radius: 11px;
+  box-shadow: 0px 0px 4px 0px #97C2EC3B;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.prizes-img {
+  display: block;
+  margin: 16px auto 0;
+  width: 100%;
+  max-width: 328px;
+}

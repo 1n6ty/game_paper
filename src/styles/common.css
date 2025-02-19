@@ -1,0 +1,15 @@
+@import "../styles/variables.css";
+
+/* Сброс отступов для body */
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Контейнер всей страницы */
+.container {
+    background: var(--color-bg);
+    min-height: 100vh;
+    padding-top: 13px;
+    padding-bottom: 16px;
+}

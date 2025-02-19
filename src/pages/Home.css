@@ -1,0 +1,88 @@
+@import "../styles/variables.css";
+@import "../styles/common.css";
+
+:root {
+	--color-prizes-bg: #67a9ea;
+	--color-advice-bg: #F7F2E5;
+}
+
+.rules-card .card-text {
+	font-family: 'Roboto';
+	font-weight: 400;
+	font-size: 15px;
+	line-height: 20px;
+	letter-spacing: 0.15px;
+}
+
+.rules-card .span {
+	font-family: 'Roboto';
+	font-weight: 600;
+	font-size: 15px;
+	line-height: 22px;
+	letter-spacing: 0.15px;
+}
+
+/* Карточка «Полезный совет о молоке» */
+.advice-card {
+	position: relative;
+	overflow: visible;
+}
+
+.advice-text {
+	font-family: 'Roboto';
+	font-weight: 600;
+	font-size: 15px;
+	line-height: 22px;
+	letter-spacing: 0.15px;
+}
+
+/* Блок основного текста с кремовым фоном внутри карточки «Полезный совет о молоке» */
+.advice-content {
+	background: var(--color-advice-bg);
+	padding: 8px;
+	font-weight: 500;
+	font-size: 17px;
+	line-height: 26px;
+	letter-spacing: 0.1px;
+	margin-top: 8px;
+}
+
+/* Изображение с коровой — немного вылазит за пределы карточки */
+.cow-img {
+	position: absolute;
+	bottom: -20px;
+	/* вылазит на 20px ниже карточки */
+	right: 16px;
+	width: 80px;
+}
+
+.history-card .card-text {
+	font-family: 'Roboto';
+	font-weight: 400;
+	font-size: 15px;
+	line-height: 20px;
+	letter-spacing: 0.15px;
+}
+
+.contacts-card {
+	background-color: var(--color-user-bg);
+}
+
+.contacts-card .card-text {
+	font-family: 'Roboto';
+	font-weight: 600;
+	font-size: 19px;
+	line-height: 28px;
+	letter-spacing: 0.15px;
+}
+
+/* Текст юридической информации (без фона) */
+.legal-info {
+	margin: 0 15px 19px 15px;
+	font-weight: 300;
+	font-size: 17px;
+	line-height: 26px;
+	letter-spacing: 0.1px;
+	text-align: center;
+	color: var(--color-primary);
+}
