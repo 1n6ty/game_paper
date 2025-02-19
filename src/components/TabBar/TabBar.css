@@ -1,8 +1,10 @@
+@import "../../styles/variables.css";
+
 :root {
     --color-background: #ffffff;
     --color-border: #ccc;
     --color-foreground: #B3C1CF;
-    --color-foreground-active: #4E82B5;
+    --color-foreground-active: var(--color-primary-blue);
 }
 
 .tabbar {
@@ -25,7 +27,7 @@
     align-items: center;
     text-decoration: none;
     color: var(--color-foreground);
-    font-family: Roboto, sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-weight: 600;
     font-size: 10px;
     line-height: 13px;

@@ -1,11 +1,20 @@
 @import "../../styles/variables.css";
-@import "../../styles/cards.css";
+
+:root {
+  --color-progress-bg: #FFF5E0;
+}
 
 /* Обертка с иконкой и данными */
 .milkcoins-bar {
   display: flex;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   align-items: flex-start;
+  background: white;
+
+  margin-bottom: 15px;
+  padding: 16px;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
 }
 
 /* Иконка стакана */
@@ -28,37 +37,39 @@
 }
 
 /* Текст «МилкКоины» */
-.title {
-  font-family: 'Roboto';
+.milkcoins-title {
+  font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 24px;
   letter-spacing: 0.15px;
+  color: var(--color-primary-dark-blue);
 }
 
 /* Счёт «20/100» */
-.value {
-  font-family: 'Roboto Light';
+.milkcoins-value {
+  font-family: 'Roboto Mono', serif;
   font-weight: 400;
   font-size: 20px;
   line-height: 24px;
   letter-spacing: 0.15px;
+  color: var(--color-primary-dark-blue);
 }
 
 /* Фон прогресс-бара (светлый, кремовый) */
-.progress-bg {
+.milkcoins-progress-bg {
   margin-top: 8px;
   width: 100%;
   height: 10px;
-  background-color: #FFF5E0;
+  background-color: var(--color-progress-bg);
   border-radius: 10px;
   overflow: hidden;
 }
 
 /* Заполнение прогресс-бара */
-.progress-fill {
+.milkcoins-progress-fill {
   height: 100%;
-  background-color: var(--color-secondary);
+  background-color: var(--color-primary-dark-blue);
   transition: width 0.3s ease;
   width: 0;
   border-radius: 10px;

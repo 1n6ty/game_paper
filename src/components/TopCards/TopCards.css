@@ -1,0 +1,67 @@
+@import "../../styles/variables.css";
+
+/* Верхние карточки (эмблема и пользовательские данные) */
+.top-cards {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  /* margin: 0 15px 19px 15px; */
+}
+
+.top-cards {
+  flex: 1;
+  border-radius: 10px;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.emblem-card {
+  /* margin-right: 7.5px; */
+  text-align: center;
+  background: white;
+
+  /* position: relative; */
+  padding: 16px;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  background: var(--color-primary-light-blue);
+
+  position: relative;
+  padding: 16px;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+/* Изображение стакана молока в карточке пользователя */
+.user-card .milk-img {
+  margin-right: 16px;
+  margin-left: 8px;
+}
+
+/* Информация пользователя */
+.user-info {
+  margin-left: 0px;
+}
+
+.user-info .username {
+  font-family: 'Roboto Semibold';
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  color: var(--color-primary-dark-blue);
+}
+
+.user-info .points {
+  font-family: 'Roboto Light';
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  color: var(--color-primary-dark-blue);
+}

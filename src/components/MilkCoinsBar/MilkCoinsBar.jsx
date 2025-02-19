@@ -1,14 +1,14 @@
 import React from "react";
-import "./styles/MilkCoinsBar.css";
+import "./MilkCoinsBar.css";
 
-const MilkCoinsBar = ({ current = 20, total = 100 }) => {
+const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
   const percentage = total > 0 ? (current / total) * 100 : 0;
 
   return (
-    <div className="card milkcoins-bar">
+    <div className="milkcoins-bar">
       {/* Иконка стакана */}
       <img
-        src="/icons/glass_of_milk.svg"
+        src="/icons/milk_glass.svg"
         alt="Стакан молока"
         className="milkcoins-icon"
       />
@@ -16,16 +16,16 @@ const MilkCoinsBar = ({ current = 20, total = 100 }) => {
       <div className="milkcoins-info">
         {/* Первая строка: «МилкКоины» слева, «20/100» справа */}
         <div className="milkcoins-row">
-          <span className="title">МилкКоины</span>
-          <span className="value">
+          <span className="milkcoins-title">МилкКоины</span>
+          <span className="milkcoins-value">
             {current} / {total}
           </span>
         </div>
 
         {/* Вторая строка: Прогресс-бар */}
-        <div className="progress-bg">
+        <div className="milkcoins-progress-bg">
           <div
-            className="progress-fill"
+            className="milkcoins-progress-fill"
             style={{ width: `${percentage}%` }}
           />
         </div>

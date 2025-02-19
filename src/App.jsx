@@ -1,11 +1,11 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
-import TabBar from './components/TabBar';
+import TabBar from './components/TabBar/TabBar';
 
-import Home from './pages/Home';
-import Games from './pages/Games';
-import Scanner from './pages/Scanner';
+import Home from './pages/Home/Home';
+import Games from './pages/Games/Games';
+import Scanner from './pages/Scanner/Scanner';
 
 function App() {
   return (

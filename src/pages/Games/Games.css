@@ -1,10 +1,9 @@
-@import "../styles/variables.css";
-@import "../styles/common.css";
+@import "../../styles/variables.css";
+@import "../../styles/common.css";
 
 /* Определяем переменные для цветов и базовых значений */
 :root {
 	--card-border-radius: 16px;
-	--card-shadow: 0px 0px 3.4px 0px rgba(151, 194, 236, 0.21);
 }
 
 /* Заголовок страницы */
@@ -25,13 +24,13 @@
 }
 
 /* Базовый стиль для карточек (как и в остальных окнах) */
-.card {
+/* .card {
 	background: var(--color-white);
 	color: var(--color-primary);
 	padding: 16px;
 	border-radius: var(--card-border-radius);
 	box-shadow: var(--card-shadow);
-}
+} */
 
 /* Специфичные стили для карточек игр */
 .game-card {

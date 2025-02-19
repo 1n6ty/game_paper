@@ -10,6 +10,6 @@ body {
 .container {
     background: var(--color-bg);
     min-height: 100vh;
-    padding-top: 13px;
+    padding: 13px 15px 21px 15px;
     padding-bottom: 16px;
 }
