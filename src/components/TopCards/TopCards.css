@@ -1,29 +1,23 @@
 @import "../../styles/variables.css";
 
+:root {
+  --top-card-border-radius: 9px;
+}
+
 /* Верхние карточки (эмблема и пользовательские данные) */
 .top-cards {
   display: flex;
   margin-bottom: 15px;
   gap: 17px;
-  /* margin: 0 15px 19px 15px; */
-}
-
-.top-cards {
-  flex: 1;
-  border-radius: 10px;
-  border-radius: var(--card-border-radius);
-  box-shadow: var(--card-shadow);
 }
 
 .emblem-card {
-  /* margin-right: 7.5px; */
   text-align: center;
   background: white;
   width: 100%;
 
-  /* position: relative; */
-  padding: 6px 8px;
-  border-radius: var(--card-border-radius);
+  padding: 0px 8px;
+  border-radius: var(--top-card-border-radius);
   box-shadow: var(--card-shadow);
 }
 
@@ -35,7 +29,7 @@
 
   position: relative;
   padding: 7px 16px;
-  border-radius: var(--card-border-radius);
+  border-radius: var(--top-card-border-radius);
   box-shadow: var(--card-shadow);
 }
 
@@ -46,7 +40,7 @@
 
 /* Информация пользователя */
 .user-info {
-  margin-left: 0px;
+  margin: 0;
 }
 
 .user-info .username {

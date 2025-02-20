@@ -1,23 +1,25 @@
 @import "../../styles/variables.css";
 @import "../../styles/common.css";
 
-/* Общий контейнер карточки */
+:root {
+  --color-unloaded-bg: #E6E6FA;
+}
+
 .game-item {
-  /* Можно настроить ширину по макету */
   width: auto;
+  height: 210px;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
-  background-color: var(--color-white);
+  background-color: white;
   /* Чтобы нижние углы были скруглёнными */
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* Верхняя часть карточки */
 .game-item-top {
   /* Небольшой фоновый цвет, если картинка не загрузилась */
-  background-color: #e6e6fa;
+  background-color: var(--color-unloaded-bg);
   width: 100%;
   /* Задаём фиксированную высоту или меняем на auto, если нужно */
   height: 159px;
@@ -30,7 +32,7 @@
 .game-item-placeholder {
   width: 100%;
   height: 100%;
-  background-color: #e6e6fa;
+  background-color: var(--color-unloaded-bg);
 }
 
 /* Сама картинка */
@@ -41,19 +43,19 @@
   object-fit: cover;
 }
 
-/* Нижняя часть карточки (полоса с названием) */
+/* Нижняя часть карточки */
 .game-item-bottom {
+  /* height: 51px; */
   background-color: white;
   text-align: center;
   padding: 11px 17px;
 }
 
-/* Название игры */
 .game-item-title {
-  color: var(--color-primary-blue);
-  font-family: "Roboto", sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 19px;
   line-height: 28px;
   letter-spacing: 0.15px;
+  color: var(--color-primary-blue);
 }

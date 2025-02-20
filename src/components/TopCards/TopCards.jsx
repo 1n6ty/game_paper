@@ -5,7 +5,7 @@ function TopCards() {
   return (
     <div className="top-cards">
       <div className="emblem-card">
-        <img src="/emblem.png" alt="Эмблема" className="emblem-img" />
+        <img src="emblem.svg" alt="Эмблема" className="emblem-img" />
       </div>
 
       <div className="user-card">

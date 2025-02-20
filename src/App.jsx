@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Header from './components/Header';
 import TabBar from './components/TabBar/TabBar';
 
 import Home from './pages/Home/Home';
@@ -11,7 +10,6 @@ function App() {
   return (
     <div style={{ minHeight: '100vh', position: 'relative', paddingBottom: '60px' }}>
       {/* Шапка, как в дизайне (название бота, логотип, т.д.) */}
-      <Header />
 
       {/* Основная зона контента */}
       <Routes>

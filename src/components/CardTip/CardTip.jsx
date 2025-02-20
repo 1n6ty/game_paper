@@ -1,7 +1,7 @@
 import React from 'react';
 import './CardTip.css';
 
-const CardTip = ({ title, text, cowImage }) => {
+const CardTip = ({ title, text, image }) => {
   return (
     <div className="card-tip">
       {title && <h2 className="card-tip-title">{title}</h2>}
@@ -10,8 +10,8 @@ const CardTip = ({ title, text, cowImage }) => {
           <p className="card-tip-text">{text}</p>
         </div>
       )}
-      {cowImage && (
-        <img src={cowImage} alt="Корова" className="card-tip-cow" />
+      {image && (
+        <img src={image} alt="Корова" className="card-tip-cow" />
       )}
     </div>
   );

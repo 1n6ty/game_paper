@@ -3,17 +3,13 @@
 
 .games-list-container {
   display: grid;
-  /* 2 столбца */
   grid-template-columns: repeat(2, 1fr);
-  /* Расстояние 15px между элементами */
   gap: 15px;
   /* padding: 15px; */
-  /* Можно добавить отступы вокруг сетки */
 }
 
-/* При необходимости можно добавить адаптивные стили: */
-/* @media (max-width: 480px) {
+@media (max-width: 300px) {
   .games-list-container {
     grid-template-columns: 1fr;
   }
-} */
+}

@@ -8,7 +8,7 @@ const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
     <div className="milkcoins-bar">
       {/* Иконка стакана */}
       <img
-        src="/icons/milk_glass.svg"
+        src="milk_glass.svg"
         alt="Стакан молока"
         className="milkcoins-icon"
       />

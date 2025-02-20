@@ -2,44 +2,45 @@
 @import "../../styles/common.css";
 
 .rules-card .card-text {
-	font-family: 'Roboto';
-	font-weight: 400;
-	font-size: 15px;
-	line-height: 20px;
-	letter-spacing: 0.15px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
 }
 
 .img-center {
-	display: flex;
-	margin-left: auto;
-	margin-right: auto;
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .ticket {
-	/* transform: translateX(-2%); */
+  /* transform: translateX(-2%); */
+  width: 328px;
 }
 
 .contacts-card-text {
-	font-family: 'Roboto', sans-serif;
-	font-weight: 600;
-	font-size: 19px;
-	line-height: 28px;
-	letter-spacing: 0.15px;
-	margin: 0;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 28px;
+  letter-spacing: 0.15px;
+  margin: 0;
 }
 
 .milk-box {
-	display: flex;
+  display: flex;
 }
 
 /* Текст юридической информации */
 .legal-info {
-	font-family: 'Roboto', sans-serif;
-	font-weight: 400;
-	font-size: 15px;
-	line-height: 20px;
-	letter-spacing: 0.15px;
-	text-align: center;
-	color: var(--color-primary-blue);
-	margin: 0 15px 0px 15px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
+  text-align: center;
+  color: var(--color-primary-blue);
+  margin: 0 15px 0px 15px;
 }

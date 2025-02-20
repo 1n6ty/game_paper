@@ -1,47 +1,47 @@
 @import "../../styles/variables.css";
 
 :root {
-    --color-background: #ffffff;
-    --color-border: #ccc;
-    --color-foreground: #B3C1CF;
-    --color-foreground-active: var(--color-primary-blue);
+  --color-background: #ffffff;
+  --color-border: #00000026;
+  --color-foreground: #B3C1CF;
+  --color-foreground-active: var(--color-primary-blue);
 }
 
 .tabbar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background-color: var(--color-background);
-    border-top: 1px solid var(--color-border);
-    z-index: 100;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 57px;
+  background-color: var(--color-background);
+  border-top: 1px solid var(--color-border);
+  z-index: 100;
 }
 
 .tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: var(--color-foreground);
-    font-family: 'Roboto', sans-serif;
-    font-weight: 600;
-    font-size: 10px;
-    line-height: 13px;
-    letter-spacing: 0.06px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  line-height: 13px;
+  letter-spacing: 0.06px;
+  color: var(--color-foreground);
 }
 
 /* Стили для иконок */
 .tab-icon {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 4px;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 4px;
 }
 
 /* Активное состояние вкладки */
 .tab.active {
-    color: var(--color-foreground-active);
+  color: var(--color-foreground-active);
 }

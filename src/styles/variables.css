@@ -1,11 +1,11 @@
 :root {
-    --color-bg: #f8fbff;
+  --color-bg: #f8fbff;
 
-    --color-primary-dark-blue: #3E6891;
-    --color-primary-blue: #4E82B5;
-    --color-primary-deep-blue: #67AAEB;
-    --color-primary-light-blue: #D1E8FF;
+  --color-primary-dark-blue: #3E6891;
+  --color-primary-blue: #4E82B5;
+  --color-primary-deep-blue: #67AAEB;
+  --color-primary-light-blue: #D1E8FF;
 
-    --card-border-radius: 16px;
-    --card-shadow: 0px 0px 3.4px 0px #97C2EC36;
+  --card-border-radius: 16px;
+  --card-shadow: 0px 0px 3.4px 0px #97C2EC36;
 }
