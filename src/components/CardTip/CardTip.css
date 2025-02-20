@@ -1,10 +1,14 @@
 @import "../../styles/variables.css";
 @import "../../styles/common.css";
 
+:root {
+  --color-text-container: #F7F2E5;
+}
+
 .card-tip {
   position: relative;
   margin-bottom: 15px;
-  padding: 16px;
+  padding: 13px 16px;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
 
@@ -14,6 +18,7 @@
 
 /* Заголовок карточки */
 .card-tip-title {
+  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 24px;
   line-height: 32px;
@@ -22,26 +27,27 @@
 
 /* Контейнер основного текста с кремовым фоном */
 .card-tip-text-container {
-  background: var(--color-primary-light-blue);
-  /* или другой кремовый цвет, если его определить в variables.css */
-  padding: 8px;
+  background: var(--color-text-container);
+  padding: 8.5px 12px;
+  margin-right: 120px;
+  /* Добавляем отступ справа, чтобы текст сдвинулся влево */
   border-radius: 8px;
 }
 
 .card-tip-text {
-  font-weight: 500;
-  font-size: 17px;
-  line-height: 26px;
-  letter-spacing: 0.1px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 22px;
+  letter-spacing: 0.15px;
   margin: 0;
 }
 
 /* Изображение коровы, которое выходит за пределы карточки справа */
 .card-tip-cow {
   position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 80px;
+  bottom: -15px;
+  right: -4px;
+  width: 140px;
   /* размер картинки, можно корректировать */
 }

@@ -4,7 +4,7 @@
 .card {
   position: relative;
   margin-bottom: 15px;
-  padding: 15px;
+  padding: 13px 16px;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
 }
@@ -26,13 +26,23 @@
 
 /* Заголовок и основной текст карточки */
 .card-title {
+  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 24px;
   line-height: 32px;
-  margin: 0 0 8px 0;
+  margin: 0 0 9px 0;
+}
+
+.card-title--small {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
 }
 
 .card-text {
+  font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 15px;
   line-height: 20px;
@@ -45,7 +55,6 @@
   position: absolute;
   top: 16px;
   right: 16px;
-
 }
 
 /* Стили для QR-кнопки */
@@ -54,6 +63,8 @@
   border-radius: 11px;
   padding: 8px;
   cursor: pointer;
+  width: 52px;
+  height: 52px;
 }
 
 .card-qr-button--white {
@@ -75,6 +86,10 @@
 .card-qr-icon {
   width: 30px;
   height: 30px;
+}
+
+.card-body-with-right-image {
+  margin-right: 50px;
 }
 
 /* Изображение в нижнем правом углу */

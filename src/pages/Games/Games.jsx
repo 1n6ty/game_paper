@@ -4,7 +4,6 @@ import MilkCoinsBar from "../../components/MilkCoinsBar/MilkCoinsBar"
 import Card from "../../components/Card/Card";
 import GamesList from "../../components/GamesList/GamesList"
 
-import "./Games.css";
 
 const Games = () => {
   return (
@@ -28,8 +27,6 @@ const Games = () => {
       </Card>
 
       <GamesList />
-
-
     </div>
   );
 };

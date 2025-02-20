@@ -34,7 +34,7 @@ function TopCards() {
 
         <div className="user-info">
           <p className="username">Никнейм</p>
-          <p className="points">Очки: 100</p>
+          <p className="points">5</p>
         </div>
       </div>
     </div>)

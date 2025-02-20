@@ -20,7 +20,7 @@
   background-color: #e6e6fa;
   width: 100%;
   /* Задаём фиксированную высоту или меняем на auto, если нужно */
-  height: 100px;
+  height: 159px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,7 +45,7 @@
 .game-item-bottom {
   background-color: white;
   text-align: center;
-  padding: 8px 0;
+  padding: 11px 17px;
 }
 
 /* Название игры */

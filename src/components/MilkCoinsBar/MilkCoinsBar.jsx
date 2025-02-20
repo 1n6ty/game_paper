@@ -14,9 +14,9 @@ const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
       />
 
       <div className="milkcoins-info">
-        {/* Первая строка: «МилкКоины» слева, «20/100» справа */}
+        {/* Первая строка: «Ламбиксы» слева, «20/100» справа */}
         <div className="milkcoins-row">
-          <span className="milkcoins-title">МилкКоины</span>
+          <span className="milkcoins-title">Ламбиксы</span>
           <span className="milkcoins-value">
             {current} / {total}
           </span>

@@ -26,14 +26,17 @@ const Home = () => {
 					<br /><br />
 					Далее играй в мини-игры, зарабатывай ламбиксы и меняй их на возможность выиграть ценные призы:
 					<b> каждые 1000 ламбиксов автоматически превращаются в билет на участие в розыгрыше</b>
+					<br /><br />
+					<img src="milk_ex.png" alt="Обмен молока" className="img" />
 				</div>
 			</Card>
 
 			<Card
+				textSize="small"
 				variant="white"
 				title="За сканирование разных видов продукции – разная награда:"
 			>
-				<img src="/reward.png" alt="Награда" className="img" />
+				<img src="reward.png" alt="Награда" className="img-center" />
 			</Card>
 
 			<Card
@@ -49,39 +52,39 @@ const Home = () => {
 					"M19.7831 18.2952C20.4445 18.2952 20.9808 18.8243 20.9808 19.4771C20.9808 20.1298 20.4445 20.659 19.7831 20.659C19.1216 20.659 18.5854 20.1298 18.5854 19.4771C18.5854 18.8243 19.1216 18.2952 19.7831 18.2952Z"
 				]}
 			>
-				<img src="/ticket.png" alt="Билет" className="img" />
+				<img src="ticket.png" alt="Билет" className="img-center ticket" />
 			</Card>
 
 			<CardTip
 				title="Полезный совет о молоке"
 				text="Молоко очень полезное! Оно богато витаминами А, В6, В12, С, Е и др."  // цифра 5 будет получаться с сервера
-				cowImage="/icons/cow.svg"
+				cowImage="icons/cow.svg"
 			/>
 
 			<Card
 				variant="white"
 				title="История завода"
-				image="milk_box.png"
-				imagePosition='bottom-right'
 			>
 				<div className="card-text">
 					<p>Городец — город мастеров с 1152 года</p>
 					<p>Каждое трудовое начинание становилось народным промыслом, знаменитым на весь мир: Городецкая роспись, городецкая резьба, городецкий пряник</p>
-					<p>А с 1961 г. Городецкое молоко! Ничего лишнего, мы всего лишь бережно передаем Вам то, что дарит нам природа</p>
+					<div className="milk-box">
+						<span>А с 1961 г. Городецкое молоко! Ничего лишнего, мы всего лишь бережно передаем Вам то, что дарит нам природа</span>
+						<img src="milk_box.png" alt="Коробка с молоком" />
+					</div>
 				</div>
 			</Card>
 
 			<Card
-				variant="white"
+				variant="light-blue"
 				title="Контакты"
-				image="/icons/logo.svg"
+				image="icons/logo.svg"
 				imagePosition='top-right'
-				className="contacts-card"
 			>
 				<div className="card-text">
-					<p>+7 (831) 423-06-47</p>
-					<p>moloko-gorodec.ru</p>
-					<p>ул. Республиканская, 91, г. Городец</p>
+					<p className="contacts-card-text">+7 (831) 423-06-47</p>
+					<p className="contacts-card-text">moloko-gorodec.ru</p>
+					<p className="contacts-card-text">ул. Республиканская, 91, г. Городец</p>
 				</div>
 			</Card>
 

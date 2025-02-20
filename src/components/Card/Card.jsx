@@ -5,14 +5,18 @@ const Card = ({
   variant = 'default',
   title,
   text,
+  textSize = 'default',
   image,
   imagePosition,
   qrIconPaths, // Ожидается строка с d-атрибутом для svg path
   children, }) => {
+  const hasRightImage =
+    image && (imagePosition === 'top-right' || imagePosition === 'bottom-right');
+  const cardBodyClass = hasRightImage || (qrIconPaths) ? 'card-body card-body-with-right-image' : 'card-body';
   return (
     <div className={`card card--${variant}`}>
       <div className="card-header">
-        {title && <h2 className="card-title">{title}</h2>}
+        {title && <h2 className={`card-title card-title--${textSize}`}>{title}</h2>}
         {qrIconPaths && (
           <div className="card-qr">
             <button
@@ -20,9 +24,9 @@ const Card = ({
             >
               <svg
                 className="card-qr-icon"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                viewBox="0 0 22 22"
               >
                 {qrIconPaths.map((d, index) => (
                   <path key={index} d={d} />
@@ -32,7 +36,7 @@ const Card = ({
           </div>
         )}
       </div>
-      <div className="card-body">
+      <div className={cardBodyClass}>
         {text && <p className="card-text">{text}</p>}
         {children}
       </div>

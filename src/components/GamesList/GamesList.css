@@ -2,7 +2,6 @@
 @import "../../styles/common.css";
 
 .games-list-container {
-  padding: 15px;
   display: grid;
   /* 2 столбца */
   grid-template-columns: repeat(2, 1fr);
