@@ -1,0 +1,5 @@
+django
+numpy
+python-dotenv
+python_on_whales
+fastapi[standard]
