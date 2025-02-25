@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'nasty-bananas-jam.loca.lt'
+    '127.0.0.1'
 ] # TODO add to allowed hosts
 
 # Application definition
@@ -135,6 +135,3 @@ MEDIA_URL = 'media/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-from python_on_whales import docker
-docker.start("score_app")

@@ -2,7 +2,6 @@ from django.db import models
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
-from python_on_whales import docker
 from subprocess import Popen, PIPE
 
 game_scripts_storage = FileSystemStorage(settings.BASE_DIR / 'game_scripts/', base_url=None)
@@ -64,10 +63,10 @@ class Game(models.Model):
         unique=True
     )
     play_script = models.FileField(
-        verbose_name="Play script",
+        verbose_name="Play script.py",
         null=False,
         blank=False,
-        upload_to="check_scripts/",
+        upload_to="",
         storage=game_scripts_storage
     )
     paint_script = models.FileField(
@@ -82,15 +81,14 @@ class Game(models.Model):
         blank=False,
         default=0
     )
-
     def save(self, **kwargs):
         super(Game, self).save(**kwargs)
-        docker.copy(settings.MEDIA_ROOT / self.play_script, ("score_app", self.play_script))
+        # TODO /update/ on score app
     
     def delete(self, **kwargs):
-        docker.execute("score_app", ["rm", "-rf", self.play_script])
-        Popen(["rm", "-rf", game_scripts_storage.location / self.play_script, settings.MEDIA_ROOT / self.paint_script], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
+        Popen(["rm", "-rf", game_scripts_storage.location + '/' + self.play_script.name, settings.MEDIA_ROOT / self.paint_script.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
         super(Game, self).delete(**kwargs)
+        # TODO /update/ on score app
     
     class Meta:
         verbose_name = "Game"
@@ -157,5 +155,5 @@ class Assets(models.Model):
         verbose_name_plural = "Assets"
     
     def delete(self, **kwargs):
-        Popen(["rm", "-rf", settings.MEDIA_ROOT / self.file], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
+        Popen(["rm", "-rf", settings.MEDIA_ROOT / self.file.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
         super(Game, self).delete(**kwargs)

@@ -20,10 +20,14 @@ from django.urls import path
 from .views.index import index
 from .views.games import get_game_links, get_score, proceed_moves
 
+# For debug purpose
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name="index"), # home page
     path('games/', get_game_links, name="games"), # games' links getter
     path('score/', get_score, name="score_get"), # score getter
     path('move/', proceed_moves, name="proceed_moves"), # Game process handler
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # TODO Remove debug
