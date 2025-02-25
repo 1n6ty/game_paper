@@ -8,7 +8,7 @@ import Scanner from './pages/Scanner/Scanner';
 
 function App() {
   return (
-    <div style={{ minHeight: '100vh', position: 'relative', paddingBottom: '60px' }}>
+    <div>
       {/* Шапка, как в дизайне (название бота, логотип, т.д.) */}
 
       {/* Основная зона контента */}
@@ -20,7 +20,7 @@ function App() {
 
       {/* Нижняя панель навигации (3 вкладки) */}
       <TabBar />
-    </div>
+    </div >
   );
 }
 
