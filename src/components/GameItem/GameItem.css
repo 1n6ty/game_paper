@@ -11,7 +11,6 @@
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
   background-color: white;
-  /* Чтобы нижние углы были скруглёнными */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -35,7 +34,6 @@
   background-color: var(--color-unloaded-bg);
 }
 
-/* Сама картинка */
 .game-item-img {
   max-width: 100%;
   max-height: 100%;

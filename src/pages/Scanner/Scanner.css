@@ -3,7 +3,7 @@
 
 :root {
   --scan-size: 120px;
-  --overlay-color: #13131381;
+  --overlay-color: #868686;
 }
 
 .scanner-container {
@@ -11,7 +11,7 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background: black;
+  background: #4B4B4B;
 }
 
 .camera-video {

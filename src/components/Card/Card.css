@@ -88,8 +88,17 @@
   height: 30px;
 }
 
-.card-body-with-right-image {
+.card-body {
+  position: relative;
+  align-items: center;
+}
+
+.card-body-with-qr {
   margin-right: 50px;
+}
+
+.card-body-with-right-image {
+  /* margin-right: 50px; */
 }
 
 /* Изображение в нижнем правом углу */
@@ -98,7 +107,6 @@
   bottom: 16px;
   right: 16px;
   max-width: 100px;
-  /* можно настроить */
   pointer-events: none;
 }
 

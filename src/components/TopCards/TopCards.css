@@ -12,6 +12,7 @@
 }
 
 .emblem-card {
+  position: relative;
   text-align: center;
   background: white;
   width: 100%;
@@ -21,6 +22,13 @@
   box-shadow: var(--card-shadow);
 }
 
+.emblem-card .emblem-img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .user-card {
   display: flex;
   align-items: center;
@@ -28,7 +36,7 @@
   width: 100%;
 
   position: relative;
-  padding: 7px 16px;
+  padding: 6px 16px 7px 10px;
   border-radius: var(--top-card-border-radius);
   box-shadow: var(--card-shadow);
 }
@@ -41,6 +49,7 @@
 /* Информация пользователя */
 .user-info {
   margin: 0;
+  padding: 0;
 }
 
 .user-info .username {
@@ -51,6 +60,7 @@
   letter-spacing: 0.15px;
   color: var(--color-primary-dark-blue);
   margin: 0;
+  padding: 0;
 }
 
 .user-info .points {
@@ -61,4 +71,5 @@
   letter-spacing: 0.15px;
   color: var(--color-primary-dark-blue);
   margin: 0;
+  padding: 0;
 }

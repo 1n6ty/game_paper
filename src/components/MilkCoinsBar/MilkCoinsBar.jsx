@@ -6,7 +6,6 @@ const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
 
   return (
     <div className="milkcoins-bar">
-      {/* Иконка стакана */}
       <img
         src="milk_glass.svg"
         alt="Стакан молока"
@@ -14,7 +13,6 @@ const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
       />
 
       <div className="milkcoins-info">
-        {/* Первая строка: «Ламбиксы» слева, «20/100» справа */}
         <div className="milkcoins-row">
           <span className="milkcoins-title">Ламбиксы</span>
           <span className="milkcoins-value">
@@ -22,7 +20,6 @@ const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
           </span>
         </div>
 
-        {/* Вторая строка: Прогресс-бар */}
         <div className="milkcoins-progress-bg">
           <div
             className="milkcoins-progress-fill"

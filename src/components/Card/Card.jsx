@@ -9,10 +9,16 @@ const Card = ({
   image,
   imagePosition,
   qrIconPaths, // Ожидается строка с d-атрибутом для svg path
-  children, }) => {
+  children }) => {
   const hasRightImage =
     image && (imagePosition === 'top-right' || imagePosition === 'bottom-right');
-  const cardBodyClass = hasRightImage || (qrIconPaths) ? 'card-body card-body-with-right-image' : 'card-body';
+  var cardBodyExtraClass;
+  if (qrIconPaths)
+    cardBodyExtraClass = 'card-body-with-qr';
+  else if (hasRightImage)
+    cardBodyExtraClass = 'card-body-with-right-image';
+  else
+    cardBodyExtraClass = '';
   return (
     <div className={`card card--${variant}`}>
       <div className="card-header">
@@ -36,7 +42,7 @@ const Card = ({
           </div>
         )}
       </div>
-      <div className={cardBodyClass}>
+      <div className={`card-body ${cardBodyExtraClass}`}>
         {text && <p className="card-text">{text}</p>}
         {children}
       </div>

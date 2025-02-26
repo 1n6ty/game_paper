@@ -15,9 +15,10 @@
   margin-right: auto;
 }
 
-.ticket {
-  /* transform: translateX(-2%); */
+.ticket-img {
+  transform: translateX(25px);
   width: 328px;
+  /* margin: 0; */
 }
 
 .contacts-card-text {
