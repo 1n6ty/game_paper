@@ -135,3 +135,6 @@ MEDIA_URL = 'media/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+import redis
+REDIS = redis.Redis(host='localhost', port=6379, decode_responses=True)

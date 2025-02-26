@@ -14,11 +14,7 @@ class User(models.Model):
         blank=False,
         unique=True
     )
-    birth_date = models.DateField(
-        verbose_name="Birth date", 
-        null=False, 
-        blank=True
-    )
+    # TODO birthdate
     score = models.BigIntegerField(
         verbose_name="Score",
         null=False,
