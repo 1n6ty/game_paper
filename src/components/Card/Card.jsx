@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Card.css';
 
 const Card = ({
@@ -19,12 +20,19 @@ const Card = ({
     cardBodyExtraClass = 'card-body-with-right-image';
   else
     cardBodyExtraClass = '';
+
+
+  const navigate = useNavigate();
+
+  const handleQrClick = () => {
+    navigate('/scanner');
+  };
   return (
     <div className={`card card--${variant}`}>
       <div className="card-header">
         {title && <h2 className={`card-title card-title--${textSize}`}>{title}</h2>}
         {qrIconPaths && (
-          <div className="card-qr">
+          <div className="card-qr" onClick={handleQrClick}>
             <button
               className={`card-qr-button card-qr-button--${variant}`}
             >
@@ -46,13 +54,17 @@ const Card = ({
         {text && <p className="card-text">{text}</p>}
         {children}
       </div>
-      {image && imagePosition === 'bottom-right' && (
-        <img src={image} alt="Card visual" className="card-image-bottom-right" />
-      )}
-      {image && imagePosition === 'top-right' && (
-        <img src={image} alt="Card visual" className="card-image-top-right" />
-      )}
-    </div>
+      {
+        image && imagePosition === 'bottom-right' && (
+          <img src={image} alt="Card visual" className="card-image-bottom-right" />
+        )
+      }
+      {
+        image && imagePosition === 'top-right' && (
+          <img src={image} alt="Card visual" className="card-image-top-right" />
+        )
+      }
+    </div >
   );
 };
 

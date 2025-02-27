@@ -34,10 +34,8 @@ const Scanner = () => {
 
   return (
     <div className="scanner-container">
-      {/* Видео с камеры на заднем плане */}
       <video ref={videoRef} className="camera-video" playsInline muted />
 
-      {/* Тёмный оверлей с прозрачным окном */}
       <div className="overlay">
         <div className="overlay-top"></div>
         <div className="overlay-bottom"></div>
@@ -45,13 +43,11 @@ const Scanner = () => {
         <div className="overlay-right"></div>
       </div>
 
-      {/* Рамка сканера (окно) */}
       <div className="scanner-frame">
         <div className="frame-large"></div>
         <div className="frame-small"></div>
       </div>
 
-      {/* Заголовок и подзаголовок, расположенные сверху */}
       <div className="scanner-header">
         <h2 className="scanner-title">Сканер</h2>
         <p className="scanner-subtitle">
@@ -59,7 +55,6 @@ const Scanner = () => {
         </p>
       </div>
 
-      {/* Инструкция под рамкой */}
       <div className="scanner-instruction">
         Наведи камеру на код
       </div>

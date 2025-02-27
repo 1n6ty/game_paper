@@ -1,8 +1,8 @@
 @import "../../styles/variables.css";
 
 :root {
-  --color-background: #ffffff;
-  --color-border: #00000026;
+  --color-background: #FFFFFF;
+  --color-border: #C7CFD6;
   --color-foreground: #B3C1CF;
   --color-foreground-active: var(--color-primary-blue);
 }
@@ -19,12 +19,14 @@
   background-color: var(--color-background);
   border-top: 1px solid var(--color-border);
   z-index: 100;
+  padding-bottom: calc(2px + env(safe-area-inset-bottom));
 }
 
 .tab {
   display: flex;
   flex-direction: column;
   align-items: center;
+
   text-decoration: none;
   font-family: 'Roboto', sans-serif;
   font-weight: 600;
@@ -34,14 +36,15 @@
   color: var(--color-foreground);
 }
 
-/* Стили для иконок */
 .tab-icon {
+  display: flex;
+  align-items: center;
+  text-align: center;
   width: 28px;
   height: 28px;
   margin-bottom: 4px;
 }
 
-/* Активное состояние вкладки */
 .tab.active {
   color: var(--color-foreground-active);
 }

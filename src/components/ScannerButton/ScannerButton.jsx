@@ -1,13 +1,11 @@
 import React from "react";
 import "./ScannerButton.css";
-import QrIcon from "../../assets/icons/Qr.svg";
 
 const ScannerButton = ({ onClick }) => {
   return (
     <div className="scanner-button-container">
       <button className="scanner-button" onClick={onClick}>
         <div className="scanner-icon">
-          {/* <QrIcon className="qr-icon" /> */}
           <svg width="115.65383911132812" height="111.92308044433594"
             viewBox="0 0 24 24" fill="none">
 

@@ -6,21 +6,23 @@ import Home from './pages/Home/Home';
 import Games from './pages/Games/Games';
 import Scanner from './pages/Scanner/Scanner';
 
+import { PointsProvider } from './contexts/PointsContext';
+
+
 function App() {
   return (
-    <div>
-      {/* Шапка, как в дизайне (название бота, логотип, т.д.) */}
+    <PointsProvider>
+      <div>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/games" element={<Games />} />
+          <Route path="/scanner" element={<Scanner />} />
+        </Routes>
 
-      {/* Основная зона контента */}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/games" element={<Games />} />
-        <Route path="/scanner" element={<Scanner />} />
-      </Routes>
+        <TabBar />
+      </div>
+    </PointsProvider>
 
-      {/* Нижняя панель навигации (3 вкладки) */}
-      <TabBar />
-    </div >
   );
 }
 

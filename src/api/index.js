@@ -1,8 +1,20 @@
 // src/api/index.js
+
+const baseUrl = "https://octopus-outgoing-bee.ngrok-free.app/";
+
 export async function fetchGameHtml() {
-    const response = await fetch('https://your-server.com/api/game', {
+    const response = await fetch(baseUrl + 'api/game', {
         method: 'GET',
-        // При необходимости можно добавить заголовки, авторизацию и т.п.
+    });
+    if (!response.ok) {
+        throw new Error('Ошибка сети');
+    }
+    return await response.text();
+}
+
+export async function fetchPoints() {
+    const response = await fetch(baseUrl + 'api/game', {
+        method: 'GET',
     });
     if (!response.ok) {
         throw new Error('Ошибка сети');

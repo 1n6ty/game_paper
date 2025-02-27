@@ -1,7 +1,10 @@
 @import "../styles/variables.css";
 
-/* Сброс отступов для body */
 body {
+  user-select: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+
   margin: 0;
   background: var(--color-bg);
 
@@ -12,7 +15,6 @@ body {
   background-size: auto;
 }
 
-/* Контейнер всей страницы */
 .container {
   min-height: 100vh;
   padding: 13px 15px 21px 15px;

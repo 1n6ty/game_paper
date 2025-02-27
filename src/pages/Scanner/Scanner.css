@@ -3,7 +3,7 @@
 
 :root {
   --scan-size: 120px;
-  --overlay-color: #868686;
+  --overlay-color: #868686b0;
 }
 
 .scanner-container {

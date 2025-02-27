@@ -1,11 +1,19 @@
-import React from "react";
+import React, { useContext } from "react";
+import { PointsContext } from '../../contexts/PointsContext';
+
+import { GL_URL } from "../../../global"
 import "./MilkCoinsBar.css";
 
-const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
-  const percentage = total > 0 ? (current / total) * 100 : 0;
+
+const MilkCoinsBar = ({
+  totalCoinsCount = 1000
+}) => {
+  const { points, updatePoints } = useContext(PointsContext);
+
+  const percentage = totalCoinsCount > 0 ? (points / totalCoinsCount) * 100 : 0;
 
   return (
-    <div className="milkcoins-bar">
+    <div className={`${GL_URL}milkcoins-bar`}>
       <img
         src="milk_glass.svg"
         alt="Стакан молока"
@@ -16,7 +24,7 @@ const MilkCoinsBar = ({ current = 20, total = 1000 }) => {
         <div className="milkcoins-row">
           <span className="milkcoins-title">Ламбиксы</span>
           <span className="milkcoins-value">
-            {current} / {total}
+            {points} / {totalCoinsCount}
           </span>
         </div>
 

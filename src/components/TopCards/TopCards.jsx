@@ -1,11 +1,18 @@
-import React from "react";
+import React, { use, useContext } from 'react';
+import { PointsContext } from '../../contexts/PointsContext';
+
+import { GL_URL } from "../../../global"
 import "./TopCards.css";
 
-function TopCards() {
+
+const TopCards = () => {
+  const { nickname } = useContext(PointsContext);
+  const { points } = useContext(PointsContext);
+
   return (
     <div className="top-cards">
       <div className="emblem-card">
-        <img src="emblem.svg" alt="Эмблема" className="emblem-img" />
+        <img src={`${GL_URL}emblem.svg`} alt="Эмблема" className="emblem-img" />
       </div>
 
       <div className="user-card">
@@ -33,8 +40,8 @@ function TopCards() {
         </svg>
 
         <div className="user-info">
-          <p className="username">Никнейм</p>
-          <p className="points">5</p>
+          <p className="username">{nickname}</p>
+          <p className="points">{points}</p>
         </div>
       </div>
     </div>)
