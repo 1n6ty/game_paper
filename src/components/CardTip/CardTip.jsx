@@ -11,7 +11,7 @@ const CardTip = ({ title, text, image }) => {
         </div>
       )}
       {image && (
-        <img src={image} alt="Корова" className="card-tip-cow" />
+        <img src={image} alt="Корова" className="card-tip-cow-img" />
       )}
     </div>
   );

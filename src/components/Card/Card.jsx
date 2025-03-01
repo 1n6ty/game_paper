@@ -10,17 +10,18 @@ const Card = ({
   image,
   imagePosition,
   qrIconPaths, // Ожидается строка с d-атрибутом для svg path
-  children }) => {
+  enableQrGap = true,
+  children
+}) => {
   const hasRightImage =
     image && (imagePosition === 'top-right' || imagePosition === 'bottom-right');
   var cardBodyExtraClass;
-  if (qrIconPaths)
+  if (qrIconPaths && (enableQrGap === true))
     cardBodyExtraClass = 'card-body-with-qr';
   else if (hasRightImage)
     cardBodyExtraClass = 'card-body-with-right-image';
   else
     cardBodyExtraClass = '';
-
 
   const navigate = useNavigate();
 

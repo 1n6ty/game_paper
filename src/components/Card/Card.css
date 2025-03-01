@@ -24,7 +24,6 @@
   color: var(--color-primary-blue);
 }
 
-/* Заголовок и основной текст карточки */
 .card-title {
   font-family: 'Roboto', sans-serif;
   font-weight: 600;
@@ -101,21 +100,17 @@
   /* margin-right: 50px; */
 }
 
-/* Изображение в нижнем правом углу */
 .card-image-bottom-right {
   position: absolute;
   bottom: 16px;
   right: 16px;
   max-width: 100px;
-  pointer-events: none;
 }
 
-/* Изображение в верхнем правом углу */
 .card-image-top-right {
   position: absolute;
   top: 16px;
   right: 16px;
   max-width: 100px;
   /* можно настроить */
-  pointer-events: none;
 }

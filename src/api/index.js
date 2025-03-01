@@ -12,7 +12,7 @@ export async function fetchGameHtml() {
     return await response.text();
 }
 
-export async function fetchPoints() {
+export async function fetchScore() {
     const response = await fetch(baseUrl + 'api/game', {
         method: 'GET',
     });

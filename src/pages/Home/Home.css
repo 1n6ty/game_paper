@@ -1,12 +1,49 @@
 @import "../../styles/variables.css";
 @import "../../styles/common.css";
 
-.rules-card .card-text {
+:root {
+  --home-scale: 1;
+  --total-score-scale: 1;
+  --total-score-height: calc(70px * var(--total-score-scale));
+  --reward-img-height: calc(119px * var(--home-scale));
+  --ticket-img-height: calc(131.8px * var(--home-scale));
+}
+
+@media (max-width: 386px) {
+  :root {
+    --total-score-scale: 0.98;
+    --home-scale: 0.95;
+  }
+}
+
+@media (max-width: 372px) {
+  :root {
+    --total-score-scale: 0.93;
+    --home-scale: 0.9;
+  }
+}
+
+@media (min-width: 418px) {
+  .ticket-img {
+    transform: translateX(6px);
+  }
+}
+
+.total-score {
+  display: flex;
+  margin-top: 14px;
+  height: var(--total-score-height);
+}
+
+.total-score-text {
   font-family: 'Roboto', sans-serif;
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 20px;
-  letter-spacing: 0.15px;
+  font-weight: 600;
+  font-size: calc(24px * var(--total-score-scale));
+  line-height: 32px;
+  letter-spacing: 0px;
+
+  margin-top: 26.8px;
+  margin-right: 1px;
 }
 
 .img-center {
@@ -15,10 +52,12 @@
   margin-right: auto;
 }
 
+.reward-img {
+  height: var(--reward-img-height);
+}
+
 .ticket-img {
-  transform: translateX(25px);
-  width: 328px;
-  /* margin: 0; */
+  height: var(--ticket-img-height);
 }
 
 .contacts-card-text {
@@ -34,7 +73,6 @@
   display: flex;
 }
 
-/* Текст юридической информации */
 .legal-info {
   font-family: 'Roboto', sans-serif;
   font-weight: 400;

@@ -1,12 +1,16 @@
 import React, { createContext, useState } from 'react';
 import { useEffect } from 'react';
-import { fetchPoints } from '../api';
+import { fetchScore } from '../api';
 
 export const PointsContext = createContext();
 
+const TOTAL_SCORE = 1000;
+const NICKNAME_NO_NAME = "<No name>"
+
 // Для соединения с сервером менять эту функцию
 export const PointsProvider = ({ children }) => {
-  const [points, setPoints] = useState(0);
+  const [totalScore, setTotalScore] = useState(TOTAL_SCORE);
+  const [score, setScore] = useState(0);
   const [tickets, setTickets] = useState(0);
   const [nickname, setNickname] = useState();
 
@@ -14,14 +18,14 @@ export const PointsProvider = ({ children }) => {
     setTickets(newTickets);
   };
 
-  const updatePoints = (newPoints) => {
-    setPoints(newPoints % 1000);
-    updateTickets(Math.floor(newPoints / 1000))
+  const updateScore = (newScore) => {
+    setScore(newScore % totalScore);
+    updateTickets(Math.floor(newScore / totalScore))
   };
 
   // Вызывается один раз при монтировании компонента
   useEffect(() => {
-    updatePoints(100);  // дебажная установка очков
+    // updateScore(123);  // дебажная установка очков
     const tg = window.Telegram.WebApp;
 
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -30,15 +34,15 @@ export const PointsProvider = ({ children }) => {
       setNickname(nickname);
       console.log("Никнейм пользователя:", nickname);
     } else {
-      setNickname("<No name>");  // устанавливается, если имя не было получено
+      setNickname(NICKNAME_NO_NAME);  // устанавливается, если имя не было получено
       console.log("Данные о пользователе недоступны");
     }
 
-    updatePoints(fetchPoints(nickname).points || points);
+    updateScore(fetchScore(nickname).score || score);
   }, []);
 
   return (
-    <PointsContext.Provider value={{ points, updatePoints, tickets, nickname }}>
+    <PointsContext.Provider value={{ score, updateScore, tickets, nickname, totalScore }}>
       {children}
     </PointsContext.Provider>
   );

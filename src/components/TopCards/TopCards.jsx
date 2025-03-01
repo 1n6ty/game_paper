@@ -7,7 +7,7 @@ import "./TopCards.css";
 
 const TopCards = () => {
   const { nickname } = useContext(PointsContext);
-  const { points } = useContext(PointsContext);
+  const { score } = useContext(PointsContext);
 
   return (
     <div className="top-cards">
@@ -41,7 +41,7 @@ const TopCards = () => {
 
         <div className="user-info">
           <p className="username">{nickname}</p>
-          <p className="points">{points}</p>
+          <p className="points">{score}</p>
         </div>
       </div>
     </div>)

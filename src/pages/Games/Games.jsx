@@ -1,6 +1,6 @@
 import React from "react";
 import TopCards from "../../components/TopCards/TopCards"
-import MilkCoinsBar from "../../components/MilkCoinsBar/MilkCoinsBar"
+import ScoreBar from "../../components/ScoreBar/ScoreBar"
 import Card from "../../components/Card/Card";
 import GamesList from "../../components/GamesList/GamesList"
 
@@ -9,7 +9,7 @@ const Games = () => {
   return (
     <div className="container">
       <TopCards />
-      <MilkCoinsBar />
+      <ScoreBar />
 
       <Card
         variant="white"

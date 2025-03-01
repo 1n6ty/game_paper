@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import TopCards from "../../components/TopCards/TopCards"
-import MilkCoinsBar from "../../components/MilkCoinsBar/MilkCoinsBar"
+import ScoreBar from "../../components/ScoreBar/ScoreBar"
 import Card from "../../components/Card/Card";
 import CardTip from "../../components/CardTip/CardTip";
 import { PointsContext } from '../../contexts/PointsContext';
@@ -10,12 +10,12 @@ import "./Home.css";
 
 
 const Home = () => {
-  const { tickets } = useContext(PointsContext);
+  const { totalScore, tickets } = useContext(PointsContext);
 
   return (
     <div className="container">
       <TopCards />
-      <MilkCoinsBar />
+      <ScoreBar />
 
       <Card
         variant="white"
@@ -28,8 +28,11 @@ const Home = () => {
           <br /><br />
           Далее играй в мини-игры, зарабатывай ламбиксы и меняй их на возможность выиграть ценные призы:
           <b> каждые 1000 ламбиксов автоматически превращаются в билет на участие в розыгрыше</b>
-          <br /><br />
-          <img src={`${GL_URL}milk_ex.svg`} alt="Обмен молока" className="img" />
+          <br />
+          <div className="total-score">
+            <span className="total-score-text">{totalScore}</span>
+            <img src={`${GL_URL}milk_ex.svg`} alt="Обмен молока" className="total-score-img" />
+          </div>
         </div>
       </Card>
 
@@ -38,7 +41,7 @@ const Home = () => {
         variant="white"
         title="Сканируйте наши продукты и получайте ламбиксы!"
       >
-        <img src={`${GL_URL}reward.svg`} alt="Награда" className="img-center" />
+        <img src={`${GL_URL}reward.svg`} alt="Награда" className="img-center reward-img" />
       </Card>
 
       <Card
@@ -53,6 +56,7 @@ const Home = () => {
           "M14.1939 18.2952C14.8553 18.2952 15.3916 18.8243 15.3916 19.4771C15.3916 20.1298 14.8553 20.659 14.1939 20.659C13.5324 20.659 12.9962 20.1298 12.9962 19.4771C12.9962 18.8243 13.5324 18.2952 14.1939 18.2952Z",
           "M19.7831 18.2952C20.4445 18.2952 20.9808 18.8243 20.9808 19.4771C20.9808 20.1298 20.4445 20.659 19.7831 20.659C19.1216 20.659 18.5854 20.1298 18.5854 19.4771C18.5854 18.8243 19.1216 18.2952 19.7831 18.2952Z"
         ]}
+        enableQrGap={false}
       >
         <img src={`${GL_URL}ticket.svg`} alt="Билет" className="img-center ticket-img" />
       </Card>
