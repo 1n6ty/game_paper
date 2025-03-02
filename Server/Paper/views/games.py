@@ -6,6 +6,7 @@ from django.db.models.manager import BaseManager
 from ..models import Game, User
 
 import requests
+import os
 
 def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
     """
@@ -46,28 +47,52 @@ def init_game(req: HttpRequest) -> None:
      Inits game session for user on server side
     """
     if req.method == "POST":
-        nick: str = req.POST.get("nick", None)
-        game_name: str = req.POST.get("nick", None)
+        nick: str | None = req.POST.get("nick", None)
+        game_name: str | None = req.POST.get("game_name", None)
         if nick == None or game_name == None:
             return HttpResponse(status=400)
 
-        usr_obj = User.objects.filter(nick=nick)
-        game_obj = Game.objects.filter(name=game_name)
+        usr_obj: BaseManager[User] = User.objects.filter(nick=nick)
+        game_obj: BaseManager[Game] = Game.objects.filter(pk=game_name)
         if not (usr_obj.exists() and game_obj.exists()):
             return HttpResponse(status=401)
-        usr_obj = usr_obj[0]
-        game_obj = game_obj[0]
+        usr_obj: User = usr_obj[0]
+        game_obj: Game = game_obj[0]
 
         if usr_obj.score - game_obj.cost < 0:
             return HttpResponse(status=401)
         
-        settings.REDIS.set(nick, game_obj.play_script)
+        usr_obj.score -= game_obj.cost
+        usr_obj.save()
+
+        settings.REDIS.set(f'{nick}:game', game_obj.play_script)
 
         return HttpResponse(status=200)
     return HttpResponse(status=400)
 
-def proceed_moves(req: HttpRequest) -> None:
+def proceed_moves(req: HttpRequest) -> HttpResponse | JsonResponse:
     """
         Proceed gamming moves
     """
-    # TODO Proceed moves
+    if req.method == 'POST':
+        nick: str | None = req.POST.get("nick", None)
+        if nick == None:
+            return HttpResponse(status=400)
+        
+        game_file: str | None = settings.REDIS.get(f'{nick}:game')
+        if game_file == None:
+            return HttpResponse(status=401)
+
+        usr_obj: BaseManager[User] = User.objects.filter(nick=nick)
+        if not usr_obj.exists():
+            return HttpResponse(status=401)
+
+        response: requests.Response = requests.post(
+            f'{os.getenv("SCORE_APP_HOST")}:{os.getenv("SCORE_APP_PORT")}/score/', 
+            data={**dict(req.POST), "game_file": game_file}
+        )
+
+        return JsonResponse(
+            response.json()
+        )
+    return HttpRequest(status=400)

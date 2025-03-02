@@ -1,47 +1,61 @@
 import os
-from pathlib import Path
-
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 
 from importlib import import_module
+import redis
+
+from threading import Timer
+
+REDIS = redis.StrictRedis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), decode_responses=True)
 
 app = FastAPI()
 
 load_dotenv()
 
-GAMES_DIR = Path(os.getenv('GAMES_DIR'))
+def clear_old_data() -> None:
+    for key in REDIS.scan_iter("*"):
+        idle: int = REDIS.object("idletime", key)
+        if idle > int(os.getenv("IDLE_TIME")):
+            REDIS.delete(key)
+    Timer(float(os.getenv("CHECK_IDLE_TIME")), clear_old_data).start()
+clear_old_data()
 
 # TODO Mount game_scripts to games
-gamefiles: dict = {}
-
-@app.post("/update/")
-def update_gamefiles():
-    global gamefiles
-    gamefiles = {
-        l: import_module(
-            str(GAMES_DIR / l).replace('.py', '').replace('/', '.')
-        )
-        for l in os.listdir(GAMES_DIR) if l.split('.')[-1] == 'py'
-    }
-    return {"message": "success"}
-update_gamefiles()
 
 @app.get("/score/")
 def get_score(req: Request):
     params: dict = dict(req.query_params)
 
-    gamefile: str | None = params.get("gamefile", None)
+    game_file: str | None = params.get("game_file", None)
+    nick: str | None = params.get("nick", None)
+    if game_file == None or nick == None:
+        raise HTTPException(status_code=400, detail='gamefile and nick must be provided')
 
-    if gamefile == None:
-        raise HTTPException(status_code=400, detail='gamefile must be provided')
+    try:
+        game_module = import_module(
+            str(game_file).replace('.py', '').replace('/', '.')
+        )
+    except Exception:
+        raise HTTPException(status_code=400, detail='incorrect gamefile')
     
-    game_module = gamefiles.get(gamefile, None)
-    if game_module == None:
-        raise HTTPException(status_code=400, detail='invalid gamefile')
-    
-    move_dict = {k: v for k, v in params.items() if k != "gamefile"}
-    # TODO Retrieve from redis; if no data - {nick}
-    # gamefiles[params["gamefile"]].proceed(env_dict(with nick), move_dict=params(without nick and gamefile)) -> tuple[env_dict(with nick), draw_dict(with score)]
-    # also try/except
-    return {"message": 1}
+    perpetual: dict = REDIS.hgetall(f'{nick}:{str(game_file)}')
+    tmp: dict = REDIS.hgetall(f'{nick}:tmp')
+    move_dict: dict = {k: v for k, v in params.items() if not (k in ["game_file", "nick"])}
+
+    try:
+        [new_perpetual, new_tmp, draw_dict, score, win_bit] = game_module.proceed(perpetual, tmp, move_dict)
+    except Exception:
+        raise HTTPException(status_code=500, detail='Error occured while executing game module')
+
+    REDIS.hmset(f'{nick}:{str(game_file)}', new_perpetual)
+    if win_bit:
+        REDIS.hmset(f'{nick}:tmp', new_tmp)
+    else:
+        REDIS.hdel(f'{nick}:tmp')
+        REDIS.hdel(nick)
+
+    return {
+        "draw": draw_dict,
+        "score": score
+    }

@@ -23,10 +23,13 @@ def send_help(msg: telebot.types.Message) -> None:
 @bot.message_handler(commands=['start'])
 def send_start(msg: telebot.types.Message) -> None:
     try:
-        cursor.execute("INSERT INTO Paper_user (nick, score) VALUES (%s, %s)", (hashlib.sha256(msg.from_user.username.encode('utf-8')).hexdigest(), 300)) # TODO config
+        cursor.execute("INSERT INTO Paper_user (nick, score) VALUES (%s, %s)", (hashlib.sha256(msg.from_user.username.encode('utf-8')).hexdigest(), int(os.getenv("START_SCORE"))))
         db.commit()
     except Exception:
         pass
-    bot.send_message(msg.chat.id, "Start")
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    web_btn = telebot.types.InlineKeyboardButton(text='App', web_app=telebot.types.WebAppInfo(os.getenv('HOST')))
+    markup.add(web_btn)
+    bot.send_message(msg.chat.id, "Start", reply_markup=markup)
 
 bot.infinity_polling()

@@ -30,4 +30,4 @@ urlpatterns = [
     path('games/', get_game_links, name="games"), # games' links getter
     path('score/', get_score, name="score_get"), # score getter
     path('move/', proceed_moves, name="proceed_moves"), # Game process handler
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # TODO Remove debug
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) # TODO Remove debug
