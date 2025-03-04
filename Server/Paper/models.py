@@ -4,7 +4,7 @@ from django.conf import settings
 
 from subprocess import Popen, PIPE
 
-game_scripts_storage = FileSystemStorage(settings.BASE_DIR / 'game_scripts/', base_url=None)
+game_scripts_storage = FileSystemStorage(settings.BASE_DIR / 'games/', base_url=None)
 
 class User(models.Model):
     nick = models.CharField(
@@ -77,14 +77,10 @@ class Game(models.Model):
         blank=False,
         default=0
     )
-    def save(self, **kwargs):
-        super(Game, self).save(**kwargs)
-        # TODO /update/ on score app
     
     def delete(self, **kwargs):
         Popen(["rm", "-rf", game_scripts_storage.location + '/' + self.play_script.name, settings.MEDIA_ROOT / self.paint_script.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
         super(Game, self).delete(**kwargs)
-        # TODO /update/ on score app
     
     class Meta:
         verbose_name = "Game"

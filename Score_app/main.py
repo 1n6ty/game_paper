@@ -1,5 +1,4 @@
 import os
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 
 from importlib import import_module
@@ -7,21 +6,23 @@ import redis
 
 from threading import Timer
 
-REDIS = redis.StrictRedis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), decode_responses=True)
+REDIS = redis.StrictRedis(host='redis', port=6379, decode_responses=True, db=0)
 
 app = FastAPI()
-
-load_dotenv()
 
 def clear_old_data() -> None:
     for key in REDIS.scan_iter("*"):
         idle: int = REDIS.object("idletime", key)
-        if idle > int(os.getenv("IDLE_TIME")):
+        if idle > int(os.getenv("DATA_LIFE_TIME")):
             REDIS.delete(key)
-    Timer(float(os.getenv("CHECK_IDLE_TIME")), clear_old_data).start()
+    Timer(float(os.getenv("CLEAR_TIME")), clear_old_data).start()
 clear_old_data()
 
 # TODO Mount game_scripts to games
+
+@app.get("/")
+def index(req: Request):
+    return {"message": "index"}
 
 @app.get("/score/")
 def get_score(req: Request):
