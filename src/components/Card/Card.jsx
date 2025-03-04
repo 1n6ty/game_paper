@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import ScannerIcon from '../../assets/icons/Qr.svg?react';
+
 import './Card.css';
 
 const Card = ({
@@ -9,14 +11,14 @@ const Card = ({
   textSize = 'default',
   image,
   imagePosition,
-  qrIconPaths, // Ожидается строка с d-атрибутом для svg path
+  enableQr,
   enableQrGap = true,
   children
 }) => {
   const hasRightImage =
     image && (imagePosition === 'top-right' || imagePosition === 'bottom-right');
   var cardBodyExtraClass;
-  if (qrIconPaths && (enableQrGap === true))
+  if ((enableQr === true) && (enableQrGap === true))
     cardBodyExtraClass = 'card-body-with-qr';
   else if (hasRightImage)
     cardBodyExtraClass = 'card-body-with-right-image';
@@ -32,21 +34,12 @@ const Card = ({
     <div className={`card card--${variant}`}>
       <div className="card-header">
         {title && <h2 className={`card-title card-title--${textSize}`}>{title}</h2>}
-        {qrIconPaths && (
+        {enableQr && (
           <div className="card-qr" onClick={handleQrClick}>
             <button
               className={`card-qr-button card-qr-button--${variant}`}
             >
-              <svg
-                className="card-qr-icon"
-                width="22"
-                height="22"
-                viewBox="0 0 22 22"
-              >
-                {qrIconPaths.map((d, index) => (
-                  <path key={index} d={d} />
-                ))}
-              </svg>
+              <ScannerIcon className="card-qr-icon" />
             </button>
           </div>
         )}

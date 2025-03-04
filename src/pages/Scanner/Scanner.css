@@ -3,7 +3,7 @@
 
 :root {
   --scan-size: 120px;
-  --overlay-color: #868686b0;
+  --overlay-color: #868686B0;
 }
 
 .scanner-container {
@@ -112,7 +112,8 @@
   border-radius: 5px;
 }
 
-/* Маленький угол (правый верхний): белые линии по верхней и правой сторонам, занимающие 50% окна */
+/* Маленький угол (правый верхний): белые линии по верхней и правой сторонам, 
+ * занимающие 50% окна */
 .frame-small {
   position: absolute;
   top: -2px;
@@ -143,7 +144,6 @@
   border-radius: 5px;
 }
 
-/* Заголовок и подзаголовок, расположенные в верхней части экрана */
 .scanner-header {
   position: absolute;
   top: 20%;
@@ -176,7 +176,6 @@
   margin: 8px 0 0 0;
 }
 
-/* Инструкция под рамкой: отступ 20px от нижней границы рамки */
 .scanner-instruction {
   font-family: 'Roboto', sans-serif;
   font-weight: 500;
@@ -191,18 +190,25 @@
   transform: translateX(-50%);
   width: 90%;
   max-width: 500px;
-  font-size: 18px;
-  font-weight: 500;
   color: white;
   z-index: 4;
 }
 
 /* Сообщение об ошибке */
 .error-msg {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 26px;
+  letter-spacing: 0.1px;
+  text-align: center;
+
   position: absolute;
-  bottom: 20px;
+  bottom: 70px;
   left: 50%;
   transform: translateX(-50%);
-  color: red;
+  width: 90%;
+  max-width: 500px;
+  color: #E97373;
   z-index: 5;
 }

@@ -25,7 +25,6 @@ export const PointsProvider = ({ children }) => {
 
   // Вызывается один раз при монтировании компонента
   useEffect(() => {
-    // updateScore(123);  // дебажная установка очков
     const tg = window.Telegram.WebApp;
 
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -39,6 +38,7 @@ export const PointsProvider = ({ children }) => {
     }
 
     updateScore(fetchScore(nickname).score || score);
+    // updateScore(100312);  // дебажная установка очков
   }, []);
 
   return (

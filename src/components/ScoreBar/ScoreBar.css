@@ -58,7 +58,6 @@
   overflow: hidden;
 }
 
-/* Заполнение прогресс-бара */
 .score-progress-fill {
   height: 100%;
   background-color: var(--color-primary-dark-blue);

@@ -1,8 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext } from 'react';
 import { PointsContext } from '../../contexts/PointsContext';
 
-import { GL_URL } from "../../../global"
-import "./ScoreBar.css";
+import { GL_URL } from '../../../global';
+import './ScoreBar.css';
 
 
 const ScoreBar = () => {

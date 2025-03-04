@@ -4,7 +4,6 @@
   --top-card-border-radius: 9px;
 }
 
-/* Верхние карточки (эмблема и пользовательские данные) */
 .top-cards {
   display: flex;
   margin-bottom: 15px;
@@ -41,12 +40,10 @@
   box-shadow: var(--card-shadow);
 }
 
-/* Изображение стакана молока в карточке пользователя */
 .user-card .milk-img {
   margin-right: 16px;
 }
 
-/* Информация пользователя */
 .user-info {
   margin: 0;
   padding: 0;
@@ -63,7 +60,7 @@
   padding: 0;
 }
 
-.user-info .points {
+.user-info .score {
   font-family: 'Roboto Light', sans-serif;
   font-weight: 400;
   font-size: 20px;

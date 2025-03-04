@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import "./Scanner.css";
+import './Scanner.css';
 
 const Scanner = () => {
   const videoRef = useRef(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    // Автоматический запуск камеры при загрузке
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -18,16 +17,17 @@ const Scanner = () => {
         }
       } catch (err) {
         console.error("Ошибка доступа к камере:", err);
-        setErrorMsg("Не удалось получить доступ к камере");
+        setErrorMsg("Не удалось получить доступ к камере!");
       }
     };
     startCamera();
 
     return () => {
-      // Остановка камеры при размонтировании
       if (videoRef.current && videoRef.current.srcObject) {
-        let tracks = videoRef.current.srcObject.getTracks();
+        const stream = videoRef.current.srcObject;
+        const tracks = stream.getTracks();
         tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
       }
     };
   }, []);

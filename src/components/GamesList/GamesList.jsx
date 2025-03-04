@@ -1,10 +1,13 @@
-import React from "react";
-import GameItem from "./../GameItem/GameItem";
-import "./GamesList.css";
+import React from 'react';
+import GameItem from '../GameItem/GameItem';
+
+import { GL_URL } from '../../../global';
+import './GamesList.css';
+
 
 const gamesData = [
-  { id: 1, title: "Название игры", image: "" },
-  { id: 2, title: "Название игры", image: "" },
+  { id: 1, title: "Название игры", image: `${GL_URL}/games/fb.svg` },
+  { id: 2, title: "Название игры", image: `${GL_URL}/games/fb.svg` },
   { id: 3, title: "Название игры", image: "" },
   { id: 4, title: "Название игры", image: "" },
 ];

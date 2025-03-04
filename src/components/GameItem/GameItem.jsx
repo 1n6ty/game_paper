@@ -1,5 +1,5 @@
-import React from "react";
-import "./GameItem.css";
+import React from 'react';
+import './GameItem.css';
 
 const GameItem = ({ title, image }) => {
   return (

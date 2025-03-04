@@ -4,7 +4,7 @@
 :root {
   --home-scale: 1;
   --total-score-scale: 1;
-  --total-score-height: calc(70px * var(--total-score-scale));
+  --total-score-height: calc(63px * var(--total-score-scale));
   --reward-img-height: calc(119px * var(--home-scale));
   --ticket-img-height: calc(131.8px * var(--home-scale));
 }
@@ -42,7 +42,7 @@
   line-height: 32px;
   letter-spacing: 0px;
 
-  margin-top: 26.8px;
+  margin-top: 23.8px;
   margin-right: 1px;
 }
 

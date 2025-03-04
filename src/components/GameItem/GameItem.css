@@ -8,6 +8,7 @@
 .game-item {
   width: auto;
   height: 210px;
+  max-width: 173px;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
   background-color: white;
@@ -17,17 +18,14 @@
 }
 
 .game-item-top {
-  /* Небольшой фоновый цвет, если картинка не загрузилась */
   background-color: var(--color-unloaded-bg);
   width: 100%;
-  /* Задаём фиксированную высоту или меняем на auto, если нужно */
-  height: 159px;
+  height: 167px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Если нет картинки, показываем placeholder */
 .game-item-placeholder {
   width: 100%;
   height: 100%;
@@ -37,13 +35,11 @@
 .game-item-img {
   max-width: 100%;
   max-height: 100%;
-  /* Обрезаем картинку по краям, если она не вписывается */
   object-fit: cover;
 }
 
-/* Нижняя часть карточки */
 .game-item-bottom {
-  /* height: 51px; */
+  height: 43px;
   background-color: white;
   text-align: center;
   padding: 11px 17px;

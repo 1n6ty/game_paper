@@ -49,42 +49,42 @@
   margin: 0;
 }
 
-/* Контейнер для QR-кнопки */
 .card-qr {
   position: absolute;
   top: 16px;
   right: 16px;
 }
 
-/* Стили для QR-кнопки */
 .card-qr-button {
+  display: flex;
   border: none;
   border-radius: 11px;
-  padding: 11px;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   width: 52px;
   height: 52px;
+  padding: 11px 0 11px 0;
 }
 
 .card-qr-button--white {
   background: var(--color-primary-light-blue);
-  fill: var(--color-primary-blue);
+  color: var(--color-primary-blue);
 }
 
 .card-qr-button--blue {
   background: white;
-  fill: var(--color-primary-blue);
+  color: var(--color-primary-blue);
 }
 
 .card-qr-button--light-blue {
   background: var(--color-primary-light-blue);
-  fill: var(--color-primary-light-blue);
+  color: var(--color-primary-light-blue);
 }
 
-/* Стили для svg-иконки внутри кнопки */
 .card-qr-icon {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
 }
 
 .card-body {
@@ -112,5 +112,4 @@
   top: 16px;
   right: 16px;
   max-width: 100px;
-  /* можно настроить */
 }

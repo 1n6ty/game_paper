@@ -1,8 +1,8 @@
 import React, { use, useContext } from 'react';
 import { PointsContext } from '../../contexts/PointsContext';
 
-import { GL_URL } from "../../../global"
-import "./TopCards.css";
+import { GL_URL } from '../../../global'
+import './TopCards.css';
 
 
 const TopCards = () => {
@@ -41,7 +41,7 @@ const TopCards = () => {
 
         <div className="user-info">
           <p className="username">{nickname}</p>
-          <p className="points">{score}</p>
+          <p className="score">{score}</p>
         </div>
       </div>
     </div>)
