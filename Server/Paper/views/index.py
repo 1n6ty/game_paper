@@ -1,9 +1,6 @@
 from django.http.request import HttpRequest
-from django.http.response import HttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponse
 from django.shortcuts import render
-
-from django.db.models.manager import BaseManager
-from ..models import User
 
 def index(req: HttpRequest) -> HttpResponse:
     """

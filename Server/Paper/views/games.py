@@ -7,6 +7,7 @@ from ..models import Game, User
 
 import requests
 import os
+import hashlib
 
 def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
     """
@@ -16,6 +17,8 @@ def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
         nick: str = req.GET.get("nick", None)
         if nick == None:
             return HttpResponse(status=400)
+        nick = hashlib.sha256(nick.encode('utf-8')).hexdigest()
+
         usr: BaseManager[User] = User.objects.filter(nick = nick)
         if not usr.exists():
             return HttpResponse(status=401)
@@ -51,6 +54,7 @@ def init_game(req: HttpRequest) -> None:
         game_name: str | None = req.POST.get("game_name", None)
         if nick == None or game_name == None:
             return HttpResponse(status=400)
+        nick = hashlib.sha256(nick.encode('utf-8')).hexdigest()
 
         usr_obj: BaseManager[User] = User.objects.filter(nick=nick)
         game_obj: BaseManager[Game] = Game.objects.filter(pk=game_name)
@@ -67,7 +71,14 @@ def init_game(req: HttpRequest) -> None:
 
         settings.REDIS.set(f'{nick}:game', game_obj.play_script)
 
-        return HttpResponse(status=200)
+        response: requests.Response = requests.post(
+            'score_app:8080/init/',
+            data=dict(req.POST)
+        )
+
+        return JsonResponse(
+            response.json()
+        )
     return HttpResponse(status=400)
 
 def proceed_moves(req: HttpRequest) -> HttpResponse | JsonResponse:
@@ -78,18 +89,21 @@ def proceed_moves(req: HttpRequest) -> HttpResponse | JsonResponse:
         nick: str | None = req.POST.get("nick", None)
         if nick == None:
             return HttpResponse(status=400)
-        
+        nick = hashlib.sha256(nick.encode('utf-8')).hexdigest()
+
         game_file: str | None = settings.REDIS.get(f'{nick}:game')
         if game_file == None:
             return HttpResponse(status=401)
 
+        game_obj: BaseManager[Game] = Game.objects.filter(play_script=game_file)
         usr_obj: BaseManager[User] = User.objects.filter(nick=nick)
-        if not usr_obj.exists():
+        if not (usr_obj.exists() and game_obj.exists()):
             return HttpResponse(status=401)
+        game_obj: Game = game_obj[0]
 
         response: requests.Response = requests.post(
-            f'{os.getenv("SCORE_APP_HOST")}:{os.getenv("SCORE_APP_PORT")}/score/', 
-            data={**dict(req.POST), "game_file": game_file}
+            'score_app:8080/score/',
+            data={**dict(req.POST), "game_name": game_obj.name}
         )
 
         return JsonResponse(

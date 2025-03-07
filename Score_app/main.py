@@ -18,21 +18,16 @@ def clear_old_data() -> None:
     Timer(float(os.getenv("CLEAR_TIME")), clear_old_data).start()
 clear_old_data()
 
-# TODO Mount game_scripts to games
-
-@app.get("/")
-def index(req: Request):
-    return {"message": "index"}
-
-@app.get("/score/")
-def get_score(req: Request):
+@app.post("gameinit")
+def init_game(req: Request):
     params: dict = dict(req.query_params)
 
-    game_file: str | None = params.get("game_file", None)
     nick: str | None = params.get("nick", None)
-    if game_file == None or nick == None:
-        raise HTTPException(status_code=400, detail='gamefile and nick must be provided')
+    game_name: str | None = params.get("game_name", None)
+    if nick == None or game_name == None:
+        raise HTTPException(status_code=400, detail='incorrect params')
 
+    game_file = REDIS.get(f"{nick}:game")
     try:
         game_module = import_module(
             str(game_file).replace('.py', '').replace('/', '.')
@@ -40,23 +35,50 @@ def get_score(req: Request):
     except Exception:
         raise HTTPException(status_code=400, detail='incorrect gamefile')
     
-    perpetual: dict = REDIS.hgetall(f'{nick}:{str(game_file)}')
+    perpetual: dict = REDIS.hgetall(f'{nick}:{str(game_name)}:perpetual')
     tmp: dict = REDIS.hgetall(f'{nick}:tmp')
-    move_dict: dict = {k: v for k, v in params.items() if not (k in ["game_file", "nick"])}
 
     try:
-        [new_perpetual, new_tmp, draw_dict, score, win_bit] = game_module.proceed(perpetual, tmp, move_dict)
+        [new_perpetual, new_tmp, draw_dict] = game_module.init(perpetual, tmp)
+    except Exception:
+        raise HTTPException(status_code=500, detail='Error occured while executing game module')
+    
+    REDIS.hmset(f'{nick}:{str(game_name)}:perpetual', new_perpetual)
+    REDIS.hmset(f'{nick}:tmp', new_tmp)
+
+    return {
+        "draw": draw_dict
+    }
+
+@app.post("/score/")
+def get_score(req: Request):
+    params: dict = dict(req.query_params)
+
+    nick: str | None = params.get("nick", None)
+    game_name: str | None = params.get("game_name", None)
+    if nick == None or game_name == None:
+        raise HTTPException(status_code=400, detail='incorrect params')
+
+    game_file = REDIS.get(f"{nick}:game")
+    try:
+        game_module = import_module(
+            str(game_file).replace('.py', '').replace('/', '.')
+        )
+    except Exception:
+        raise HTTPException(status_code=400, detail='incorrect gamefile')
+    
+    perpetual: dict = REDIS.hgetall(f'{nick}:{str(game_name)}:perpetual')
+    tmp: dict = REDIS.hgetall(f'{nick}:tmp')
+    move_dict: dict = {k: v for k, v in params.items() if not (k in ["game_name", "nick"])}
+
+    try:
+        [new_perpetual, score] = game_module.proceed(perpetual, tmp, move_dict)
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
 
-    REDIS.hmset(f'{nick}:{str(game_file)}', new_perpetual)
-    if win_bit:
-        REDIS.hmset(f'{nick}:tmp', new_tmp)
-    else:
-        REDIS.hdel(f'{nick}:tmp')
-        REDIS.hdel(nick)
+    REDIS.hmset(f'{nick}:{str(game_name)}:perpetual', new_perpetual)
+    REDIS.delete(f'{nick}:game')
 
     return {
-        "draw": draw_dict,
         "score": score
     }
