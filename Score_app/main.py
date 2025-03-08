@@ -72,7 +72,7 @@ def get_score(req: Request):
     move_dict: dict = {k: v for k, v in params.items() if not (k in ["game_name", "nick"])}
 
     try:
-        [new_perpetual, score] = game_module.proceed(perpetual, tmp, move_dict)
+        [new_perpetual, score] = game_module.finish(perpetual, tmp, move_dict)
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
 

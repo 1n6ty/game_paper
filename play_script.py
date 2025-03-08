@@ -27,7 +27,7 @@ def init(perpetual: dict, tmp: dict) -> tuple[dict, dict, dict]:
 
     return (perpetual, tmp, draw_dict)
 
-def proceed(perpetual: dict, tmp: dict, moves: dict) -> tuple[dict, int]:
+def finish(perpetual: dict, tmp: dict, moves: dict) -> tuple[dict, int]:
     """
         Function to compute score based on moves and tmp
 

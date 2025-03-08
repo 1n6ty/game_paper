@@ -46,6 +46,27 @@ function proceed(canvas, tmp, finish_func){
     return tmp;
 }
 
+function finish(canvas, tmp, score){
+    /*
+        Function to draw finish window and output some statistics
+
+        Parameters
+        ----------
+            canvas:
+                Object of canvas to draw on
+            \n
+            tmp:
+                Temporary storage for game session
+            \n
+            score:
+                score gained from game
+        
+        Returns None
+        -------
+    */
+
+}
+
 export {
-    init, proceed
+    init, proceed, finish
 };
