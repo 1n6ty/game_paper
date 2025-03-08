@@ -6,7 +6,7 @@ import './TopCards.css';
 
 
 const TopCards = () => {
-  const { nickname } = useContext(PointsContext);
+  const { user } = useContext(PointsContext);
   const { score } = useContext(PointsContext);
 
   return (
@@ -40,7 +40,7 @@ const TopCards = () => {
         </svg>
 
         <div className="user-info">
-          <p className="username">{nickname}</p>
+          <p className="username">{user?.username || `${user?.first_name} ${user?.last_name}`}</p>
           <p className="score">{score}</p>
         </div>
       </div>

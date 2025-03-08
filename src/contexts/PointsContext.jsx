@@ -12,7 +12,7 @@ export const PointsProvider = ({ children }) => {
   const [totalScore, setTotalScore] = useState(TOTAL_SCORE);
   const [score, setScore] = useState(0);
   const [tickets, setTickets] = useState(0);
-  const [nickname, setNickname] = useState();
+  const [user, setUser] = useState();
 
   const updateTickets = (newTickets) => {
     setTickets(newTickets);
@@ -25,24 +25,23 @@ export const PointsProvider = ({ children }) => {
 
   // Вызывается один раз при монтировании компонента
   useEffect(() => {
-    const tg = window.Telegram.WebApp;
-
+    const tg = window.Telegram && window.Telegram.WebApp;
+    tg.ready();
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      const user = tg.initDataUnsafe.user;
-      const nickname = user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim();
-      setNickname(nickname);
-      console.log("Никнейм пользователя:", nickname);
+      setUser(tg.initDataUnsafe.user);
     } else {
-      setNickname(NICKNAME_NO_NAME);  // устанавливается, если имя не было получено
-      console.log("Данные о пользователе недоступны");
+      console.warn('Данные пользователя из Telegram недоступны. Возможно, вы тестируете вне Telegram.');
+      // Временный fallback для разработки
+      setUser({
+        username: 'TestUser',
+        first_name: 'Test',
+        last_name: 'User'
+      });
     }
-
-    updateScore(fetchScore(nickname).score || score);
-    // updateScore(100312);  // дебажная установка очков
   }, []);
 
   return (
-    <PointsContext.Provider value={{ score, updateScore, tickets, nickname, totalScore }}>
+    <PointsContext.Provider value={{ score, updateScore, tickets, user, totalScore }}>
       {children}
     </PointsContext.Provider>
   );
