@@ -95,7 +95,7 @@ const Home = () => {
         </div>
       </Card>
 
-      <p className="legal-info">Разработано ПАО "Ламбумиз"</p>
+      <p className="legal-info">Разработано ПАО «Ламбумиз»</p>
     </div >
   );
 };
