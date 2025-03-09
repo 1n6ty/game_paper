@@ -2,49 +2,54 @@ import React, { useState, useEffect, useRef } from 'react';
 import GameOver from '../../GameOver/GameOver';
 import './MilkyFly.css';
 
-import pipeDefaultUrl from '/games/milkyFly/pipeDefault.svg';
-import pipeSpecialUrl from '/games/milkyFly/pipeSpecial.svg';
+// Пути до ассетов в папке public
+const pipeDefaultUrl = '/games/milkyFly/pipeDefault.svg';
+const pipeSpecialUrl = '/games/milkyFly/pipeSpecial.svg';
 
-import cloudsUrl from '/games/milkyFly/clouds.svg';
-import bushesDarkUrl from '/games/milkyFly/bushesDark.svg';
-import bushesLightUrl from '/games/milkyFly/bushesLight.svg';
+const cloudsUrl = '/games/milkyFly/clouds.svg';
+const bushesDarkUrl = '/games/milkyFly/bushesDark.svg';
+const bushesLightUrl = '/games/milkyFly/bushesLight.svg';
 
-import grassUrl from '/games/milkyFly/grass.svg';
-// import groundUrl from 'games/milkyFly/ground.svg';
+const grassUrl = '/games/milkyFly/grass.svg';
 
-import cowIdle from '/games/milkyFly/cowIdle.svg';
-import cowPressed from '/games/milkyFly/cowPressed.svg';
+const cowIdle = '/games/milkyFly/cowIdle.svg';
+const cowPressed = '/games/milkyFly/cowPressed.svg';
 
 const MilkyFly = () => {
-  // ====== Константы (настраиваемые параметры) ======
-  const INITIAL_SPEED = 2;               // Начальная скорость
-  const SPEED_MULTIPLIER = 1.2;            // Множитель увеличения скорости каждые 10 препятствий
-  const PARALLAX_CLOUDS = 0.2;             // Множитель для облаков
-  const PARALLAX_BUSHES_DARK = 0.4;        // Множитель для тёмных кустов
-  const PARALLAX_BUSHES_LIGHT = 0.6;       // Множитель для светлых кустов
-  const PARALLAX_GRASS = 0.8;              // Множитель для движущейся травы
-  const FALL_ANGLE = 30;                 // Максимальный угол наклона при падении (градусы)
+  // ====== Константы для "виртуальной" логики ======
+  const BASE_WIDTH = 428; // Исходная ширина для расчётов
+  const BASE_HEIGHT = 809; // Исходная высота для расчётов
 
+  // ====== Параметры игры ======
+  const INITIAL_SPEED = 2;                // Начальная скорость
+  const SPEED_MULTIPLIER = 1.2;           // Увеличение скорости каждые 10 труб
+  const PARALLAX_CLOUDS = 0;
+  const PARALLAX_BUSHES_DARK = 0;
+  const PARALLAX_BUSHES_LIGHT = 0;
+  const PARALLAX_GRASS = 0.8;
+  const FALL_ANGLE = 30;                  // Угол наклона при падении
   const GRAVITY = 0.5;
   const JUMP_FORCE = -8;
-  const PIPE_GAP = 100;
-  const PIPE_WIDTH = 50;
-  const PIPE_INTERVAL = 90;  // интервал кадров между появлением труб
-  const CANVAS_WIDTH = 400;
-  const CANVAS_HEIGHT = 600;
-  const FLOOR_HEIGHT = 50;   // высота области, где рисуется пол
 
-  // Массив градиентов: каждый элемент — массив из 3-х цветов (верх, середина, низ)
+  const PIPE_GAP = 150;
+  const PIPE_WIDTH = 66;
+  const PIPE_INTERVAL = 120;
+  const FLOOR_HEIGHT = 140;
+
+  // Ограничения для случайного появления труб
+  const MIN_TOP = FLOOR_HEIGHT + 20;  // трубы не будут появляться слишком низко
+  const MAX_TOP = 500;                // и не слишком высоко
+
+  // Массив градиентов: каждый — массив из 3-х цветов (верх, середина, низ)
   const GRADIENTS = [
-    ["#67AAEB", "#D3E8FF", "#FFFFFF"], // Вечер
-    ["#67AAEB", "#F7CDCE", "#FFFFFF"], // Закат
-    ["#97A0FF", "#D1E8FF", "#FFFFFF"], // Рассвет
-    ["#A1D1FF", "#D1E8FF", "#FFFFFF"], // День
-    ["#AED7FF", "#FEFEFF", "#FFFFFF"], // Утро
+    ["#67AAEB", "#D3E8FF", "#FFFFFF"],
+    ["#67AAEB", "#F7CDCE", "#FFFFFF"],
+    ["#97A0FF", "#D1E8FF", "#FFFFFF"],
+    ["#A1D1FF", "#D1E8FF", "#FFFFFF"],
+    ["#AED7FF", "#FEFEFF", "#FFFFFF"],
   ];
 
-
-  // ====== Состояния игры ======
+  // ====== React-состояния ======
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
@@ -53,41 +58,83 @@ const MilkyFly = () => {
   const canvasRef = useRef(null);
   const animationIdRef = useRef();
 
-  // Храним динамику игры в объекте, чтобы не перерендеривать компонент каждый кадр
+  // Объект для кэширования загруженных изображений
+  const imagesRef = useRef({});
+
+  // Основное состояние игры (в "виртуальных" координатах)
   const gameStateRef = useRef({
     speed: INITIAL_SPEED,
     frame: 0,
     pipes: [],
-    // Позиции для параллакса
+    // Позиции параллакса
     cloudsX: 0,
     bushesDarkX: 0,
     bushesLightX: 0,
     grassX: 0,
-    // Состояние птицы (коровы)
+    // Состояние "птицы" (коровы)
     bird: {
       x: 50,
       y: 150,
       velocity: 0,
       frameCounter: 0,
-      currentFrame: 0, // 0 или 1 (для двух спрайтов)
-      rotation: 0,     // угол в градусах
+      currentFrame: 0,
+      rotation: 0,
     },
-    // Выбор фона (рандомно при запуске)
-    selectedGradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)]
+    // Рандомный фон
+    selectedGradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)],
+    // Счётчик труб (для определения особой трубы)
+    pipeCount: 0,
+    // Флаг остановки игры
+    isGameOver: false,
   });
 
-  // При монтировании загружаем лучший результат и запускаем игру
-  useEffect(() => {
-    const storedBest = parseInt(localStorage.getItem('bestScore')) || 0;
-    setBestScore(storedBest);
-    resetGame();
-    animationIdRef.current = requestAnimationFrame(gameLoop);
+  // Функция предзагрузки одного изображения
+  const loadImage = (src) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+    });
+  };
 
-    // Обработчики для прыжка (Space и касание)
+  // Предзагрузка ассетов
+  const preloadAssets = async () => {
+    const assets = {
+      clouds: loadImage(cloudsUrl),
+      bushesDark: loadImage(bushesDarkUrl),
+      bushesLight: loadImage(bushesLightUrl),
+      grass: loadImage(grassUrl),
+      pipeDefault: loadImage(pipeDefaultUrl),
+      pipeSpecial: loadImage(pipeSpecialUrl),
+      cowIdle: loadImage(cowIdle),
+      cowPressed: loadImage(cowPressed),
+    };
+    const loaded = await Promise.all(Object.values(assets));
+    const keys = Object.keys(assets);
+    keys.forEach((key, idx) => {
+      imagesRef.current[key] = loaded[idx];
+    });
+  };
+
+  // Инициализация при монтировании
+  useEffect(() => {
+    const storedBest = parseInt(localStorage.getItem('bestScore'), 10) || 0;
+    setBestScore(storedBest);
+
+    preloadAssets().then(() => {
+      resetGame();
+      requestAnimationFrame(gameLoop);
+    });
+
+    // Слушатели для прыжка (Space/touch)
     const handleJump = (e) => {
       if (e.type === 'keydown' && e.code !== 'Space') return;
-      gameStateRef.current.bird.velocity = JUMP_FORCE;
-      gameStateRef.current.bird.frameCounter = 0; // сброс анимации
+      const st = gameStateRef.current;
+      if (!st.isGameOver) {
+        st.bird.velocity = JUMP_FORCE;
+        st.bird.frameCounter = 0;
+      }
     };
     window.addEventListener('keydown', handleJump);
     window.addEventListener('touchstart', handleJump);
@@ -97,21 +144,21 @@ const MilkyFly = () => {
       window.removeEventListener('touchstart', handleJump);
       cancelAnimationFrame(animationIdRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Сброс состояния игры
+  // Сброс игры
   const resetGame = () => {
     setGameOver(false);
     setScore(0);
-    gameStateRef.current.speed = INITIAL_SPEED;
-    gameStateRef.current.frame = 0;
-    gameStateRef.current.pipes = [];
-    gameStateRef.current.cloudsX = 0;
-    gameStateRef.current.bushesDarkX = 0;
-    gameStateRef.current.bushesLightX = 0;
-    gameStateRef.current.grassX = 0;
-    gameStateRef.current.bird = {
+    const st = gameStateRef.current;
+    st.speed = INITIAL_SPEED;
+    st.frame = 0;
+    st.pipes = [];
+    st.cloudsX = 0;
+    st.bushesDarkX = 0;
+    st.bushesLightX = 0;
+    st.grassX = 0;
+    st.bird = {
       x: 50,
       y: 150,
       velocity: 0,
@@ -119,215 +166,222 @@ const MilkyFly = () => {
       currentFrame: 0,
       rotation: 0,
     };
-    gameStateRef.current.selectedGradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
+    st.selectedGradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
+    st.pipeCount = 0;
+    st.isGameOver = false;
   };
+
+  // Адаптивный размер canvas
+  useEffect(() => {
+    function resizeCanvas() {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      const parentWidth = parent.clientWidth;
+      const aspect = BASE_HEIGHT / BASE_WIDTH;
+      const newHeight = Math.floor(parentWidth * aspect);
+      canvas.width = parentWidth;
+      canvas.height = newHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    return () => window.removeEventListener('resize', resizeCanvas);
+  }, []);
 
   // Основной игровой цикл
   const gameLoop = () => {
-    update();
-    draw();
-    if (!gameOver) {
-      animationIdRef.current = requestAnimationFrame(gameLoop);
-    } else {
-      // При Game Over обновляем лучший результат
-      if (score > bestScore) {
-        setBestScore(score);
-        localStorage.setItem('bestScore', score);
-      }
-    }
-  };
+    const st = gameStateRef.current;
+    if (st.isGameOver) return; // Прерываем цикл, если игра остановлена
 
-  // Обновление логики игры
-  const update = () => {
-    const state = gameStateRef.current;
-    state.frame++;
-
-    // Обновляем позиции параллакс-слоев
-    state.cloudsX -= state.speed * PARALLAX_CLOUDS;
-    state.bushesDarkX -= state.speed * PARALLAX_BUSHES_DARK;
-    state.bushesLightX -= state.speed * PARALLAX_BUSHES_LIGHT;
-    state.grassX -= state.speed * PARALLAX_GRASS;
-
-    // Если слой ушел за границу, сбрасываем (предполагается, что ширина слоя равна CANVAS_WIDTH)
-    if (state.cloudsX <= -CANVAS_WIDTH) state.cloudsX += CANVAS_WIDTH;
-    if (state.bushesDarkX <= -CANVAS_WIDTH) state.bushesDarkX += CANVAS_WIDTH;
-    if (state.bushesLightX <= -CANVAS_WIDTH) state.bushesLightX += CANVAS_WIDTH;
-    if (state.grassX <= -CANVAS_WIDTH) state.grassX += CANVAS_WIDTH;
-
-    // Физика птицы (коровы)
-    state.bird.velocity += GRAVITY;
-    state.bird.y += state.bird.velocity;
-    // Если падает, увеличиваем угол до FALL_ANGLE; иначе слегка наклоняем вверх
-    if (state.bird.velocity > 0) {
-      state.bird.rotation = Math.min(FALL_ANGLE, state.bird.rotation + 2);
-    } else {
-      state.bird.rotation = -15;
-    }
-    // Анимация спрайтов: переключаем кадры каждые 5 кадров, а если скорость падения выше – каждые 3
-    state.bird.frameCounter++;
-    let frameDelay = state.bird.velocity > 2 ? 3 : 5;
-    if (state.bird.frameCounter >= frameDelay) {
-      state.bird.currentFrame = (state.bird.currentFrame + 1) % 2;
-      state.bird.frameCounter = 0;
-    }
-
-    // Создаем трубы каждые PIPE_INTERVAL кадров
-    if (state.frame % PIPE_INTERVAL === 0) {
-      let topHeight = Math.random() * (CANVAS_HEIGHT - PIPE_GAP - 100) + 50;
-      const pipe = {
-        x: CANVAS_WIDTH,
-        top: topHeight,
-        bottom: topHeight + PIPE_GAP,
-        width: PIPE_WIDTH,
-        special: ((state.pipes.length + 1) % 10 === 0), // каждая 10-я труба особая
-        passed: false,
-      };
-      state.pipes.push(pipe);
-    }
-
-    // Обновляем трубы и проверяем, прошла ли птица трубу
-    for (let i = 0; i < state.pipes.length; i++) {
-      state.pipes[i].x -= state.speed;
-      if (!state.pipes[i].passed && state.pipes[i].x + PIPE_WIDTH < state.bird.x) {
-        state.pipes[i].passed = true;
-        setScore(prev => prev + 1);
-        // Если пройдено кратное 10 препятствий, увеличиваем скорость
-        if ((score + 1) % 10 === 0) {
-          state.speed *= SPEED_MULTIPLIER;
-        }
-      }
-    }
-    // Удаляем трубы, ушедшие за экран
-    state.pipes = state.pipes.filter(pipe => pipe.x + pipe.width > 0);
-
-    // Проверка столкновений (с трубами)
-    for (let pipe of state.pipes) {
-      if (
-        state.bird.x + 20 > pipe.x &&
-        state.bird.x - 20 < pipe.x + pipe.width &&
-        (state.bird.y - 20 < pipe.top || state.bird.y + 20 > pipe.bottom)
-      ) {
-        setGameOver(true);
-      }
-    }
-    // Проверка столкновений с верхней границей и полом (здесь пол = FLOOR_HEIGHT)
-    if (state.bird.y + 20 > CANVAS_HEIGHT - FLOOR_HEIGHT || state.bird.y - 20 < 0) {
-      setGameOver(true);
-    }
-  };
-
-  // Рендеринг на canvas
-  const draw = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const state = gameStateRef.current;
-
-    // Очистка canvas
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    // Вместо отрисовки фонового изображения используем градиент:
-    const gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-    gradient.addColorStop(0, state.selectedGradient[0]); // Верхний цвет
-    gradient.addColorStop(0.5, state.selectedGradient[1]);   // Средний цвет
-    gradient.addColorStop(1, state.selectedGradient[2]);   // Нижний цвет
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-
-    const cloudsImg = new Image();
-    cloudsImg.src = cloudsUrl;
-    cloudsImg.onload = () => {
-      // Рисуем слои параллакса
-      // Облака (повторяются по горизонтали)
-      ctx.drawImage(cloudsImg, state.cloudsX, 0, CANVAS_WIDTH, 100);
-      ctx.drawImage(cloudsImg, state.cloudsX + CANVAS_WIDTH, 0, CANVAS_WIDTH, 100);
-    }
-
-    // Тёмные кусты
-    const bushesDarkImg = new Image();
-    bushesDarkImg.src = bushesDarkUrl;
-    bushesDarkImg.onload = () => {
-      ctx.drawImage(bushesDarkImg, state.bushesDarkX, CANVAS_HEIGHT - 200, CANVAS_WIDTH, 100);
-      ctx.drawImage(bushesDarkImg, state.bushesDarkX + CANVAS_WIDTH, CANVAS_HEIGHT - 200, CANVAS_WIDTH, 100);
-    }
-
-    // Светлые кусты
-    const bushesLightImg = new Image();
-    bushesLightImg.src = bushesLightUrl;
-    bushesLightImg.onload = () => {
-      ctx.drawImage(bushesLightImg, state.bushesLightX, CANVAS_HEIGHT - 150, CANVAS_WIDTH, 100);
-      ctx.drawImage(bushesLightImg, state.bushesLightX + CANVAS_WIDTH, CANVAS_HEIGHT - 150, CANVAS_WIDTH, 100);
-    }
-
-    // Рисуем трубы
-    for (let pipe of state.pipes) {
-      const pipeUrl = pipe.special ? pipeSpecialUrl : pipeDefaultUrl;
-      const pipeImg = new Image();
-      pipeImg.src = pipeUrl;
-      pipeImg.onload = () => {
-        // Труба сверху
-        ctx.drawImage(pipeImg, pipe.x, 0, pipe.width, pipe.top);
-        // Труба снизу (учитываем, что пол занимает FLOOR_HEIGHT пикселей)
-        ctx.drawImage(pipeImg, pipe.x, pipe.bottom, pipe.width, CANVAS_HEIGHT - pipe.bottom - FLOOR_HEIGHT);
-      }
-
-    }
-
-    // Рисуем пол: сначала движущуюся траву, затем статичную землю
-    const grassImg = new Image();
-    grassImg.src = grassUrl;
-    grassImg.onload = () => {
-      ctx.drawImage(grassImg, state.grassX, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, 30);
-      ctx.drawImage(grassImg, state.grassX + CANVAS_WIDTH, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, 30);
-    }
-    // ctx.drawImage(groundUrl, 0, CANVAS_HEIGHT - 20, CANVAS_WIDTH, 20);
-
-    // Рисуем птицу (корову) с учетом поворота
-    ctx.save();
-    ctx.translate(state.bird.x, state.bird.y);
-    ctx.rotate((state.bird.rotation * Math.PI) / 180);
-    const birdUrl = state.bird.currentFrame === 0 ? cowIdle : cowPressed;
-    const birdImg = new Image();
-    birdImg.src = birdUrl;
-    birdImg.onload = () => {
-      ctx.drawImage(birdImg, -20, -20, 40, 40);
-    }
-    ctx.restore();
-
-    // Рисуем лучший результат (левый верхний угол: отступ 15px слева, 11px сверху)
-    ctx.fillStyle = '#000';
-    ctx.font = '16px Arial';
-    ctx.fillText(`лучший результат: ${bestScore}`, 15, 11 + 16);
-
-    // Рисуем текущий счёт (по центру, отступ сверху 44px)
-    const scoreText = score.toString();
-    const textWidth = ctx.measureText(scoreText).width;
-    ctx.fillText(scoreText, (CANVAS_WIDTH - textWidth) / 2, 44);
-  };
-
-  // Обработчики для компонента GameOver
-  const handleRestart = () => {
-    resetGame();
-    setGameOver(false);
+    updateLogic();
+    drawScene();
     animationIdRef.current = requestAnimationFrame(gameLoop);
   };
 
+  // Обновление логики игры
+  const updateLogic = () => {
+    const st = gameStateRef.current;
+    st.frame++;
+
+    // Позиции параллакса
+    st.cloudsX -= st.speed * PARALLAX_CLOUDS;
+    st.bushesDarkX -= st.speed * PARALLAX_BUSHES_DARK;
+    st.bushesLightX -= st.speed * PARALLAX_BUSHES_LIGHT;
+    st.grassX -= st.speed * PARALLAX_GRASS;
+
+    if (st.cloudsX <= -BASE_WIDTH) st.cloudsX += BASE_WIDTH;
+    if (st.bushesDarkX <= -BASE_WIDTH) st.bushesDarkX += BASE_WIDTH;
+    if (st.bushesLightX <= -BASE_WIDTH) st.bushesLightX += BASE_WIDTH;
+    if (st.grassX <= -BASE_WIDTH) st.grassX += BASE_WIDTH;
+
+    // Физика птицы (коровы)
+    st.bird.velocity += GRAVITY;
+    st.bird.y += st.bird.velocity;
+    if (st.bird.velocity > 0) {
+      st.bird.rotation = Math.min(FALL_ANGLE, st.bird.rotation + 2);
+    } else {
+      st.bird.rotation = -15;
+    }
+
+    // Анимация спрайтов
+    st.bird.frameCounter++;
+    const frameDelay = st.bird.velocity > 2 ? 3 : 5;
+    if (st.bird.frameCounter >= frameDelay) {
+      st.bird.currentFrame = (st.bird.currentFrame + 1) % 2;
+      st.bird.frameCounter = 0;
+    }
+
+    // Генерация труб
+    if (st.frame % PIPE_INTERVAL === 0) {
+      st.pipeCount++;
+      const topHeight = Math.floor(Math.random() * (MAX_TOP - MIN_TOP)) + MIN_TOP;
+      st.pipes.push({
+        x: BASE_WIDTH,
+        top: topHeight,
+        bottom: topHeight + PIPE_GAP,
+        width: PIPE_WIDTH,
+        special: (st.pipeCount % 10 === 0),
+        passed: false,
+      });
+    }
+
+    // Движение труб и увеличение счета
+    for (let pipe of st.pipes) {
+      pipe.x -= st.speed;
+      if (!pipe.passed && pipe.x + PIPE_WIDTH < st.bird.x) {
+        pipe.passed = true;
+        setScore(prev => prev + 1);
+        if ((score + 1) % 10 === 0) {
+          st.speed *= SPEED_MULTIPLIER;
+        }
+      }
+    }
+    st.pipes = st.pipes.filter(pipe => pipe.x + pipe.width > 0);
+
+    // Проверка столкновений с трубами
+    for (let pipe of st.pipes) {
+      if (
+        st.bird.x + 20 > pipe.x &&
+        st.bird.x - 20 < pipe.x + pipe.width &&
+        (st.bird.y - 20 < pipe.top || st.bird.y + 20 > pipe.bottom)
+      ) {
+        handleGameOver();
+        return;
+      }
+    }
+    // Проверка столкновений с верхней/нижней границей
+    if (st.bird.y - 40 < 0 || st.bird.y + 40 > BASE_HEIGHT - FLOOR_HEIGHT) {
+      handleGameOver();
+      return;
+    }
+  };
+
+  // Остановка игры
+  const handleGameOver = () => {
+    const st = gameStateRef.current;
+    st.isGameOver = true;
+    setGameOver(true);
+    cancelAnimationFrame(animationIdRef.current);
+  };
+
+  // Рендер сцены
+  const drawScene = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Масштабируем по реальным размерам (сохраняя пропорции)
+    const scaleX = canvas.width / BASE_WIDTH;
+    const scaleY = canvas.height / BASE_HEIGHT;
+    ctx.save();
+    ctx.scale(scaleX, scaleY);
+
+    const st = gameStateRef.current;
+    ctx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+
+    // Рисуем фон как градиент
+    const gradient = ctx.createLinearGradient(0, 0, 0, BASE_HEIGHT);
+    gradient.addColorStop(0, st.selectedGradient[0]);
+    gradient.addColorStop(0.5, st.selectedGradient[1]);
+    gradient.addColorStop(1, st.selectedGradient[2]);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+
+    // Рисуем параллакс-слои (облака, кусты)
+    if (imagesRef.current.clouds) {
+      ctx.drawImage(imagesRef.current.clouds, st.cloudsX, BASE_HEIGHT - FLOOR_HEIGHT - 237, BASE_WIDTH, 387);
+      ctx.drawImage(imagesRef.current.clouds, st.cloudsX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT - 237, BASE_WIDTH, 387);
+    }
+    if (imagesRef.current.bushesDark) {
+      ctx.drawImage(imagesRef.current.bushesDark, st.bushesDarkX, BASE_HEIGHT - FLOOR_HEIGHT - 78, BASE_WIDTH, 228);
+      ctx.drawImage(imagesRef.current.bushesDark, st.bushesDarkX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT - 78, BASE_WIDTH, 228);
+    }
+    if (imagesRef.current.bushesLight) {
+      ctx.drawImage(imagesRef.current.bushesLight, st.bushesLightX, BASE_HEIGHT - FLOOR_HEIGHT - 52, BASE_WIDTH, 202);
+      ctx.drawImage(imagesRef.current.bushesLight, st.bushesLightX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT - 52, BASE_WIDTH, 202);
+    }
+
+    // Рисуем трубы без изменения их высоты – просто смещаем по вертикали:
+    for (let pipe of st.pipes) {
+      const pipeImg = pipe.special ? imagesRef.current.pipeSpecial : imagesRef.current.pipeDefault;
+      if (!pipeImg) continue;
+      // Вычисляем естественную высоту трубы при масштабировании до PIPE_WIDTH,
+      // сохраняя соотношение сторон изображения.
+      const pipeH = PIPE_WIDTH * (pipeImg.naturalHeight / pipeImg.naturalWidth);
+      // Верхняя труба: переводим координаты так, чтобы нижний край трубы совпадал с pipe.top
+      ctx.save();
+      ctx.translate(pipe.x, pipe.top);
+      ctx.scale(1, -1);
+      // Рисуем верхнюю трубу с высотой pipeH (без масштабирования до pipe.top)
+      ctx.drawImage(pipeImg, 0, -pipeH, pipe.width, pipeH);
+      ctx.restore();
+
+      // Нижняя труба: рисуем так, чтобы верхний край совпадал с pipe.bottom
+      ctx.drawImage(pipeImg, pipe.x, pipe.bottom, pipe.width, pipeH);
+    }
+
+    // Рисуем пол (движущаяся трава)
+    if (imagesRef.current.grass) {
+      ctx.drawImage(imagesRef.current.grass, st.grassX, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 30);
+      ctx.drawImage(imagesRef.current.grass, st.grassX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 30);
+    }
+
+    // Рисуем птицу (корова) с поворотом
+    ctx.save();
+    ctx.translate(st.bird.x, st.bird.y);
+    ctx.rotate((st.bird.rotation * Math.PI) / 180);
+    const birdImg = st.bird.currentFrame === 0 ? imagesRef.current.cowIdle : imagesRef.current.cowPressed;
+    if (birdImg) {
+      // Чтобы изменить размеры персонажа, измените аргументы: здесь (-50, -40, 100, 80)
+      ctx.drawImage(birdImg, -50, -40, 100, 80);
+    }
+    ctx.restore();
+
+    ctx.restore();
+  };
+
+  // Обработчики кнопок GameOver
+  const handleRestart = () => {
+    resetGame();
+    requestAnimationFrame(gameLoop);
+  };
   const handleExit = () => {
-    // Здесь можно добавить навигацию в главное меню. Пока просто перезагружаем страницу.
     window.location.reload();
   };
 
   return (
     <div className="game-container">
-      <canvas
-        ref={canvasRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        className="game-canvas"
-      />
-      {gameOver && <GameOver score={score} onRestart={handleRestart} onExit={handleExit} />}
+      <div className="best-score">лучший результат: {bestScore}</div>
+      <div className="current-score">{score}</div>
+      <canvas ref={canvasRef} className="game-canvas" />
+      {gameOver && (
+        <GameOver
+          score={score}
+          onRestart={handleRestart}
+          onExit={handleExit}
+        />
+      )}
     </div>
   );
 };

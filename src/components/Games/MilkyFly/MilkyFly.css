@@ -1,11 +1,47 @@
 .game-container {
-    position: relative;
-    width: 400px;
-    height: 600px;
-    margin: 0 auto;
-    border: 1px solid #000;
+  position: relative;
+  width: 100%;
+  max-width: 428px;
+  /* Можно менять под нужный максимум */
+  margin: 0 auto;
 }
 
 .game-canvas {
-    display: block;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.best-score {
+  font-family: 'Roboto Mono', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  vertical-align: middle;
+
+  color: white;
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  font-size: 16px;
+  z-index: 10;
+}
+
+.current-score {
+  font-family: 'Roboto Mono', sans-serif;
+  font-weight: 500;
+  font-size: 48px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  text-align: center;
+  vertical-align: middle;
+
+  color: white;
+  position: absolute;
+  top: 44px;
+  width: 100%;
+  text-align: center;
+  font-size: 24px;
+  z-index: 10;
 }

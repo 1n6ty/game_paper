@@ -19,7 +19,6 @@ const Game = () => {
 
   return (
     <div className="game-window">
-      <button onClick={() => navigate(-1)}>Закрыть игру</button>
       {gameComponent}
     </div>
   );
