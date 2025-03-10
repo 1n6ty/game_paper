@@ -18,7 +18,7 @@ const cowPressed = '/games/milkyFly/cowPressed.svg';
 const MilkyFly = () => {
   // ====== Константы для "виртуальной" логики ======
   const BASE_WIDTH = 428; // Исходная ширина для расчётов
-  const BASE_HEIGHT = 809; // Исходная высота для расчётов
+  const BASE_HEIGHT = 700; // Исходная высота для расчётов
 
   // ====== Параметры игры ======
   const INITIAL_SPEED = 2;                // Начальная скорость
@@ -34,11 +34,11 @@ const MilkyFly = () => {
   const PIPE_GAP = 150;
   const PIPE_WIDTH = 66;
   const PIPE_INTERVAL = 120;
-  const FLOOR_HEIGHT = 140;
+  const FLOOR_HEIGHT = 100;
 
   // Ограничения для случайного появления труб
-  const MIN_TOP = FLOOR_HEIGHT + 20;  // трубы не будут появляться слишком низко
-  const MAX_TOP = 500;                // и не слишком высоко
+  const MIN_TOP = 0;  // трубы не будут появляться слишком низко
+  const MAX_TOP = 400;                // и не слишком высоко
 
   // Массив градиентов: каждый — массив из 3-х цветов (верх, середина, низ)
   const GRADIENTS = [
@@ -171,7 +171,7 @@ const MilkyFly = () => {
     st.isGameOver = false;
   };
 
-  // Адаптивный размер canvas
+  // Адаптивный размер canvas (подгоняется под родительский контейнер, сохраняя соотношение BASE_WIDTH/BASE_HEIGHT)
   useEffect(() => {
     function resizeCanvas() {
       const canvas = canvasRef.current;
@@ -285,13 +285,13 @@ const MilkyFly = () => {
     cancelAnimationFrame(animationIdRef.current);
   };
 
-  // Рендер сцены
+  // Рендеринг сцены
   const drawScene = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Масштабируем по реальным размерам (сохраняя пропорции)
+    // Масштабирование для адаптивности
     const scaleX = canvas.width / BASE_WIDTH;
     const scaleY = canvas.height / BASE_HEIGHT;
     ctx.save();
@@ -322,38 +322,39 @@ const MilkyFly = () => {
       ctx.drawImage(imagesRef.current.bushesLight, st.bushesLightX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT - 52, BASE_WIDTH, 202);
     }
 
-    // Рисуем трубы без изменения их высоты – просто смещаем по вертикали:
+    // Рисуем трубы без изменения их высоты – просто смещаем их по вертикали.
+    // Вводим константу PIPE_SHIFT для смещения (в пикселях).
     for (let pipe of st.pipes) {
       const pipeImg = pipe.special ? imagesRef.current.pipeSpecial : imagesRef.current.pipeDefault;
       if (!pipeImg) continue;
-      // Вычисляем естественную высоту трубы при масштабировании до PIPE_WIDTH,
-      // сохраняя соотношение сторон изображения.
-      const pipeH = PIPE_WIDTH * (pipeImg.naturalHeight / pipeImg.naturalWidth);
-      // Верхняя труба: переводим координаты так, чтобы нижний край трубы совпадал с pipe.top
+      // Вычисляем масштабированную высоту трубы (сохраняя пропорции)
+      const scaledPipeHeight = PIPE_WIDTH * (pipeImg.naturalHeight / pipeImg.naturalWidth);
+      const PIPE_SHIFT = 20; // Смещение для отделения труб по вертикали
+
+      // Верхняя труба: переворачиваем по вертикали и смещаем вверх
       ctx.save();
-      ctx.translate(pipe.x, pipe.top);
+      ctx.translate(pipe.x, pipe.top - PIPE_SHIFT);
       ctx.scale(1, -1);
-      // Рисуем верхнюю трубу с высотой pipeH (без масштабирования до pipe.top)
-      ctx.drawImage(pipeImg, 0, -pipeH, pipe.width, pipeH);
+      ctx.drawImage(pipeImg, 0, 0, pipe.width, scaledPipeHeight);
       ctx.restore();
 
-      // Нижняя труба: рисуем так, чтобы верхний край совпадал с pipe.bottom
-      ctx.drawImage(pipeImg, pipe.x, pipe.bottom, pipe.width, pipeH);
+      // Нижняя труба: смещаем вниз
+      ctx.drawImage(pipeImg, pipe.x, pipe.bottom + PIPE_SHIFT, pipe.width, scaledPipeHeight);
     }
 
     // Рисуем пол (движущаяся трава)
     if (imagesRef.current.grass) {
-      ctx.drawImage(imagesRef.current.grass, st.grassX, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 30);
-      ctx.drawImage(imagesRef.current.grass, st.grassX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 30);
+      ctx.drawImage(imagesRef.current.grass, st.grassX, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 103);
+      ctx.drawImage(imagesRef.current.grass, st.grassX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 103);
     }
 
-    // Рисуем птицу (корова) с поворотом
+    // Рисуем птицу (корова) с учётом поворота
     ctx.save();
     ctx.translate(st.bird.x, st.bird.y);
     ctx.rotate((st.bird.rotation * Math.PI) / 180);
     const birdImg = st.bird.currentFrame === 0 ? imagesRef.current.cowIdle : imagesRef.current.cowPressed;
     if (birdImg) {
-      // Чтобы изменить размеры персонажа, измените аргументы: здесь (-50, -40, 100, 80)
+      // Чтобы изменить размеры персонажа, измените параметры здесь: (-50, -40, 100, 80)
       ctx.drawImage(birdImg, -50, -40, 100, 80);
     }
     ctx.restore();
@@ -361,7 +362,7 @@ const MilkyFly = () => {
     ctx.restore();
   };
 
-  // Обработчики кнопок GameOver
+  // Обработчики для компонента GameOver
   const handleRestart = () => {
     resetGame();
     requestAnimationFrame(gameLoop);
