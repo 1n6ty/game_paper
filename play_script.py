@@ -2,7 +2,7 @@ import numpy as np
 
 def init(perpetual: dict, tmp: dict) -> tuple[dict, dict, dict]:
     """
-        Function to init game
+        Function to init game on server and sends tmp back to client to init game there
 
         Parameters
         ----------
@@ -11,21 +11,17 @@ def init(perpetual: dict, tmp: dict) -> tuple[dict, dict, dict]:
             \n
             tmp
                 Storage of temporary data for a concrete session of a game
-            \n
-        Returns `tuple[dict_1, dict_2, dict_3]`
+            
+        Returns `tuple[dict_1, dict_2]`
         --------
             dict_1
                 Always Perpetual dict
             \n
             dict_2
                 Always Tmp dict
-            \n
-            dict_3
-                Painting data, neccesary for draw-script on client
     """
-    draw_dict: dict = {}
 
-    return (perpetual, tmp, draw_dict)
+    return (perpetual, tmp)
 
 def finish(perpetual: dict, tmp: dict, moves: dict) -> tuple[dict, int]:
     """

@@ -39,7 +39,7 @@ def init_game(req: Request):
     tmp: dict = REDIS.hgetall(f'{nick}:tmp')
 
     try:
-        [new_perpetual, new_tmp, draw_dict] = game_module.init(perpetual, tmp)
+        [new_perpetual, new_tmp] = game_module.init(perpetual, tmp)
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
     
@@ -47,7 +47,7 @@ def init_game(req: Request):
     REDIS.hmset(f'{nick}:tmp', new_tmp)
 
     return {
-        "draw": draw_dict
+        "init": new_tmp
     }
 
 @app.post("/score/")
