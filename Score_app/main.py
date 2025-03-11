@@ -18,7 +18,7 @@ def clear_old_data() -> None:
     Timer(float(os.getenv("CLEAR_TIME")), clear_old_data).start()
 clear_old_data()
 
-@app.post("gameinit")
+@app.post("/gameinit/")
 def init_game(req: Request):
     params: dict = dict(req.query_params)
 
@@ -39,7 +39,7 @@ def init_game(req: Request):
     tmp: dict = REDIS.hgetall(f'{nick}:tmp')
 
     try:
-        [new_perpetual, new_tmp] = game_module.init(perpetual, tmp)
+        [new_perpetual, new_tmp, init_data] = game_module.init(perpetual, tmp)
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
     
@@ -47,11 +47,11 @@ def init_game(req: Request):
     REDIS.hmset(f'{nick}:tmp', new_tmp)
 
     return {
-        "init": new_tmp
+        "init": init_data
     }
 
-@app.post("/score/")
-def get_score(req: Request):
+@app.post("/gamefinish/")
+def finish_game(req: Request):
     params: dict = dict(req.query_params)
 
     nick: str | None = params.get("nick", None)
@@ -69,10 +69,10 @@ def get_score(req: Request):
     
     perpetual: dict = REDIS.hgetall(f'{nick}:{str(game_name)}:perpetual')
     tmp: dict = REDIS.hgetall(f'{nick}:tmp')
-    move_dict: dict = {k: v for k, v in params.items() if not (k in ["game_name", "nick"])}
+    game_data: dict = {k: v for k, v in params.items() if not (k in ["game_name", "nick"])}
 
     try:
-        [new_perpetual, score] = game_module.finish(perpetual, tmp, move_dict)
+        [new_perpetual, score] = game_module.finish(perpetual, tmp, game_data)
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
 

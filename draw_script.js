@@ -36,6 +36,7 @@ function proceed(canvas, tmp, finish_func){
             \n
             finish_func:
                 Function to finish game session and send tmp data to server
+                This Function has (game_data) in arguments list
         
         Returns Object
         -------

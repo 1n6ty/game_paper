@@ -46,7 +46,7 @@ class Game {
         );
     }
 
-    finish(){
+    finish(game_data){
         clearInterval(this.#timeInterval);
         fetch('/move/', {
             method: "POST",
@@ -54,7 +54,7 @@ class Game {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(this.#tmp)
+            body: JSON.stringify(game_data)
         }).then((response) => {
             response.json().then(
                 (response_json) => {

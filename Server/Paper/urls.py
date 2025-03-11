@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 
 from .views.index import index
-from .views.games import get_game_links, get_score, proceed_moves, init_game
+from .views.games import get_game_links, get_score, finish_game, init_game
 
 # For debug purpose
 from django.conf import settings
@@ -29,6 +29,6 @@ urlpatterns = [
     path('', index, name="index"), # home page
     path('gamelinks/', get_game_links, name="gamelinks"), # games' links getter
     path('score/', get_score, name="score_get"), # score getter
-    path('move/', proceed_moves, name="proceed_moves"), # Game process handler
+    path('gamefinish/', finish_game, name="finish_game"), # Game process handler
     path('gameinit/', init_game, name="init_game"), # Game initiator
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) # TODO Remove debug

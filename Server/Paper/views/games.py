@@ -6,7 +6,6 @@ from django.db.models.manager import BaseManager
 from ..models import Game, User
 
 import requests
-import os
 import hashlib
 
 def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
@@ -72,7 +71,7 @@ def init_game(req: HttpRequest) -> None:
         settings.REDIS.set(f'{nick}:game', game_obj.play_script)
 
         response: requests.Response = requests.post(
-            'score_app:8080/init/',
+            'score_app:8080/gameinit/',
             data=dict(req.POST)
         )
 
@@ -81,9 +80,9 @@ def init_game(req: HttpRequest) -> None:
         )
     return HttpResponse(status=400)
 
-def proceed_moves(req: HttpRequest) -> HttpResponse | JsonResponse:
+def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
     """
-        Proceed gamming moves
+        Checks whether the game was played correctly and compute score
     """
     if req.method == 'POST':
         nick: str | None = req.POST.get("nick", None)
@@ -102,7 +101,7 @@ def proceed_moves(req: HttpRequest) -> HttpResponse | JsonResponse:
         game_obj: Game = game_obj[0]
 
         response: requests.Response = requests.post(
-            'score_app:8080/score/',
+            'score_app:8080/gamefinish/',
             data={**dict(req.POST), "game_name": game_obj.name}
         )
 
