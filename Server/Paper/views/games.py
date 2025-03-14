@@ -5,8 +5,12 @@ from django.conf import settings
 from django.db.models.manager import BaseManager
 from ..models import Game, User
 
-import requests
+from requests import Session, Response
 import hashlib
+import json
+
+request_session = Session()
+request_session.trust_env = False
 
 def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
     """
@@ -39,7 +43,7 @@ def get_game_links(req: HttpRequest) -> JsonResponse | HttpResponse:
 
         return JsonResponse(
             {
-                g.name: g.paint_script for g in games
+                g.name: g.paint_script.name for g in games
             }
         )
     return HttpResponse(status=400)
@@ -49,14 +53,16 @@ def init_game(req: HttpRequest) -> None:
      Inits game session for user on server side
     """
     if req.method == "POST":
-        nick: str | None = req.POST.get("nick", None)
-        game_name: str | None = req.POST.get("game_name", None)
+        data: dict = json.loads(req.body)
+
+        nick: str | None = data.get("nick", None)
+        game_name: str | None = data.get("game_name", None)
         if nick == None or game_name == None:
             return HttpResponse(status=400)
         nick = hashlib.sha256(nick.encode('utf-8')).hexdigest()
 
         usr_obj: BaseManager[User] = User.objects.filter(nick=nick)
-        game_obj: BaseManager[Game] = Game.objects.filter(pk=game_name)
+        game_obj: BaseManager[Game] = Game.objects.filter(name=game_name)
         if not (usr_obj.exists() and game_obj.exists()):
             return HttpResponse(status=401)
         usr_obj: User = usr_obj[0]
@@ -68,13 +74,14 @@ def init_game(req: HttpRequest) -> None:
         usr_obj.score -= game_obj.cost
         usr_obj.save()
 
-        settings.REDIS.set(f'{nick}:game', game_obj.play_script)
+        settings.REDIS.set(f'{nick}:game', game_obj.play_script.name)
 
-        response: requests.Response = requests.post(
-            'score_app:8080/gameinit/',
-            data=dict(req.POST)
+        data["nick"] = nick
+        response: Response = request_session.post(
+            'http://score_app:8080/gameinit/',
+            json=data
         )
-
+        
         return JsonResponse(
             response.json()
         )
@@ -85,7 +92,9 @@ def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
         Checks whether the game was played correctly and compute score
     """
     if req.method == 'POST':
-        nick: str | None = req.POST.get("nick", None)
+        data: dict = json.loads(req.body)
+
+        nick: str | None = data.get("nick", None)
         if nick == None:
             return HttpResponse(status=400)
         nick = hashlib.sha256(nick.encode('utf-8')).hexdigest()
@@ -94,18 +103,25 @@ def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
         if game_file == None:
             return HttpResponse(status=401)
 
-        game_obj: BaseManager[Game] = Game.objects.filter(play_script=game_file)
+        game_obj: BaseManager[Game] = Game.objects.filter(play_script__contains=game_file)
         usr_obj: BaseManager[User] = User.objects.filter(nick=nick)
         if not (usr_obj.exists() and game_obj.exists()):
             return HttpResponse(status=401)
         game_obj: Game = game_obj[0]
+        usr_obj: User = usr_obj[0]
 
-        response: requests.Response = requests.post(
-            'score_app:8080/gamefinish/',
-            data={**dict(req.POST), "game_name": game_obj.name}
+        data["nick"] = nick
+        response: Response = request_session.post(
+            'http://score_app:8080/gamefinish/',
+            json={**data, "game_name": game_obj.name}
         )
 
+        response_json = response.json()
+
+        usr_obj.score += response_json["score"]
+        usr_obj.save()
+
         return JsonResponse(
-            response.json()
+            response_json
         )
     return HttpRequest(status=400)

@@ -1,75 +1,86 @@
 class Game {
     #tmp = {};
-    #canBeStarted = false;
     #timeInterval = -1;
     #module = Object();
+    onModuleLoad = () => {};
+    frame_rate = 60;
 
-    constructor(canvas, nick, game_name, draw_script_file_url, frame_rate){
+    constructor(canvas, nick, game_name, draw_script_file_url){
         this.canvas = canvas;
         this.nick = nick;
-        this.frame_rate = frame_rate;
-
+        this.game_name = game_name;
+        this.draw_script_file_url = draw_script_file_url;
+        
+        if(document.cookie && document.cookie !== ''){
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken=')) {
+                    this.csrf_cookie = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
         import(/* webpackIgnore: true */ draw_script_file_url).then(
             (obj) => {
                 this.#module = obj;
-                // Game init
-                fetch("/gameinit/", {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        game_name: game_name,
-                        nick: nick
-                    })
-                }).then(
-                    (response) => {
-                        response.json().then(
-                            (init_game_data) => {
-                                this.#tmp = this.#module.init(canvas, init_game_data, this.#tmp);
-                                if(this.#canBeStarted) this.#timeInterval = setInterval(this.#game, Math.floor(60 / frame_rate) * 1000);
-                                this.#canBeStarted = true;
-                            }
-                        )
-                    } 
-                ).catch(
-                    () => {
-                        console.error("Game init error");
-                    }
-                );
+                onModuleLoad();
             }
         ).catch(
-            () => {
-                console.error("Draw script load error");
+            (reason) => {
+                console.error("Draw script load error with " + reason);
             }
         );
     }
 
-    finish(game_data){
-        clearInterval(this.#timeInterval);
-        fetch('/move/', {
+    start(){
+        let finish = (game_data) => {
+            clearInterval(this.#timeInterval);
+            game_data.nick = this.nick;
+            fetch('/gamefinish/', {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(game_data)
+            }).then((response) => {
+                response.json().then(
+                    (response_json) => {
+                        this.#module.finish(this.canvas, this.#tmp, response_json.score);
+                    }
+                )
+            });
+        },
+        game = () => {
+            this.#tmp = this.#module.proceed(this.canvas, this.#tmp, finish);
+        };
+
+        fetch("/gameinit/", {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
             },
-            body: JSON.stringify(game_data)
-        }).then((response) => {
-            response.json().then(
-                (response_json) => {
-                    this.#module.finish(this.canvas, this.#tmp, response_json.score);
-                }
-            )
-        });
-    }
-
-    start(){
-        if(this.#canBeStarted) this.#timeInterval = setInterval(this.#game, Math.floor(60 / frame_rate) * 1000);
-        this.#canBeStarted = true;
-    }
-    
-    #game(){
-        this.#tmp = this.#module.proceed(this.canvas, this.#tmp, this.finish);
+            body: JSON.stringify({
+                game_name: this.game_name,
+                nick: this.nick
+            })
+        }).then(
+            (response) => {
+                response.json().then(
+                    (init_game_data) => {
+                        this.#tmp = this.#module.init(canvas, init_game_data.init, this.#tmp);
+                        this.#timeInterval = setInterval(game, Math.floor(1 / this.frame_rate) * 1000);
+                    }
+                )
+            } 
+        ).catch(
+            (reason) => {
+                console.error("Game init error with" + reason);
+            }
+        );
     }
 }

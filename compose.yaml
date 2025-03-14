@@ -6,8 +6,8 @@ services:
       - SITE_HOST=${SITE_HOST}
       - MYSQL_DB_USER=${MYSQL_DB_USER}
       - MYSQL_DB_PASSWORD=${MYSQL_DB_PASSWORD}
-    links:
-      - mysql:mysql
+    networks:
+      - web
     depends_on:
       mysql:
         condition: service_healthy
@@ -17,8 +17,10 @@ services:
     environment:
       - DATA_LIFE_TIME=${DATA_LIFE_TIME}
       - CLEAR_TIME=${CLEAR_TIME}
-    links:
-      - redis:redis
+    networks:
+      - web
+    expose:
+      - 8080
     depends_on:
       redis:
         condition: service_healthy
@@ -29,10 +31,8 @@ services:
     build: ./Server
     ports:
       - 8080:8080
-    links:
-      - redis:redis
-      - mysql:mysql
-      - score_app:score_app
+    networks:
+      - web
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - MYSQL_DB_USER=${MYSQL_DB_USER}
@@ -47,6 +47,8 @@ services:
     
   redis:
     image: redis
+    networks:
+      - web
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       timeout: 20s
@@ -54,6 +56,8 @@ services:
   
   mysql:
     image: mysql
+    networks:
+      - web
     environment:
       MYSQL_DATABASE: "Paperdb"
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -63,3 +67,7 @@ services:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+
+networks:
+  web:
+    driver: bridge

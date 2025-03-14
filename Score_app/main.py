@@ -1,4 +1,5 @@
 import os
+import json
 from fastapi import FastAPI, HTTPException, Request
 
 from importlib import import_module
@@ -6,6 +7,7 @@ import redis
 
 from threading import Timer
 
+BASE_GAMES = 'games/'
 REDIS = redis.StrictRedis(host='redis', port=6379, decode_responses=True, db=0)
 
 app = FastAPI()
@@ -19,9 +21,8 @@ def clear_old_data() -> None:
 clear_old_data()
 
 @app.post("/gameinit/")
-def init_game(req: Request):
-    params: dict = dict(req.query_params)
-
+async def init_game(req: Request):
+    params: dict = await req.json()
     nick: str | None = params.get("nick", None)
     game_name: str | None = params.get("game_name", None)
     if nick == None or game_name == None:
@@ -30,30 +31,34 @@ def init_game(req: Request):
     game_file = REDIS.get(f"{nick}:game")
     try:
         game_module = import_module(
-            str(game_file).replace('.py', '').replace('/', '.')
+            str(BASE_GAMES + game_file).replace('.py', '').replace('/', '.')
         )
     except Exception:
         raise HTTPException(status_code=400, detail='incorrect gamefile')
     
-    perpetual: dict = REDIS.hgetall(f'{nick}:{str(game_name)}:perpetual')
-    tmp: dict = REDIS.hgetall(f'{nick}:tmp')
+    perpetual: str | None = REDIS.get(f'{nick}:{str(game_name)}:perpetual')
+    perpetual: str = perpetual if perpetual else "{}"
+    perpetual: dict = json.loads(perpetual)
+    
+    tmp: str | None = REDIS.get(f'{nick}:tmp')
+    tmp: str = tmp if tmp else "{}"
+    tmp: dict = json.loads(tmp)
 
     try:
         [new_perpetual, new_tmp, init_data] = game_module.init(perpetual, tmp)
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
     
-    REDIS.hmset(f'{nick}:{str(game_name)}:perpetual', new_perpetual)
-    REDIS.hmset(f'{nick}:tmp', new_tmp)
+    REDIS.set(f'{nick}:{str(game_name)}:perpetual', json.dumps(new_perpetual))
+    REDIS.set(f'{nick}:tmp', json.dumps(new_tmp))
 
     return {
         "init": init_data
     }
 
 @app.post("/gamefinish/")
-def finish_game(req: Request):
-    params: dict = dict(req.query_params)
-
+async def finish_game(req: Request):
+    params: dict = await req.json()
     nick: str | None = params.get("nick", None)
     game_name: str | None = params.get("game_name", None)
     if nick == None or game_name == None:
@@ -62,13 +67,19 @@ def finish_game(req: Request):
     game_file = REDIS.get(f"{nick}:game")
     try:
         game_module = import_module(
-            str(game_file).replace('.py', '').replace('/', '.')
+            str(BASE_GAMES + game_file).replace('.py', '').replace('/', '.')
         )
     except Exception:
         raise HTTPException(status_code=400, detail='incorrect gamefile')
     
-    perpetual: dict = REDIS.hgetall(f'{nick}:{str(game_name)}:perpetual')
-    tmp: dict = REDIS.hgetall(f'{nick}:tmp')
+    perpetual: str | None = REDIS.get(f'{nick}:{str(game_name)}:perpetual')
+    perpetual: str = perpetual if perpetual else "{}"
+    perpetual: dict = json.loads(perpetual)
+    
+    tmp: str | None = REDIS.get(f'{nick}:tmp')
+    tmp: str = tmp if tmp else "{}"
+    tmp: dict = json.loads(tmp)
+
     game_data: dict = {k: v for k, v in params.items() if not (k in ["game_name", "nick"])}
 
     try:
@@ -76,7 +87,7 @@ def finish_game(req: Request):
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
 
-    REDIS.hmset(f'{nick}:{str(game_name)}:perpetual', new_perpetual)
+    REDIS.set(f'{nick}:{str(game_name)}:perpetual', json.dumps(new_perpetual))
     REDIS.delete(f'{nick}:game')
 
     return {
