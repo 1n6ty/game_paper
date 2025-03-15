@@ -6,13 +6,14 @@ import svgr from 'vite-plugin-svgr'
 export default defineConfig({
   server: {
     host: '0.0.0.0',
+    allowedHosts: ['silly-trams-spend.loca.lt'],
   },
   base: '/',
   build: {
     // Вывод сборки будет в папку "static"
     // outDir: 'static',
     // Убираем вложенную папку для ассетов, чтобы все файлы (js, css, изображения) оказались прямо в "static"
-    assetsDir: ''
+    assetsDir: 'static'
   },
   plugins: [react(), svgr({
     svgrOptions: {

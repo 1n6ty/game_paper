@@ -3,6 +3,7 @@ import './Scanner.css';
 
 const Scanner = () => {
   const videoRef = useRef(null);
+  const streamRef = useRef(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -11,6 +12,7 @@ const Scanner = () => {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" }
         });
+        streamRef.current = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
@@ -23,11 +25,13 @@ const Scanner = () => {
     startCamera();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
-        videoRef.current.srcObject = null;
+      if (streamRef.current) {
+        const tracks = streamRef.current.getTracks();
+        tracks.forEach(track => {
+          console.log("Останавливаю трек", track);
+          track.stop();
+        });
+        streamRef.current = null;
       }
     };
   }, []);
