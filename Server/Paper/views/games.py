@@ -119,8 +119,9 @@ def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
 
         response_json = response.json()
 
-        usr_obj.score += response_json["score"]
-        usr_obj.save()
+        if "score" in response_json:
+            usr_obj.score += response_json["score"]
+            usr_obj.save()
 
         return JsonResponse(
             response_json

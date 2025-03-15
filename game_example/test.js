@@ -1,6 +1,25 @@
 var mousedown; // Переменная ивента нажатия на кнопку мыши
 
 function init(canvas, init_game_data, tmp){
+    /*
+        Function to init game session
+
+        Parameters
+        ----------
+            canvas:
+                Object of canvas to draw on
+            \n
+            init_game_data:
+                Data from server
+            \n
+            tmp:
+                Temporary storage for game session
+        
+        Returns Object
+        -------
+            tmp:
+                Temporary storage for game session
+    */
     var ctx = canvas.getContext('2d'); // Контекст канваса
     
     tmp.position = [parseInt(init_game_data.pos[0]), parseInt(init_game_data.pos[0])]; // Получение данных инициализации с сервера
@@ -51,9 +70,9 @@ function proceed(canvas, tmp, finish_func = (game_data) => {}){
     return tmp;
 }
 
-function finish(canvas, tmp, score){
+function finish(canvas, tmp){
     /*
-        Function to draw finish window, deinit canvas and output some statistics
+        Function to deinit game session
 
         Parameters
         ----------
@@ -69,9 +88,6 @@ function finish(canvas, tmp, score){
         Returns None
         -------
     */
-
-    var ctx = canvas.getContext('2d');
-    ctx.fillText(`Finish game with score ${score}`, 10, 50); // Вывод итоговых очков после проверки сервером
 
     canvas.removeEventListener("mousedown", mousedown); // Deinit
 }

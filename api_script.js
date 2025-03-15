@@ -3,7 +3,8 @@ class Game {
     #secret_key = "";
     #timeInterval = -1;
     #module = Object();
-    frame_rate = 60;
+    #frame_rate = 60;
+    #onFinish = () => {}
 
     constructor(canvas, nick, game_name, draw_script_file_url, onModuleLoad = () => {}){
         this.canvas = canvas;
@@ -34,6 +35,13 @@ class Game {
         );
     }
 
+    set frame_rate(rate){
+        this.#frame_rate = rate;
+    }
+    set onFinish(method = (canvas, tmp, score) => {}){
+        this.#onFinish = method;
+    }
+
     start(){
         let finish = (game_data) => {
             clearInterval(this.#timeInterval);
@@ -50,7 +58,8 @@ class Game {
             }).then((response) => {
                 response.json().then(
                     (response_json) => {
-                        this.#module.finish(this.canvas, this.#tmp, response_json.score);
+                        this.#module.finish(this.canvas, this.#tmp);
+                        this.#onFinish(this.canvas, this.#tmp, response_json.score);
                     }
                 )
             });
@@ -74,9 +83,10 @@ class Game {
             (response) => {
                 response.json().then(
                     (init_game_data) => {
-                        this.#tmp = this.#module.init(canvas, init_game_data.init, this.#tmp);
                         this.#secret_key = init_game_data.init.secret_key;
-                        this.#timeInterval = setInterval(game, Math.floor(1 / this.frame_rate) * 1000);
+                        delete init_game_data.init.secret_key;
+                        this.#tmp = this.#module.init(canvas, init_game_data.init, this.#tmp);
+                        this.#timeInterval = setInterval(game, Math.floor(1 / this.#frame_rate) * 1000);
                     }
                 )
             } 
@@ -87,3 +97,22 @@ class Game {
         );
     }
 }
+
+fetch('/score/?nick=' + nick).then(
+    (response) => {
+        response.json().then(
+            (json_response) => {
+                // Do smth with json data {score: int}
+            }
+        )
+    }
+);
+fetch('/gamelinks/').then(
+    (response) => {
+        response.json().then(
+            (json_response) => {
+                // Do smth with json data {name_1: url_1, name_2: url_2...}
+            }
+        )
+    }
+);
