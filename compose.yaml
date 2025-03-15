@@ -29,8 +29,8 @@ services:
 
   server:
     build: ./Server
-    ports:
-      - 8080:8080
+    expose:
+      - 8080
     networks:
       - web
     environment:
@@ -44,6 +44,8 @@ services:
         condition: service_healthy
     volumes:
       - ./games:/app/games
+      - ./static:/app/static
+      - ./media:/app/media
     
   redis:
     image: redis
@@ -67,6 +69,23 @@ services:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+  
+  nginx:
+    build: ./nginx
+    networks:
+      - web
+    ports:
+      - 80:80
+    depends_on:
+      - redis
+      - mysql
+      - server
+      - score_app
+    volumes:
+      - ./games:/app/games
+      - ./static:/app/static
+      - ./media:/app/media
+    
 
 networks:
   web:

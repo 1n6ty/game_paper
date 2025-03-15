@@ -5,4 +5,4 @@ WORKDIR /app
 RUN mkdir games
 COPY . .
 RUN pip install --no-cache-dir -r requirements_server.txt
-CMD ["python3", "-u", "manage.py", "runserver", "0.0.0.0:8080"]
+CMD [ "gunicorn", "-b",  "0.0.0.0:8080", "Paper.wsgi:application" ]
