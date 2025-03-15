@@ -5,10 +5,10 @@ import { GL_URL } from '../../../global';
 import './GamesList.css';
 
 const gamesData = [
-  { id: 1, title: "Милки флай", image: `${GL_URL}/games/fb.svg` },
-  { id: 2, title: "Название игры", image: `${GL_URL}/games/fb.svg` },
-  { id: 3, title: "Название игры", image: "" },
-  { id: 4, title: "Название игры", image: "" },
+  { id: 1, title: "Милки флай", image: `${GL_URL}games/milkyFly_cover.svg` },
+  { id: 2, title: "Трекер здоровья", image: `${GL_URL}games/healthTracker_cover.svg` },
+  // { id: 3, title: "Название игры", image: "" },
+  // { id: 4, title: "Название игры", image: "" },
 ];
 
 const GamesList = () => {

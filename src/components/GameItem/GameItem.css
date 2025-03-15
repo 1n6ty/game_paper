@@ -42,7 +42,7 @@
   height: auto;
   background-color: white;
   text-align: center;
-  padding: 11px 17px;
+  padding: 6px 0 9px 0;
 }
 
 .game-item-title {
@@ -51,5 +51,7 @@
   font-size: 19px;
   line-height: 28px;
   letter-spacing: 0.15px;
+
   color: var(--color-primary-blue);
+  margin: 0;
 }

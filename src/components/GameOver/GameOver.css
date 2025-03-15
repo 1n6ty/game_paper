@@ -1,24 +1,107 @@
-.game-over-overlay {
-  position: absolute;
+/* Фон-оверлей, затемняющий весь экран */
+.gameover-overlay {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  /* Полупрозрачный темный фон */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
+  /* Чтобы окно было поверх всего */
+  z-index: 999;
 }
 
-.game-over-content {
-  background: #fff;
-  padding: 20px;
+/* Основной блок окна */
+.gameover-container {
+  /* width: 337px;
+  height: 229px; */
+  background-color: #EFF7FE;
+  padding: 36px 31px;
+  border-radius: 16px;
   text-align: center;
-  border-radius: 8px;
+  margin: 0;
 }
 
-.game-over-content button {
-  margin: 5px;
-  padding: 10px 15px;
+.gameover-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: 0px;
+  text-align: center;
+  vertical-align: middle;
+
+  color: #325374;
+  margin: 0 0 25px;
+}
+
+.gameover-score-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* width: 100%; */
+}
+
+.gameover-score-label {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  text-align: left;
+
+  color: #325374;
+  margin: 0;
+}
+
+.gameover-score-value {
+  font-family: 'Roboto Mono', sans-serif;
+  font-weight: 500;
+  font-size: 48px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  text-align: center;
+
+  color: #325374;
+  margin: 0;
+}
+
+.gameover-buttons {
+  display: flex;
+  height: 35px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.gameover-btn {
+  border: none;
+  border-radius: 8px;
   font-size: 16px;
+  cursor: pointer;
+}
+
+.gameover-btn-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 26px;
+  letter-spacing: 0.1px;
+
+  margin: 0;
+}
+
+.exit-btn {
+  width: 100px;
+  background-color: #F7CDCE;
+  color: #DB6971;
+}
+
+.restart-btn {
+  width: 165px;
+  background-color: #9AD9A6;
+  color: #2F7A2E;
 }

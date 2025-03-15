@@ -1,4 +1,3 @@
-// GameItem.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './GameItem.css';
@@ -7,8 +6,6 @@ const GameItem = ({ title, image, gameData }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    // Здесь формируется путь для навигации.
-    // Например, если маршрут игры выглядит так: /games/:id
     navigate(`/games/${gameData.id}`);
   };
 

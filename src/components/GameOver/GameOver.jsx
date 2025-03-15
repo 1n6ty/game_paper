@@ -1,14 +1,27 @@
 import React from 'react';
-import './GameOver.css'; // Стили для оверлея
+import './GameOver.css';
 
-const GameOver = ({ score, onRestart, onExit }) => {
+const GameOver = ({ score = 0, onExit, onRestart }) => {
   return (
-    <div className="game-over-overlay">
-      <div className="game-over-content">
-        <h2>Игра окончена!</h2>
-        <p>Вы набрали: {score} очков</p>
-        <button onClick={onRestart}>Начать заново</button>
-        <button onClick={onExit}>Выйти</button>
+    <div className="gameover-overlay">
+      <div className="gameover-container">
+        <h2 className="gameover-title">Игра окончена!</h2>
+        <div className="gameover-score-section">
+          <div className="gameover-score-label">
+            Количество<br />набранных очков:
+          </div>
+          <div className="gameover-score-value">
+            {score}
+          </div>
+        </div>
+        <div className="gameover-buttons">
+          <button className="gameover-btn exit-btn" onClick={onExit}>
+            <p className="gameover-btn-text">Выйти</p>
+          </button>
+          <button className="gameover-btn restart-btn" onClick={onRestart}>
+            <p className="gameover-btn-text">Начать заново</p>
+          </button>
+        </div>
       </div>
     </div>
   );

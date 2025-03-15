@@ -6,7 +6,6 @@ import svgr from 'vite-plugin-svgr'
 export default defineConfig({
   server: {
     host: '0.0.0.0',
-    allowedHosts: ['silly-trams-spend.loca.lt'],
   },
   base: '/',
   build: {
