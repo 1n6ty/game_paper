@@ -4,6 +4,8 @@ from fastapi import FastAPI, HTTPException, Request
 
 from importlib import import_module
 import redis
+import hashlib
+import random
 
 from threading import Timer
 
@@ -49,6 +51,9 @@ async def init_game(req: Request):
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
     
+    new_tmp["secret_key"] = hashlib.sha256(str(random.randint(0, int(10e6))).encode('utf-8')).hexdigest()
+    init_data["secret_key"] = new_tmp["secret_key"]
+
     REDIS.set(f'{nick}:{str(game_name)}:perpetual', json.dumps(new_perpetual))
     REDIS.set(f'{nick}:tmp', json.dumps(new_tmp))
 
@@ -81,6 +86,9 @@ async def finish_game(req: Request):
     tmp: dict = json.loads(tmp)
 
     game_data: dict = {k: v for k, v in params.items() if not (k in ["game_name", "nick"])}
+
+    if game_data["secret_key"] != tmp["secret_key"]:
+        raise HTTPException(status_code=401, detail='secret_key didn\'t match')
 
     try:
         [new_perpetual, score] = game_module.finish(perpetual, tmp, game_data)

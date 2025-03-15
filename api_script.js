@@ -1,11 +1,11 @@
 class Game {
     #tmp = {};
+    #secret_key = "";
     #timeInterval = -1;
     #module = Object();
-    onModuleLoad = () => {};
     frame_rate = 60;
 
-    constructor(canvas, nick, game_name, draw_script_file_url){
+    constructor(canvas, nick, game_name, draw_script_file_url, onModuleLoad = () => {}){
         this.canvas = canvas;
         this.nick = nick;
         this.game_name = game_name;
@@ -15,8 +15,9 @@ class Game {
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
-                if (cookie.substring(0, 10) === ('csrftoken=')) {
-                    this.csrf_cookie = decodeURIComponent(cookie.substring(10));
+                
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    this.csrf_cookie = cookie.substring(10, cookie.length);
                     break;
                 }
             }
@@ -37,12 +38,13 @@ class Game {
         let finish = (game_data) => {
             clearInterval(this.#timeInterval);
             game_data.nick = this.nick;
+            game_data.secret_key = this.#secret_key;
             fetch('/gamefinish/', {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
+                    'X-CSRFToken': this.csrf_cookie
                 },
                 body: JSON.stringify(game_data)
             }).then((response) => {
@@ -62,7 +64,7 @@ class Game {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
+                'X-CSRFToken': this.csrf_cookie
             },
             body: JSON.stringify({
                 game_name: this.game_name,
@@ -73,6 +75,7 @@ class Game {
                 response.json().then(
                     (init_game_data) => {
                         this.#tmp = this.#module.init(canvas, init_game_data.init, this.#tmp);
+                        this.#secret_key = init_game_data.init.secret_key;
                         this.#timeInterval = setInterval(game, Math.floor(1 / this.frame_rate) * 1000);
                     }
                 )

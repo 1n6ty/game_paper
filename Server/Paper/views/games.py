@@ -8,6 +8,7 @@ from ..models import Game, User
 from requests import Session, Response
 import hashlib
 import json
+import random
 
 request_session = Session()
 request_session.trust_env = False
