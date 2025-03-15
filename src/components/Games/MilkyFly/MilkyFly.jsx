@@ -1,94 +1,113 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GameOver from '../../GameOver/GameOver';
+import { GL_URL } from '../../../../global';
 import './MilkyFly.css';
 
 // Пути до ассетов в папке public
-const pipeDefaultUrl = '/games/milkyFly/pipeDefault.svg';
-const pipeSpecialUrl = '/games/milkyFly/pipeSpecial.svg';
+const ceilEvening = `${GL_URL}games/milkyFly/ceil_evening.svg`;   // Вечер
+const ceilSunset = `${GL_URL}games/milkyFly/ceil_sunset.svg`;       // Закат
+const ceilSunrise = `${GL_URL}games/milkyFly/ceil_sunrise.svg`;     // Рассвет
+const ceilDay = `${GL_URL}games/milkyFly/ceil_day.svg`;             // День
+const ceilMorning = `${GL_URL}games/milkyFly/ceil_morning.svg`;     // Утро
 
-const cloudsUrl = '/games/milkyFly/clouds.svg';
-const bushesDarkUrl = '/games/milkyFly/bushesDark.svg';
-const bushesLightUrl = '/games/milkyFly/bushesLight.svg';
+const pipeDefaultUrl = `${GL_URL}games/milkyFly/pipeDefault.svg`;
+const pipeSpecialUrl = `${GL_URL}games/milkyFly/pipeSpecial.svg`;
 
-const grassUrl = '/games/milkyFly/grass.svg';
+const cloudsUrl = `${GL_URL}games/milkyFly/clouds.svg`;
+const bushesDarkUrl = `${GL_URL}games/milkyFly/bushesDark.svg`;
+const bushesLightUrl = `${GL_URL}games/milkyFly/bushesLight.svg`;
 
-const cowIdle = '/games/milkyFly/cowIdle.svg';
-const cowPressed = '/games/milkyFly/cowPressed.svg';
+const grassUrl = `${GL_URL}games/milkyFly/grass.svg`;
+
+const cowIdle = `${GL_URL}games/milkyFly/cowIdle.svg`;
+const cowPressed = `${GL_URL}games/milkyFly/cowPressed.svg`;
+
+const MAX_CANVAS_WIDTH = 428;            // максимальная ширина канваса
+const BASE_ASPECT = 720 / 428;           // соотношение сторон (исходная высота / ширина)
 
 const MilkyFly = () => {
-  // ====== Константы для "виртуальной" логики ======
-  const BASE_WIDTH = 428; // Исходная ширина для расчётов
-  const BASE_HEIGHT = 700; // Исходная высота для расчётов
+  // ====== "Виртуальные" размеры (будут вычисляться динамически) ======
+  // Изначально устанавливаем максимальный размер
+  const [baseDimensions, setBaseDimensions] = useState({
+    width: MAX_CANVAS_WIDTH,
+    height: Math.floor(MAX_CANVAS_WIDTH * BASE_ASPECT),
+  });
 
   // ====== Параметры игры ======
-  const INITIAL_SPEED = 2;                // Начальная скорость
+  const INITIAL_SPEED = 2.5;                // Начальная скорость
   const SPEED_MULTIPLIER = 1.2;           // Увеличение скорости каждые 10 труб
-  const PARALLAX_CLOUDS = 0;
-  const PARALLAX_BUSHES_DARK = 0;
-  const PARALLAX_BUSHES_LIGHT = 0;
-  const PARALLAX_GRASS = 0.8;
-  const FALL_ANGLE = 30;                  // Угол наклона при падении
-  const GRAVITY = 0.5;
-  const JUMP_FORCE = -8;
+  const PARALLAX_CLOUDS = 0.01;
+  const PARALLAX_BUSHES_DARK = 0.03;
+  const PARALLAX_BUSHES_LIGHT = 0.08;
+  const PARALLAX_GRASS = 1;
+  const FALL_ANGLE = 90;                  // Угол наклона при падении
+  const GRAVITY = 0.6;
+  const JUMP_FORCE = -10;
 
   const PIPE_GAP = 150;
   const PIPE_WIDTH = 66;
-  const PIPE_INTERVAL = 120;
-  const FLOOR_HEIGHT = 100;
+  const PIPE_INTERVAL = 100;
+  const FLOOR_HEIGHT = 36;
 
-  // Ограничения для случайного появления труб
-  const MIN_TOP = 0;  // трубы не будут появляться слишком низко
-  const MAX_TOP = 400;                // и не слишком высоко
+  // Ограничения для труб
+  const MIN_TOP = 100;                      // трубы не появляются слишком высоко
+  const MAX_TOP = baseDimensions.height / 2 + MIN_TOP; // и не слишком низко
 
-  // Массив градиентов: каждый — массив из 3-х цветов (верх, середина, низ)
-  const GRADIENTS = [
-    ["#67AAEB", "#D3E8FF", "#FFFFFF"],
-    ["#67AAEB", "#F7CDCE", "#FFFFFF"],
-    ["#97A0FF", "#D1E8FF", "#FFFFFF"],
-    ["#A1D1FF", "#D1E8FF", "#FFFFFF"],
-    ["#AED7FF", "#FEFEFF", "#FFFFFF"],
+  // Массив вариантов фона и потолка: [путь к потолку, [цвет, цвет, цвет]]
+  const BACKGROUNDS = [
+    ["ceilEvening", ["#67AAEB", "#D3E8FF", "#FFFFFF"]],  // Вечер
+    ["ceilSunset", ["#67AAEB", "#F7CDCE", "#FFFFFF"]],    // Закат
+    ["ceilSunrise", ["#97A0FF", "#D1E8FF", "#FFFFFF"]],    // Рассвет
+    ["ceilDay", ["#A1D1FF", "#D1E8FF", "#FFFFFF"]],    // День
+    ["ceilMorning", ["#AED7FF", "#D9ECFF", "#FEEEEF"]],     // Утро
   ];
+
+  const START_X = baseDimensions.width / 2;
+  const START_Y = baseDimensions.height / 2;
 
   // ====== React-состояния ======
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
 
-  // Ссылка на canvas и id анимации
   const canvasRef = useRef(null);
   const animationIdRef = useRef();
 
-  // Объект для кэширования загруженных изображений
   const imagesRef = useRef({});
 
-  // Основное состояние игры (в "виртуальных" координатах)
+  // Основное состояние игры (синхронно, в "виртуальных" координатах)
+
   const gameStateRef = useRef({
     speed: INITIAL_SPEED,
     frame: 0,
     pipes: [],
-    // Позиции параллакса
     cloudsX: 0,
     bushesDarkX: 0,
     bushesLightX: 0,
     grassX: 0,
-    // Состояние "птицы" (коровы)
+    ceilX: 0,
     bird: {
-      x: 50,
-      y: 150,
+      x: START_X,
+      y: START_Y,
       velocity: 0,
       frameCounter: 0,
       currentFrame: 0,
       rotation: 0,
+      floatOffset: 0,
     },
-    // Рандомный фон
-    selectedGradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)],
-    // Счётчик труб (для определения особой трубы)
+    // Выбор варианта фона и потолка (считаем, что для данного варианта используются оба ассета)
+    selectedCeiling: BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)][0],
+    selectedGradient: BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)][1],
     pipeCount: 0,
-    // Флаг остановки игры
+    passedPipes: 0,
+    lastAccelerated: 0,
+    isStarted: false,
     isGameOver: false,
   });
 
-  // Функция предзагрузки одного изображения
+  const lastFrameRef = useRef(performance.now());
+
+  // Функция предзагрузки изображения
   const loadImage = (src) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -98,7 +117,7 @@ const MilkyFly = () => {
     });
   };
 
-  // Предзагрузка ассетов
+  // Предзагрузка ассетов (включая потолочные)
   const preloadAssets = async () => {
     const assets = {
       clouds: loadImage(cloudsUrl),
@@ -109,6 +128,11 @@ const MilkyFly = () => {
       pipeSpecial: loadImage(pipeSpecialUrl),
       cowIdle: loadImage(cowIdle),
       cowPressed: loadImage(cowPressed),
+      ceilEvening: loadImage(ceilEvening),
+      ceilSunset: loadImage(ceilSunset),
+      ceilSunrise: loadImage(ceilSunrise),
+      ceilDay: loadImage(ceilDay),
+      ceilMorning: loadImage(ceilMorning),
     };
     const loaded = await Promise.all(Object.values(assets));
     const keys = Object.keys(assets);
@@ -123,14 +147,19 @@ const MilkyFly = () => {
     setBestScore(storedBest);
 
     preloadAssets().then(() => {
+      // TODO решить проблему сброса игры при старте
       resetGame();
       requestAnimationFrame(gameLoop);
     });
 
-    // Слушатели для прыжка (Space/touch)
     const handleJump = (e) => {
       if (e.type === 'keydown' && e.code !== 'Space') return;
       const st = gameStateRef.current;
+      if (!st.isStarted) {
+        st.isStarted = true;
+        st.bird.velocity = JUMP_FORCE;
+        return;
+      }
       if (!st.isGameOver) {
         st.bird.velocity = JUMP_FORCE;
         st.bird.frameCounter = 0;
@@ -138,7 +167,6 @@ const MilkyFly = () => {
     };
     window.addEventListener('keydown', handleJump);
     window.addEventListener('touchstart', handleJump);
-
     return () => {
       window.removeEventListener('keydown', handleJump);
       window.removeEventListener('touchstart', handleJump);
@@ -158,20 +186,28 @@ const MilkyFly = () => {
     st.bushesDarkX = 0;
     st.bushesLightX = 0;
     st.grassX = 0;
+    st.ceilX = 0;
     st.bird = {
-      x: 50,
-      y: 150,
+      x: START_X,
+      y: START_Y,
       velocity: 0,
       frameCounter: 0,
       currentFrame: 0,
       rotation: 0,
+      floatOffset: 0,
     };
-    st.selectedGradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
+    // Выбираем новый вариант потолка и градиента
+    const randIndex = Math.floor(Math.random() * BACKGROUNDS.length);
+    st.selectedCeiling = BACKGROUNDS[randIndex][0];
+    st.selectedGradient = BACKGROUNDS[randIndex][1];
     st.pipeCount = 0;
+    st.passedPipes = 0;
+    st.lastAccelerated = 0;
+    st.isStarted = false;
     st.isGameOver = false;
   };
 
-  // Адаптивный размер canvas (подгоняется под родительский контейнер, сохраняя соотношение BASE_WIDTH/BASE_HEIGHT)
+  // Адаптивный размер canvas с фиксированным максимумом (канвас не будет шире MAX_CANVAS_WIDTH)
   useEffect(() => {
     function resizeCanvas() {
       const canvas = canvasRef.current;
@@ -179,65 +215,82 @@ const MilkyFly = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
       const parentWidth = parent.clientWidth;
-      const aspect = BASE_HEIGHT / BASE_WIDTH;
-      const newHeight = Math.floor(parentWidth * aspect);
-      canvas.width = parentWidth;
-      canvas.height = newHeight;
+      const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
+      const aspect = baseDimensions.height / baseDimensions.width;
+      const newHeight = Math.floor(newWidth * aspect);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = newWidth * dpr;
+      canvas.height = newHeight * dpr;
+      canvas.style.width = `${newWidth}px`;
+      canvas.style.height = `${newHeight}px`;
+      console.log(`${canvas.width}, ${canvas.height}`);
     }
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     return () => window.removeEventListener('resize', resizeCanvas);
-  }, []);
+  }, [baseDimensions]);
 
-  // Основной игровой цикл
+  // Основной игровой цикл с ограничением dt
   const gameLoop = () => {
-    const st = gameStateRef.current;
-    if (st.isGameOver) return; // Прерываем цикл, если игра остановлена
+    const now = performance.now();
+    let dt = (now - lastFrameRef.current) / 1000;
+    lastFrameRef.current = now;
+    dt = Math.min(dt, 0.1); // ограничение dt
 
-    updateLogic();
+    const st = gameStateRef.current;
+    if (st.isGameOver) return;
+
+    updateLogic(dt);
     drawScene();
     animationIdRef.current = requestAnimationFrame(gameLoop);
   };
 
-  // Обновление логики игры
-  const updateLogic = () => {
+  // Обновление логики игры с учетом deltaTime
+  const updateLogic = (dt) => {
     const st = gameStateRef.current;
-    st.frame++;
+    const fps = dt * 60;
+    st.frame += fps;
 
-    // Позиции параллакса
-    st.cloudsX -= st.speed * PARALLAX_CLOUDS;
-    st.bushesDarkX -= st.speed * PARALLAX_BUSHES_DARK;
-    st.bushesLightX -= st.speed * PARALLAX_BUSHES_LIGHT;
-    st.grassX -= st.speed * PARALLAX_GRASS;
-
-    if (st.cloudsX <= -BASE_WIDTH) st.cloudsX += BASE_WIDTH;
-    if (st.bushesDarkX <= -BASE_WIDTH) st.bushesDarkX += BASE_WIDTH;
-    if (st.bushesLightX <= -BASE_WIDTH) st.bushesLightX += BASE_WIDTH;
-    if (st.grassX <= -BASE_WIDTH) st.grassX += BASE_WIDTH;
-
-    // Физика птицы (коровы)
-    st.bird.velocity += GRAVITY;
-    st.bird.y += st.bird.velocity;
-    if (st.bird.velocity > 0) {
-      st.bird.rotation = Math.min(FALL_ANGLE, st.bird.rotation + 2);
-    } else {
-      st.bird.rotation = -15;
-    }
+    // Параллакс
+    st.cloudsX -= st.speed * PARALLAX_CLOUDS * fps;
+    st.bushesDarkX -= st.speed * PARALLAX_BUSHES_DARK * fps;
+    st.bushesLightX -= st.speed * PARALLAX_BUSHES_LIGHT * fps;
+    st.grassX -= st.speed * PARALLAX_GRASS * fps;
+    if (st.cloudsX <= -baseDimensions.width) st.cloudsX += baseDimensions.width;
+    if (st.bushesDarkX <= -baseDimensions.width) st.bushesDarkX += baseDimensions.width;
+    if (st.bushesLightX <= -baseDimensions.width) st.bushesLightX += baseDimensions.width;
+    if (st.grassX <= -baseDimensions.width) st.grassX += baseDimensions.width;
+    if (st.ceilX <= -baseDimensions.width) st.ceilX += baseDimensions.width;
 
     // Анимация спрайтов
-    st.bird.frameCounter++;
+    st.bird.frameCounter += fps;
     const frameDelay = st.bird.velocity > 2 ? 3 : 5;
     if (st.bird.frameCounter >= frameDelay) {
       st.bird.currentFrame = (st.bird.currentFrame + 1) % 2;
       st.bird.frameCounter = 0;
     }
 
+    if (!st.isStarted) {
+      st.bird.floatOffset += dt * 3;
+      st.bird.y = baseDimensions.height / 2 + Math.sin(st.bird.floatOffset) * 15;
+      return;
+    }
+
+    // Физика птицы
+    st.bird.velocity += GRAVITY * fps;
+    st.bird.y += st.bird.velocity * fps;
+    if (st.bird.velocity > 0) {
+      st.bird.rotation = Math.min(FALL_ANGLE, st.bird.rotation + 2 * fps);
+    } else {
+      st.bird.rotation = -15;
+    }
+
     // Генерация труб
-    if (st.frame % PIPE_INTERVAL === 0) {
+    if (st.frame % PIPE_INTERVAL < fps) {
       st.pipeCount++;
       const topHeight = Math.floor(Math.random() * (MAX_TOP - MIN_TOP)) + MIN_TOP;
       st.pipes.push({
-        x: BASE_WIDTH,
+        x: baseDimensions.width,
         top: topHeight,
         bottom: topHeight + PIPE_GAP,
         width: PIPE_WIDTH,
@@ -246,14 +299,16 @@ const MilkyFly = () => {
       });
     }
 
-    // Движение труб и увеличение счета
+    // Движение труб и обновление счетчика
     for (let pipe of st.pipes) {
       pipe.x -= st.speed;
       if (!pipe.passed && pipe.x + PIPE_WIDTH < st.bird.x) {
         pipe.passed = true;
-        setScore(prev => prev + 1);
-        if ((score + 1) % 10 === 0) {
+        st.passedPipes++;
+        setScore(st.passedPipes);
+        if (st.passedPipes > 0 && st.passedPipes % 10 === 0 && st.lastAccelerated !== st.passedPipes) {
           st.speed *= SPEED_MULTIPLIER;
+          st.lastAccelerated = st.passedPipes;
         }
       }
     }
@@ -270,18 +325,22 @@ const MilkyFly = () => {
         return;
       }
     }
-    // Проверка столкновений с верхней/нижней границей
-    if (st.bird.y - 40 < 0 || st.bird.y + 40 > BASE_HEIGHT - FLOOR_HEIGHT) {
+    // Проверка столкновений с границами
+    if (st.bird.y - 40 < 0 || st.bird.y + 40 > baseDimensions.height - FLOOR_HEIGHT) {
       handleGameOver();
       return;
     }
   };
 
-  // Остановка игры
+  // Остановка игры и сохранение лучшего счета
   const handleGameOver = () => {
     const st = gameStateRef.current;
     st.isGameOver = true;
     setGameOver(true);
+    if (st.passedPipes > bestScore) {
+      setBestScore(st.passedPipes);
+      localStorage.setItem('bestScore', st.passedPipes);
+    }
     cancelAnimationFrame(animationIdRef.current);
   };
 
@@ -290,79 +349,80 @@ const MilkyFly = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-
-    // Масштабирование для адаптивности
-    const scaleX = canvas.width / BASE_WIDTH;
-    const scaleY = canvas.height / BASE_HEIGHT;
+    const dpr = window.devicePixelRatio || 1;
     ctx.save();
-    ctx.scale(scaleX, scaleY);
+    ctx.scale(dpr, dpr);
 
+    const { width, height } = baseDimensions;
     const st = gameStateRef.current;
-    ctx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+    ctx.clearRect(0, 0, width, height);
 
     // Рисуем фон как градиент
-    const gradient = ctx.createLinearGradient(0, 0, 0, BASE_HEIGHT);
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
     gradient.addColorStop(0, st.selectedGradient[0]);
     gradient.addColorStop(0.5, st.selectedGradient[1]);
     gradient.addColorStop(1, st.selectedGradient[2]);
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+    ctx.fillRect(0, 0, width, height);
 
     // Рисуем параллакс-слои (облака, кусты)
     if (imagesRef.current.clouds) {
-      ctx.drawImage(imagesRef.current.clouds, st.cloudsX, BASE_HEIGHT - FLOOR_HEIGHT - 237, BASE_WIDTH, 387);
-      ctx.drawImage(imagesRef.current.clouds, st.cloudsX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT - 237, BASE_WIDTH, 387);
+      ctx.drawImage(imagesRef.current.clouds, st.cloudsX, height - FLOOR_HEIGHT - 237, width, 387);
+      ctx.drawImage(imagesRef.current.clouds, st.cloudsX + width - 1, height - FLOOR_HEIGHT - 237, width, 387);
     }
     if (imagesRef.current.bushesDark) {
-      ctx.drawImage(imagesRef.current.bushesDark, st.bushesDarkX, BASE_HEIGHT - FLOOR_HEIGHT - 78, BASE_WIDTH, 228);
-      ctx.drawImage(imagesRef.current.bushesDark, st.bushesDarkX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT - 78, BASE_WIDTH, 228);
+      ctx.drawImage(imagesRef.current.bushesDark, st.bushesDarkX, height - FLOOR_HEIGHT - 78, width, 228);
+      ctx.drawImage(imagesRef.current.bushesDark, st.bushesDarkX + width - 1, height - FLOOR_HEIGHT - 78, width, 228);
     }
     if (imagesRef.current.bushesLight) {
-      ctx.drawImage(imagesRef.current.bushesLight, st.bushesLightX, BASE_HEIGHT - FLOOR_HEIGHT - 52, BASE_WIDTH, 202);
-      ctx.drawImage(imagesRef.current.bushesLight, st.bushesLightX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT - 52, BASE_WIDTH, 202);
+      ctx.drawImage(imagesRef.current.bushesLight, st.bushesLightX, height - FLOOR_HEIGHT - 52, width, 202);
+      ctx.drawImage(imagesRef.current.bushesLight, st.bushesLightX + width - 1, height - FLOOR_HEIGHT - 52, width, 202);
     }
 
-    // Рисуем трубы без изменения их высоты – просто смещаем их по вертикали.
-    // Вводим константу PIPE_SHIFT для смещения (в пикселях).
+    // Рисуем трубы (без изменения естественной высоты)
     for (let pipe of st.pipes) {
       const pipeImg = pipe.special ? imagesRef.current.pipeSpecial : imagesRef.current.pipeDefault;
       if (!pipeImg) continue;
-      // Вычисляем масштабированную высоту трубы (сохраняя пропорции)
       const scaledPipeHeight = PIPE_WIDTH * (pipeImg.naturalHeight / pipeImg.naturalWidth);
-      const PIPE_SHIFT = 20; // Смещение для отделения труб по вертикали
-
-      // Верхняя труба: переворачиваем по вертикали и смещаем вверх
+      // Верхняя труба: переворачиваем по вертикали
       ctx.save();
-      ctx.translate(pipe.x, pipe.top - PIPE_SHIFT);
+      ctx.translate(pipe.x, pipe.top);
       ctx.scale(1, -1);
       ctx.drawImage(pipeImg, 0, 0, pipe.width, scaledPipeHeight);
       ctx.restore();
-
       // Нижняя труба: смещаем вниз
-      ctx.drawImage(pipeImg, pipe.x, pipe.bottom + PIPE_SHIFT, pipe.width, scaledPipeHeight);
+      ctx.drawImage(pipeImg, pipe.x, pipe.bottom, pipe.width, scaledPipeHeight);
+    }
+
+    // Рисуем потолок
+    if (imagesRef.current[st.selectedCeiling]) {
+      const CEIL_HEIGHT = 33; // фиксированная высота потолка
+      ctx.drawImage(imagesRef.current[st.selectedCeiling], st.grassX, 0, width, CEIL_HEIGHT);
+      ctx.drawImage(imagesRef.current[st.selectedCeiling], st.grassX + width - 1, 0, width, CEIL_HEIGHT);
     }
 
     // Рисуем пол (движущаяся трава)
     if (imagesRef.current.grass) {
-      ctx.drawImage(imagesRef.current.grass, st.grassX, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 103);
-      ctx.drawImage(imagesRef.current.grass, st.grassX + BASE_WIDTH - 1, BASE_HEIGHT - FLOOR_HEIGHT, BASE_WIDTH, 103);
+      const GROUND_HEIGHT = 36; // фиксированная высота потолка
+      ctx.drawImage(imagesRef.current.grass, st.grassX, height - FLOOR_HEIGHT, width, GROUND_HEIGHT);
+      ctx.drawImage(imagesRef.current.grass, st.grassX + width - 1, height - FLOOR_HEIGHT, width, GROUND_HEIGHT);
     }
 
-    // Рисуем птицу (корова) с учётом поворота
+    // Рисуем птицу (корова)
     ctx.save();
     ctx.translate(st.bird.x, st.bird.y);
     ctx.rotate((st.bird.rotation * Math.PI) / 180);
     const birdImg = st.bird.currentFrame === 0 ? imagesRef.current.cowIdle : imagesRef.current.cowPressed;
     if (birdImg) {
-      // Чтобы изменить размеры персонажа, измените параметры здесь: (-50, -40, 100, 80)
-      ctx.drawImage(birdImg, -50, -40, 100, 80);
+      const COW_WIDTH = 94.65;
+      const COW_HEIGHT = 64.96;
+      ctx.drawImage(birdImg, -COW_WIDTH / 2, -COW_HEIGHT / 2, COW_WIDTH, COW_HEIGHT);
     }
     ctx.restore();
 
     ctx.restore();
   };
 
-  // Обработчики для компонента GameOver
   const handleRestart = () => {
     resetGame();
     requestAnimationFrame(gameLoop);

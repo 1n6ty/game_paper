@@ -1,15 +1,18 @@
 .game-container {
-  position: relative;
-  width: 100%;
-  max-width: 428px;
-  /* Можно менять под нужный максимум */
-  margin: 0 auto;
+  width: 100vw;
+  /* max-width: 428px; */
+
+  height: 100vh;
+  background-color: #eac49c;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .game-canvas {
   width: 100%;
   height: auto;
-  display: block;
+  display: flex;
 }
 
 .best-score {
@@ -24,7 +27,6 @@
   position: absolute;
   top: 10px;
   left: 15px;
-  font-size: 16px;
   z-index: 10;
 }
 
@@ -41,7 +43,5 @@
   position: absolute;
   top: 44px;
   width: 100%;
-  text-align: center;
-  font-size: 24px;
   z-index: 10;
 }
