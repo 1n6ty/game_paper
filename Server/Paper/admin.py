@@ -3,6 +3,7 @@ from django.conf import settings
 
 from subprocess import Popen, PIPE
 
+from .forms import AssetsModelForm
 from .models import User, Company, Game, Product_Type, Purchase, Assets, game_scripts_storage
 # Register your models here.
 
@@ -34,4 +35,10 @@ class Purchase_Admin(admin.ModelAdmin):
 
 @admin.register(Assets)
 class Assets_Admin(admin.ModelAdmin):
-    pass
+    form = AssetsModelForm
+
+    fieldsets = (
+        (None, {
+            'fields': ('root', 'zip_upload_field'),
+        }),
+    )

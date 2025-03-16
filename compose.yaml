@@ -11,6 +11,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+        restart: true
+    restart: always
   
   score_app:
     build: ./Score_app
@@ -24,8 +26,10 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+        restart: true
     volumes:
       - ./games:/app/games
+    restart: always
 
   server:
     build: ./Server
@@ -40,12 +44,15 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+        restart: true
       mysql:
         condition: service_healthy
+        restart: true
     volumes:
       - ./games:/app/games
       - ./static:/app/static
       - ./media:/app/media
+    restart: always
     
   redis:
     image: redis
@@ -55,6 +62,7 @@ services:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       timeout: 20s
       retries: 10
+    restart: always
   
   mysql:
     image: mysql
@@ -69,6 +77,7 @@ services:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+    restart: always
   
   nginx:
     build: ./nginx
@@ -85,7 +94,7 @@ services:
       - ./games:/app/games
       - ./static:/app/static
       - ./media:/app/media
-    
+    restart: always
 
 networks:
   web:

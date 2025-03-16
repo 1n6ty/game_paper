@@ -135,17 +135,17 @@ class Purchase(models.Model):
         verbose_name_plural = "Purchases"
 
 class Assets(models.Model):
-    file = models.FileField(
-        verbose_name="File",
+    root = models.CharField(
+        max_length=255,
+        verbose_name="Root catalog",
         null=False,
-        blank=False,
-        upload_to="assets/",
+        blank=False
     )
 
     class Meta:
         verbose_name = "Asset"
         verbose_name_plural = "Assets"
-    
+
     def delete(self, **kwargs):
-        Popen(["rm", "-rf", settings.MEDIA_ROOT / self.file.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
-        super(Game, self).delete(**kwargs)
+        Popen(["rm", "-rf", settings.MEDIA_ROOT / "assets" / self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
+        super(Assets, self).delete(**kwargs)
