@@ -3,7 +3,7 @@ from django.http.response import HttpResponse, JsonResponse
 from django.conf import settings
 
 from django.db.models.manager import BaseManager
-from ..models import Game, User
+from ..models import Game, User, Settings
 
 from requests import Session, Response
 import hashlib
@@ -27,10 +27,13 @@ def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
         if not usr.exists():
             return HttpResponse(status=401)
         
+        settings_app: Settings = Settings.objects.get(pk = 1)
+
         usr: User = usr[0]
         return JsonResponse(
             {
-                "score": usr.score
+                "score": usr.score,
+                "score_for_coupon": settings_app.scores_for_coupon
             }
         )
     return HttpResponse(400)

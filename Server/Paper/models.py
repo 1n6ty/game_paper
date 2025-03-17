@@ -149,3 +149,21 @@ class Assets(models.Model):
     def delete(self, **kwargs):
         Popen(["rm", "-rf", settings.MEDIA_ROOT / "assets" / self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
         super(Assets, self).delete(**kwargs)
+
+class Settings(models.Model):
+    start_score = models.BigIntegerField(
+        verbose_name="Start score",
+        null=False,
+        blank=False,
+        default=0
+    )
+    scores_for_coupon = models.BigIntegerField(
+        verbose_name="Scores for coupon",
+        null=False,
+        blank=False,
+        default=0
+    )
+
+    class Meta:
+        verbose_name = "Setting"
+        verbose_name_plural = "Settings"

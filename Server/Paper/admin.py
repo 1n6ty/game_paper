@@ -4,7 +4,7 @@ from django.conf import settings
 from subprocess import Popen, PIPE
 
 from .forms import AssetsModelForm
-from .models import User, Company, Game, Product_Type, Purchase, Assets, game_scripts_storage
+from .models import User, Company, Game, Product_Type, Purchase, Assets, game_scripts_storage, Settings
 # Register your models here.
 
 @admin.register(User)
@@ -42,3 +42,9 @@ class Assets_Admin(admin.ModelAdmin):
             'fields': ('root', 'zip_upload_field'),
         }),
     )
+
+@admin.register(Settings)
+class Settings_Admin(admin.ModelAdmin):
+    
+    def has_delete_permission(self, request, obj=None):
+        return False

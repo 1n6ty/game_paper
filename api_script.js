@@ -102,7 +102,7 @@ fetch('/score/?nick=' + nick).then(
     (response) => {
         response.json().then(
             (json_response) => {
-                // Do smth with json data {score: int}
+                // Do smth with json data {score: int, score_for_coupon: int}
             }
         )
     }
