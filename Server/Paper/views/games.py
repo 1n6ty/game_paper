@@ -47,7 +47,7 @@ def get_game_links(req: HttpRequest) -> JsonResponse | HttpResponse:
 
         return JsonResponse(
             {
-                g.name: g.paint_script.name for g in games
+                g.name: [g.paint_script.name, g.icon.name] for g in games
             }
         )
     return HttpResponse(status=400)

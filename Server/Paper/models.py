@@ -71,6 +71,12 @@ class Game(models.Model):
         blank=False,
         upload_to="games/",
     )
+    icon = models.FileField(
+        verbose_name="Game icon",
+        null=False,
+        blank=False,
+        upload_to="game_icons/",
+    )
     cost = models.PositiveIntegerField(
         verbose_name="Cost to open",
         null=False,
