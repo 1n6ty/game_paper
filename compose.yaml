@@ -55,6 +55,7 @@ services:
       - ./games:/app/games
       - ./static:/app/static
       - ./media:/app/media
+      - ./templates:/app/templates
     restart: always
     
   redis:
