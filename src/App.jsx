@@ -7,24 +7,21 @@ import Games from './pages/Games/Games';
 import Scanner from './pages/Scanner/Scanner';
 import Game from './pages/Game/Game';
 
-import { PointsProvider } from './contexts/PointsContext';
+import { UserProvider } from './contexts/UserContext';
 
 
 function App() {
   return (
-    <PointsProvider>
-      <div>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/games" element={<Games />} />
-          <Route path="/scanner" element={<Scanner />} />
-          <Route path="/games/:id" element={<Game />} />
-        </Routes>
+    <UserProvider>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/games" element={<Games />} />
+        <Route path="/scanner" element={<Scanner />} />
+        <Route path="/games/:gameName" element={<Game />} />
+      </Routes>
 
-        <TabBar />
-      </div>
-    </PointsProvider>
-
+      <TabBar />
+    </UserProvider>
   );
 }
 
