@@ -88,6 +88,13 @@ class Game(models.Model):
         Popen(["rm", "-rf", game_scripts_storage.location + '/' + self.play_script.name, settings.MEDIA_ROOT / self.paint_script.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
         super(Game, self).delete(**kwargs)
     
+    def save_model(self, request, obj, form, change):
+        if 'play_script' in form.changed_data:
+            Popen(["rm", "-rf", game_scripts_storage.location + '/' + self.play_script.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
+        if 'paint_script' in form.changed_data:
+            Popen(["rm", "-rf", settings.MEDIA_ROOT / self.paint_script.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
+        super(Game, self).save_model(request, obj, form, change)
+
     class Meta:
         verbose_name = "Game"
         verbose_name_plural = "Games"

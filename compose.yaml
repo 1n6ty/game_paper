@@ -89,6 +89,7 @@ services:
       - web
     ports:
       - 80:80
+      - 443:443
     depends_on:
       - redis
       - mysql
@@ -98,6 +99,8 @@ services:
       - ./games:/app/games
       - ./static:/app/static
       - ./media:/app/media
+      - ./cer:/etc/letsencrypt/live/milkclub.lambumiz.ru
+      - ./certbot/www:/var/www/certbot
     restart: always
 
 networks:

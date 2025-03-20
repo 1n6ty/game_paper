@@ -22,7 +22,7 @@ def send_help(msg: telebot.types.Message) -> None:
 @bot.message_handler(commands=['prize'])
 def send_prize(msg: telebot.types.Message) -> None:
     import random
-    bot.send_message(msg.chat.id, random.choice(for_prize)) # TODO REMOVE
+    bot.send_message(msg.chat.id, random.choice(list(for_prize))) # TODO REMOVE
 
 @bot.message_handler(commands=['start'])
 def send_start(msg: telebot.types.Message) -> None:
@@ -38,7 +38,20 @@ def send_start(msg: telebot.types.Message) -> None:
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     web_btn = telebot.types.InlineKeyboardButton(text='App', web_app=telebot.types.WebAppInfo(os.getenv('SITE_HOST')))
     markup.add(web_btn)
-    bot.send_message(msg.chat.id, "Start", reply_markup=markup)
+    
+    bot.send_message(
+        msg.chat.id, 
+        f"Ну что, @{msg.from_user.username}, готов погрузиться в игровой мир, прокачать свой скилл и начать собирать ламбиксы? 😉"
+    )
+    bot.send_message(
+        msg.chat.id, 
+        """
+        Твой путь к призам начинается прямо сейчас! Открывай мини-игры, сканируй «Честный знак», зарабатывай ламбиксы и получай награды 
+        Чем больше играешь – тем больше выигрываешь! 
+        Жми <b>«ЗАПУСК»</b> и погнали! 🚀
+        """,
+        reply_markup=markup
+    )
 
 print("Starting bot!!!")
 bot.infinity_polling()
