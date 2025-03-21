@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
-import { PointsContext } from '../../contexts/PointsContext';
+import { UserContext } from '../../contexts/UserContext';
 
 import { GL_URL } from '../../../global';
 import './ScoreBar.css';
 
 
 const ScoreBar = () => {
-  const { score, totalScore } = useContext(PointsContext);
+  const { score, totalScore } = useContext(UserContext);
 
   const percentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
 

@@ -8,7 +8,7 @@ const GameOver = ({ score = 0, onExit, onRestart }) => {
         <h2 className="gameover-title">Игра окончена!</h2>
         <div className="gameover-score-section">
           <div className="gameover-score-label">
-            Количество<br />набранных очков:
+            Количество<br />набранных ламбиксов:
           </div>
           <div className="gameover-score-value">
             {score}

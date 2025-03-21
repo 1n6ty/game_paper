@@ -1,13 +1,12 @@
-import React, { use, useContext } from 'react';
-import { PointsContext } from '../../contexts/PointsContext';
+import React, { useContext } from 'react';
+import { UserContext } from '../../contexts/UserContext';
 
 import { GL_URL } from '../../../global'
 import './TopCards.css';
 
 
 const TopCards = () => {
-  const { user } = useContext(PointsContext);
-  const { score } = useContext(PointsContext);
+  const { user, score } = useContext(UserContext);
 
   return (
     <div className="top-cards">
@@ -40,7 +39,7 @@ const TopCards = () => {
         </svg>
 
         <div className="user-info">
-          <p className="username">{user?.username || `${user?.first_name} ${user?.last_name}`}</p>
+          <p className="username">{user?.userName || `${user?.firstName} ${user?.lastName}`}</p>
           <p className="score">{score}</p>
         </div>
       </div>

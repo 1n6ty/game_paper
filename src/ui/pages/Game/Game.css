@@ -1,0 +1,21 @@
+.game-container {
+  width: 100vw;
+  height: 100vh;
+  background-color: #eac49c;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-height: 800px) {
+  .game-container {
+    align-items: start;
+  }
+}
+
+.game-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 79px 0;
+}

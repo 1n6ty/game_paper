@@ -1,21 +1,31 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import TopCards from '../../components/TopCards/TopCards';
 import ScoreBar from '../../components/ScoreBar/ScoreBar';
 import Card from '../../components/Card/Card';
 import CardTip from '../../components/CardTip/CardTip';
-import { PointsContext } from '../../contexts/PointsContext';
+import { UserContext } from '../../contexts/UserContext';
 
 import { GL_URL } from '../../../global';
 import './Home.css';
 
+const Profile = () => {
+  const { loadScore } = useContext(UserContext);
+  loadScore();
+
+  return (
+    <div>
+      <TopCards />
+      <ScoreBar />
+    </div>
+  )
+}
 
 const Home = () => {
-  const { totalScore, tickets } = useContext(PointsContext);
+  const { totalScore, tickets } = useContext(UserContext);
 
   return (
     <div className="container">
-      <TopCards />
-      <ScoreBar />
+      <Profile />
 
       <Card
         variant="white"
@@ -24,10 +34,10 @@ const Home = () => {
         <div className="card-text">
           <b>Сканируй код «Честный знак» на упаковках Городецкого молока и получай ламбиксы!</b>
           <br />
-          При старте ты получишь приветственные 300 ламбиксов
+          При старте ты получишь приветственные 30 ламбиксов
           <br /><br />
           Далее играй в мини-игры, зарабатывай ламбиксы и меняй их на возможность выиграть ценные призы:
-          <b> каждые 1000 ламбиксов автоматически превращаются в билет на участие в розыгрыше</b>
+          <b> каждые {totalScore} ламбиксов автоматически превращаются в билет на участие в розыгрыше</b>
           <br />
           <div className="total-score">
             <span className="total-score-text">{totalScore}</span>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import ScannerIcon from '../../assets/icons/Qr.svg?react';
+import ScannerIcon from '../../../assets/icons/Qr.svg?react';
 
 import './Card.css';
 

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { loadUserScore } from '../domain/userUseCases';
+import { loadUserScore } from '../../domain/userUseCases';
 
 import { TEST } from "../../global";
 
@@ -19,10 +19,27 @@ const UserProvider = ({ children }) => {
   //   setTickets(newTickets);
   // };
 
-  const updateScore = (newScore) => {
-    setScore(newScore % totalScore);
-    // updateTickets(Math.floor(newScore / totalScore))
-  };
+  // const updateScore = (newScore) => {
+  //   setScore(newScore % totalScore);
+  //   // updateTickets(Math.floor(newScore / totalScore))
+  // };
+
+  const loadScore = () => {
+    if (user && user.userName) {
+      loadUserScore(user.userName)
+        .then(data => {
+          updateUserScoreData(data.score, data.totalScore);
+        })
+        .catch(error => {
+          console.error("Ошибка загрузки очков:", error);
+
+          if (TEST) {
+            console.log("Установка тестовых очков.");
+            updateUserScoreData(TEST_SCORE, TOTAL_SCORE);
+          }
+        });
+    }
+  }
 
   const updateUserScoreData = (newScore, newTotalScore) => {
     setTotalScore(newTotalScore);
@@ -35,7 +52,13 @@ const UserProvider = ({ children }) => {
     const tg = window.Telegram && window.Telegram.WebApp;
     tg.ready();
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      setUser(tg.initDataUnsafe.user);
+      console.log(tg.initDataUnsafe.user);
+      setUser({
+        userName: tg.initDataUnsafe.user.username,
+        firstName: tg.initDataUnsafe.user.first_name,
+        lastName: tg.initDataUnsafe.user.last_name
+      }
+      );
     } else {
       console.warn('Данные пользователя из Telegram недоступны. Возможно, вы тестируете вне Telegram.');
 
@@ -69,7 +92,7 @@ const UserProvider = ({ children }) => {
   }, [user]);
 
   return (
-    <UserContext.Provider value={{ score, updateScore, tickets, user, totalScore }}>
+    <UserContext.Provider value={{ score, loadScore, tickets, user, totalScore }}>
       {children}
     </UserContext.Provider>
   );

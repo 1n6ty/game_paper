@@ -2,11 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './GameItem.css';
 
-const GameItem = ({ title, image, gameData }) => {
+const GameItem = ({ title, image }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/games/${gameData.id}`);
+    navigate(`/games/${title}`);
   };
 
   return (
