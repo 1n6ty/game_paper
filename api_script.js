@@ -21,7 +21,7 @@ class Game {
         this.draw_script_url = draw_script_url;
     }
 
-    #finish = (game_data) => {
+    finish(game_data){
         clearInterval(this.#timeInterval);
 
         game_data.nick = this.nick;
@@ -46,8 +46,8 @@ class Game {
         });
     }
 
-    #game = () => {
-        this.#tmp = this.#module.proceed(this.canvas, this.#tmp, this.#finish);
+    #game(){
+        this.#tmp = this.#module.proceed(this.canvas, this.#tmp, this.finish);
     }
 
     async start(){

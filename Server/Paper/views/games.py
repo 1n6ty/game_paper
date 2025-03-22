@@ -9,7 +9,6 @@ from ..models import Game, User, Settings
 from requests import Session, Response
 import hashlib
 import json
-import random
 
 request_session = Session()
 request_session.trust_env = False
@@ -61,10 +60,8 @@ def init_game(req: HttpRequest) -> None:
     if req.method == "POST":
         data: dict = json.loads(req.body)
 
-        nick: str | None = data.get("nick", None)
         game_name: str | None = data.get("game_name", None)
-        secret_key: str | None = data.get("secret_key", None)
-        if nick == None or game_name == None or secret_key:
+        if game_name == None:
             return HttpResponse(status=400)
         nick = hashlib.sha256(nick.encode('utf-8')).hexdigest()
 
