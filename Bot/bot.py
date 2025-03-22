@@ -28,29 +28,27 @@ def send_prize(msg: telebot.types.Message) -> None:
 def send_start(msg: telebot.types.Message) -> None:
     global for_prize;
     for_prize |= set([msg.from_user.username]) # TODO REMOVE
-    cursor.execute("SELECT start_score FROM Paper_settings WHERE id = 1;");
-    start_score = int(cursor.fetchall()[0][0])
+    try:
+        cursor.execute("SELECT start_score FROM Paper_settings WHERE id = 1;");
+        start_score = int(cursor.fetchall()[0][0])
+    except:
+        pass
+    finally:
+        db.commit()
     try:
         cursor.execute("INSERT INTO Paper_user (nick, score) VALUES (%s, %s);", (hashlib.sha256(msg.from_user.username.encode('utf-8')).hexdigest(), start_score))
-        db.commit()
     except Exception:
         pass
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    web_btn = telebot.types.InlineKeyboardButton(text='App', web_app=telebot.types.WebAppInfo(os.getenv('SITE_HOST')))
-    markup.add(web_btn)
-    
+    finally:
+        db.commit()
+
     bot.send_message(
         msg.chat.id, 
         f"Ну что, @{msg.from_user.username}, готов погрузиться в игровой мир, прокачать свой скилл и начать собирать ламбиксы? 😉"
     )
     bot.send_message(
-        msg.chat.id, 
-        """
-        Твой путь к призам начинается прямо сейчас! Открывай мини-игры, сканируй «Честный знак», зарабатывай ламбиксы и получай награды 
-        Чем больше играешь – тем больше выигрываешь! 
-        Жми <b>«ЗАПУСК»</b> и погнали! 🚀
-        """,
-        reply_markup=markup
+        msg.chat.id,
+        "Твой путь к призам начинается прямо сейчас! Открывай мини-игры, сканируй «Честный знак», зарабатывай ламбиксы и получай награды.\nЧем больше играешь – тем больше выигрываешь!\nЖми «ЗАПУСК» и погнали! 🚀"
     )
 
 print("Starting bot!!!")

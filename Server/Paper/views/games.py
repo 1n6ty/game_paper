@@ -63,7 +63,8 @@ def init_game(req: HttpRequest) -> None:
 
         nick: str | None = data.get("nick", None)
         game_name: str | None = data.get("game_name", None)
-        if nick == None or game_name == None:
+        secret_key: str | None = data.get("secret_key", None)
+        if nick == None or game_name == None or secret_key:
             return HttpResponse(status=400)
         nick = hashlib.sha256(nick.encode('utf-8')).hexdigest()
 
