@@ -48,7 +48,7 @@ def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
         usr: User = usr[0]
         return JsonResponse(
             {
-                "score": usr.score,
+                "score": int(usr.score) % int(settings_app.scores_for_coupon),
                 "coupons": int(usr.score) // int(settings_app.scores_for_coupon)
             }
         )
