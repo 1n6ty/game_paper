@@ -3,7 +3,7 @@ import { fetchGameLinks } from '../infrastructure';
 
 // Возвращает названия доступных игр
 // В формате { game_name_1: cover_url_1, game_name_2: cover_url_2, ... }
-const loadGames = async () => {
+async function loadGames() {
   const gameLinks = await fetchGameLinks();
   const result = {};
   Object.keys(gameLinks).forEach(gameName => {
@@ -12,7 +12,8 @@ const loadGames = async () => {
   return result;
 };
 
-const loadGameData = async (gameName) => {
+// Возвращает имя и url скрипта игры
+async function loadGameData(gameName) {
   const gameLinks = await fetchGameLinks();
   return {
     gameName,
@@ -112,7 +113,7 @@ class GameAPI {
             this.#secret_key = init_game_data.init.secret_key;
             delete init_game_data.init.secret_key;
             this.#tmp = this.#module.init(this.canvas, init_game_data.init, this.#tmp);
-            this.#timeInterval = setInterval(game, Math.floor(1 / this.#frame_rate) * 1000);
+            this.#timeInterval = setInterval(game, (1 / this.#frame_rate) * 1000);
           }
         )
       }
