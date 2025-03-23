@@ -28,23 +28,27 @@ const UserProvider = ({ children }) => {
     if (user && user.userName) {
       loadUserScore(user.userName)
         .then(data => {
-          updateUserScoreData(data.score, data.totalScore);
+          updateUserScoreData(data.score, data.totalScore, data.tickets);
         })
         .catch(error => {
           console.error("Ошибка загрузки очков:", error);
 
           if (TEST) {
             console.log("Установка тестовых очков.");
-            updateUserScoreData(TEST_SCORE, TOTAL_SCORE);
+            updateUserScoreData(TEST_SCORE, TOTAL_SCORE, 0);
           }
         });
     }
   }
 
-  const updateUserScoreData = (newScore, newTotalScore) => {
+  const updateUserScoreData = (newScore, newTotalScore, newTickets) => {
+    console.log("newScore:", newScore);
+    setScore(newScore);
+    console.log("totalScore:", newTotalScore);
     setTotalScore(newTotalScore);
-    setScore(newScore % newTotalScore);
-    setTickets(Math.floor(newScore / newTotalScore));
+    console.log("newTickets", newTickets);
+    setTickets(newTickets);
+    // console.log("tickets:", tickets);
   };
 
 
@@ -75,20 +79,7 @@ const UserProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (user && user.userName) {
-      loadUserScore(user.userName)
-        .then(data => {
-          updateUserScoreData(data.score, data.totalScore);
-        })
-        .catch(error => {
-          console.error("Ошибка загрузки очков:", error);
-
-          if (TEST) {
-            console.log("Установка тестовых очков.");
-            updateUserScoreData(TEST_SCORE, TOTAL_SCORE);
-          }
-        });
-    }
+    loadScore();
   }, [user]);
 
   return (
