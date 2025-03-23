@@ -12,7 +12,7 @@ async function loadGames() {
   return result;
 };
 
-// Возвращает имя и url скрипта игры
+// Возвращает имя и url доступных игр
 async function loadGameData(gameName) {
   const gameLinks = await fetchGameLinks();
   return {
