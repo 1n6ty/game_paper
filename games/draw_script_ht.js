@@ -1,49 +1,26 @@
-/***********************************************************************
- * draw_script.js
- * Версия: __VERSION__
- * 
- * Игра "Трекер здоровья". В этой игре пользователь каждый день 
- * нажимает на стакан (изображённый SVG), который постепенно заполняется.
- * При заполнении стакана за 7 дней подряд (серверная логика) игрок получает билет.
- * 
- * Ассеты:
- *   - glass: изображение контура стакана (179×259)
- *   - decorations: изображение украшений (480×473)
- *   - filling: изображение заливки стакана (будет отрисовываться частично
- *     в зависимости от числа заполненных дней)
- *
- * Дизайн:
- *   - Задний фон игры – градиент от #D1E8FF (верх) до #FFFFFF (низ).
- *   - Карточка с числом дней имеет фон "#FFFFFF4D", а индикаторы дней рисуются
- *     согласно двум состояниям (заполнен/не заполнен) с заданными стилями.
- *
- * При динамическом масштабировании canvas изначально задаётся максимальный размер,
- * а при уменьшении ширины родительского элемента canvas масштабируется вниз.
- *
- * Сервер передаёт init_game_data с полем consecutiveDays (число дней подряд).
- * Клиент хранит targetFillLevel = consecutiveDays, а currentFillLevel анимируется
- * до этого значения.
- ***********************************************************************/
+const __VERSION__ = "6.2";
 
-const __VERSION__ = 2;
-
-/* === Параметры ассетов и размеры === */
 const PATH = "/media/assets/healthTracker/";
-const glassUrl = `${PATH}glass.svg`;        // Стакан (контур)
-const decorationsUrl = `${PATH}decorations.svg`;  // Украшения
-const fillingUrl = `${PATH}filling.svg`;        // Изображение заливки стакана
+const glassUrl = `${PATH}glass.svg`;
+const decorationsUrl = `${PATH}decorations.svg`;
+const fillingUrl = `${PATH}filling.svg`;
 
-// Размеры элементов (в пикселях)
 const GLASS_WIDTH = 179.77;
 const GLASS_HEIGHT = 259;
-const DECOR_WIDTH = 480.1;
+const FILLING_WIDTH = 154.96;
+const FILLING_HEIGHT = 208.68;
+const DECOR_WIDTH = 425.1;
 const DECOR_HEIGHT = 473;
 const TOTAL_DAYS = 7;  // всего дней для заполнения
 
-// Цвета и стили для заднего фона и для карточки с индикаторами
+const TITLE_COLOR = "#779FBD";
+const TEXT_COLOR = "#779FBD";
+
+const INSTRUCTION_CARD_COLOR = "#FFFFFF";
+const DAYS_CARD_COLOR = "#FFFFFF4D";
+
 const BG_TOP_COLOR = "#D1E8FF";
 const BG_BOTTOM_COLOR = "#FFFFFF";
-const DAYS_CARD_BG = "#FFFFFF4D";
 
 const DAY_EMPTY_BORDER = "#9FBACF";
 const DAY_EMPTY_FILL = "#FFFFFF";
@@ -52,9 +29,8 @@ const DAY_FILLED_FILL = "#9AD99D";
 const DAY_TEXT_EMPTY = "#9FBACF";
 const DAY_TEXT_FILLED = "#FFFFFF";
 
-/* === Размеры canvas === */
-const MAX_CANVAS_WIDTH = 428;
-const BASE_ASPECT = 720 / MAX_CANVAS_WIDTH;  // исходное соотношение
+const MAX_CANVAS_WIDTH = 425;
+const BASE_ASPECT = 845 / MAX_CANVAS_WIDTH;
 const baseDimensions = {
   width: MAX_CANVAS_WIDTH,
   height: Math.floor(MAX_CANVAS_WIDTH * BASE_ASPECT),
@@ -79,12 +55,8 @@ class GameEngine {
     this.tmp = tmp || {};
     this.tmp.engine = this;
 
-    // Сервер передаёт число дней подряд в init_game_data.consecutiveDays
-    // Если не передано, по умолчанию 0.
     this.consecutiveDays = parseInt(init_game_data.consecutiveDays || "0", 10);
-    // Для анимации заполнения: текущий уровень заливки (начинается с 0)
     this.currentFillLevel = 0;
-    // Целевой уровень заливки равен consecutiveDays
     this.targetFillLevel = this.consecutiveDays;
 
     // Флаг игры – используется для остановки анимации, если игра завершена
@@ -96,9 +68,9 @@ class GameEngine {
     this.boundHandleClick = (e) => this.handleClick(e);
     this.canvas.addEventListener("click", this.boundHandleClick);
 
-    // this.boundResizeCanvas = () => this.resizeCanvas();
-    // window.addEventListener("resize", this.boundResizeCanvas);
-    // this.resizeCanvas();
+    this.boundResizeCanvas = () => this.resizeCanvas();
+    window.addEventListener("resize", this.boundResizeCanvas);
+    this.resizeCanvas();
 
     this.lastFrameTime = performance.now();
     this.startGameLoop();
@@ -108,18 +80,18 @@ class GameEngine {
   }
 
   /* Метод динамического масштабирования canvas */
-  // resizeCanvas() {
-  //   const parent = this.canvas.parentElement;
-  //   if (!parent) return;
-  //   const parentWidth = parent.clientWidth;
-  //   const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
-  //   const newHeight = Math.floor(newWidth * BASE_ASPECT);
-  //   const dpr = window.devicePixelRatio || 1;
-  //   this.canvas.width = newWidth * dpr;
-  //   this.canvas.height = newHeight * dpr;
-  //   this.canvas.style.width = `${newWidth}px`;
-  //   this.canvas.style.height = `${newHeight}px`;
-  // }
+  resizeCanvas() {
+    const parent = this.canvas.parentElement;
+    if (!parent) return;
+    const parentWidth = parent.clientWidth;
+    const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
+    const newHeight = Math.floor(newWidth * BASE_ASPECT);
+    const dpr = window.devicePixelRatio || 1;
+    this.canvas.width = newWidth * dpr;
+    this.canvas.height = newHeight * dpr;
+    this.canvas.style.width = `${newWidth}px`;
+    this.canvas.style.height = `${newHeight}px`;
+  }
 
   /* Обработчик клика по стакану */
   handleClick(e) {
@@ -148,7 +120,6 @@ class GameEngine {
     }
   }
 
-  /* Загрузка ассетов */
   async loadAssets() {
     const assets = {
       glass: loadImage(glassUrl),
@@ -162,7 +133,6 @@ class GameEngine {
     });
   }
 
-  /* Игровой цикл – для анимации заполнения стакана */
   startGameLoop() {
     this.lastFrameTime = performance.now();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
@@ -171,12 +141,11 @@ class GameEngine {
   gameLoop() {
     if (this.isGameOver) return;
     const now = performance.now();
-    let dt = (now - this.lastFrameTime) / 1000;
+    const dt = Math.min((now - this.lastFrameTime) / 1000, 0.1);
     this.lastFrameTime = now;
-    dt = Math.min(dt, 0.1);
 
     // Анимация заполнения стакана: плавное приближение currentFillLevel к targetFillLevel
-    const fillSpeed = 2; // уровней в секунду
+    const fillSpeed = 1; // уровней в секунду
     if (this.currentFillLevel < this.targetFillLevel) {
       this.currentFillLevel += fillSpeed * dt;
       if (this.currentFillLevel > this.targetFillLevel) {
@@ -184,10 +153,9 @@ class GameEngine {
       }
     }
     this.drawScene();
-    this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+    // this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
-  /* Метод отрисовки всей сцены */
   drawScene() {
     const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
@@ -195,74 +163,119 @@ class GameEngine {
     const { width, height } = baseDimensions;
     this.ctx.clearRect(0, 0, width, height);
 
-    // Задний фон – градиент от BG_TOP_COLOR до BG_BOTTOM_COLOR
     const bgGradient = this.ctx.createLinearGradient(0, 0, 0, height);
     bgGradient.addColorStop(0, BG_TOP_COLOR);
     bgGradient.addColorStop(1, BG_BOTTOM_COLOR);
     this.ctx.fillStyle = bgGradient;
     this.ctx.fillRect(0, 0, width, height);
 
-    // Отрисовка украшений (если ассет загружен) – центрирован
     if (this.images.decorations) {
-      const decorW = DECOR_WIDTH;
-      const decorH = DECOR_HEIGHT;
-      const decorX = (width - decorW) / 2;
-      const decorY = height - decorH; // отступ сверху
-      this.ctx.drawImage(this.images.decorations, decorX, decorY, decorW, decorH);
+      const decorX = (width - DECOR_WIDTH) / 2;
+      const decorY = height - DECOR_HEIGHT;
+      this.ctx.drawImage(this.images.decorations, decorX, decorY, DECOR_WIDTH, DECOR_HEIGHT);
     }
 
-    // Отрисовка карточки с заголовком и инструкцией (текстовые элементы)
     this.drawInstructionCard();
 
-    // Отрисовка карточки с 7 индикаторами (дней)
     this.drawDaysCard();
 
-    // Отрисовка стакана (контур) и заливки
     this.drawGlass();
 
     this.ctx.restore();
   }
 
   drawInstructionCard() {
-    // Пример отрисовки карточки с заголовком и инструкцией
-    // Координаты и размеры задаются относительно baseDimensions
+    const TEXT_PADDING = 16;
+    const GAP_BETWEEN_TITLE_AND_TEXT = 60;
+    const LINE_HEIGHT = 23;
+    const INSTRUCTION_CARD_HORIZONTAL_PADDING = 14.5;
+
     const { width } = baseDimensions;
-    const cardX = 20, cardY = 20, cardW = width - 29, cardH = 183;
-    // Фон карточки
-    this.ctx.fillStyle = "#FFFFFF";
+    const cardX = INSTRUCTION_CARD_HORIZONTAL_PADDING;
+    const cardY = 20;
+    const cardW = width - INSTRUCTION_CARD_HORIZONTAL_PADDING * 2;
+    const cardH = 183;
+
+    // Отрисовка фона карточки
+    this.ctx.fillStyle = INSTRUCTION_CARD_COLOR;
     this.roundRect(this.ctx, cardX, cardY, cardW, cardH, 16);
     this.ctx.fill();
-    // Заголовок
-    this.ctx.fillStyle = "#779FBD";
+
+    // Отрисовка заголовка
+    this.ctx.fillStyle = TITLE_COLOR;
     this.ctx.font = "700 20px Roboto";
-    this.ctx.fillText("Трекер здоровья", cardX + 16, cardY + 30);
-    // Инструкция (часть жирная)
+    this.ctx.fillText("Трекер здоровья", cardX + TEXT_PADDING, cardY + 30);
+
+    // Текст инструкции
+    const instructionText = "Наполняй стакан молоком каждый день! Не забывай нажимать на него — только так он будет заполняться. Пропустишь день, и стакан опустеет. Заполни его за 7 дней подряд и получи билет!";
+
+    // Вычисляем максимальную ширину текста в карточке
+    const maxTextWidth = cardW - TEXT_PADDING * 2;
+
+    // Функция для переноса текста
+    const wrapText = (ctx, text, maxWidth) => {
+      const words = text.split(" ");
+      const lines = [];
+      let currentLine = words[0];
+
+      for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = ctx.measureText(currentLine + " " + word).width;
+        if (width < maxWidth) {
+          currentLine += " " + word;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      lines.push(currentLine);
+      return lines;
+    };
+
+    this.ctx.fillStyle = TEXT_COLOR;
+
+    // Устанавливаем шрифт для первой строки (жирный)
     this.ctx.font = "600 16px Roboto";
-    const lines = [
-      "Наполняй бутылку молоком каждый день!",
-      "Не забывай нажимать на неё — только так она будет заполняться.",
-      "Пропустишь день, и бутылка опустеет.",
-      "Заполни её за 7 дней подряд и получи билет!"
-    ];
+    // Для первой части текста можно взять часть до первого знака "!" как жирную
+    const boldEnd = instructionText.indexOf("!") + 1;
+    const boldText = instructionText.substring(0, boldEnd);
+    const normalText = instructionText.substring(boldEnd).trim();
+
+    // Получаем массив строк для жирного текста
+    const boldLines = wrapText(this.ctx, boldText, maxTextWidth);
+    // Устанавливаем обычный шрифт для оставшегося текста
+    const normalLines = wrapText(this.ctx, normalText, maxTextWidth);
+
+    // Рисуем жирные строки
     let offset = 0;
-    lines.forEach((line) => {
-      this.ctx.fillText(line, cardX + 15, cardY + 80 + offset);
-      offset += 20;
+    boldLines.forEach(line => {
+      this.ctx.fillText(line, cardX + TEXT_PADDING, cardY + GAP_BETWEEN_TITLE_AND_TEXT + offset);
+      offset += LINE_HEIGHT;
+    });
+    // Рисуем оставшиеся строки
+    this.ctx.font = "400 16px Roboto";
+    normalLines.forEach(line => {
+      this.ctx.fillText(line, cardX + TEXT_PADDING, cardY + GAP_BETWEEN_TITLE_AND_TEXT + offset);
+      offset += LINE_HEIGHT;
     });
   }
 
   drawDaysCard() {
-    // Рисуем карточку с 7 индикаторами дней
+    const DAYS_CARD_HORIZONTAL_PADDING = 14.5;
+
     const { width } = baseDimensions;
-    const cardX = 20, cardY = 230, cardW = width - 40, cardH = 70;
-    this.ctx.fillStyle = DAYS_CARD_BG;
+    const cardX = DAYS_CARD_HORIZONTAL_PADDING;
+    const cardY = 219;
+    const cardW = width - DAYS_CARD_HORIZONTAL_PADDING * 2;
+    const cardH = 75;
+    this.ctx.fillStyle = DAYS_CARD_COLOR;
     this.roundRect(this.ctx, cardX, cardY, cardW, cardH, 16);
     this.ctx.fill();
 
     const circleRadius = 22.5;
     const spacing = (cardW - 14 * circleRadius) / (TOTAL_DAYS + 1);
     let xPos = cardX + spacing + circleRadius;
-    // Используем this.consecutiveDays, полученное от сервера
+
     const daysFilled = this.consecutiveDays;
     for (let i = 1; i <= TOTAL_DAYS; i++) {
       const filled = i <= daysFilled;
@@ -277,7 +290,7 @@ class GameEngine {
       this.ctx.strokeStyle = borderColor;
       this.ctx.stroke();
       this.ctx.fillStyle = textColor;
-      this.ctx.font = "500 20px 'Roboto Mono'";
+      this.ctx.font = "500 20px/24px Roboto Mono";
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
       this.ctx.fillText(i.toString(), xPos, cardY + cardH / 2);
@@ -286,40 +299,88 @@ class GameEngine {
   }
 
   drawGlass() {
-    // Рисуем стакан и его заполнение
+    const GLASS_GAP = 81;
+
     const { width, height } = baseDimensions;
     const centerX = width / 2;
-    const bottomY = height - 50; // отступ от низа
+    const bottomY = height - GLASS_GAP;
     const glassX = centerX - GLASS_WIDTH / 2;
     const glassY = bottomY - GLASS_HEIGHT;
 
     // Отрисовка контура стакана
     if (this.images.glass) {
       this.ctx.drawImage(this.images.glass, glassX, glassY, GLASS_WIDTH, GLASS_HEIGHT);
-    } else {
-      // fallback: рисуем прямоугольник
-      // this.ctx.strokeStyle = "#CCCCCC";
-      // this.ctx.strokeRect(glassX, glassY, GLASS_WIDTH, GLASS_HEIGHT);
     }
 
-    // Отрисовка заливки стакана
-    // Вычисляем процент заполнения: currentFillLevel (0..TOTAL_DAYS)
+    // Отрисовка заливки стакана с клиппингом по контуру
     const fillPercent = Math.min(this.currentFillLevel / TOTAL_DAYS, 1);
-    const fillHeight = GLASS_HEIGHT * fillPercent;
+    const fillHeight = FILLING_HEIGHT * fillPercent;
     const fillY = glassY + (GLASS_HEIGHT - fillHeight);
-
     if (this.images.filling) {
-      // Используем clipping: рисуем filling внутри стакана
       this.ctx.save();
-      this.ctx.beginPath();
-      this.ctx.rect(glassX, glassY, GLASS_WIDTH, GLASS_HEIGHT);
-      this.ctx.clip();
-      this.ctx.drawImage(this.images.filling, glassX, fillY, GLASS_WIDTH, fillHeight);
+      // this.ctx.beginPath();
+      // Используем roundRect для создания пути, соответствующего контуру стакана,
+      // чтобы заливка обрезалась по краям.
+      // this.roundRect(this.ctx, glassX, glassY, GLASS_WIDTH, GLASS_HEIGHT, 10);
+      // this.drawCurvedTrapezoid(this.ctx, glassX, glassY, GLASS_HEIGHT, 100, fillHeight, 20);
+      this.ctx.fillStyle = "#FF22AA";
+      this.ctx.fill();
+      // this.ctx.closePath()
+      // this.ctx.clip();
+      this.ctx.drawImage(this.images.filling, glassX, fillY, FILLING_WIDTH, fillHeight);
       this.ctx.restore();
-    } else {
-      // this.ctx.fillStyle = "#9AD99D"; // зелёная заливка
-      // this.ctx.fillRect(glassX, fillY, GLASS_WIDTH, fillHeight);
     }
+  }
+
+  /**
+      * Рисует трапецию с изогнутой нижней стороной.
+      *
+      * @param {CanvasRenderingContext2D} ctx - контекст рисования canvas.
+      * @param {number} x - координата X верхнего левого угла трапеции.
+      * @param {number} y - координата Y верхнего левого угла трапеции.
+      * @param {number} topWidth - ширина верхней стороны.
+      * @param {number} bottomWidth - ширина нижней стороны.
+      * @param {number} height - высота трапеции.
+      * @param {number} curveDepth - величина изгиба нижней стороны.
+      */
+  drawCurvedTrapezoid(ctx, x, y, topWidth, bottomWidth, height, curveDepth) {
+    // Расчёт отступов для нижней стороны
+    const deltaWidth = (bottomWidth - topWidth) / 2;
+
+    ctx.beginPath();
+    // верхняя сторона: от (x, y) до (x + topWidth, y)
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + topWidth, y);
+
+    // правая боковая сторона (без изгиба): до (x + topWidth + deltaWidth, y + height)
+    ctx.lineTo(x + topWidth + deltaWidth, y + height - curveDepth);
+
+    // нижняя изогнутая сторона: создадим кривую Безье
+    // Контрольные точки определены для создания мягкой кривизны.
+    ctx.quadraticCurveTo(
+      x + topWidth + deltaWidth, y + height,                // контрольная точка
+      x + topWidth + deltaWidth + curveDepth, y + height      // конечная точка правой части кривой
+    );
+
+    // затем – к левой части нижней стороны.
+    ctx.quadraticCurveTo(
+      x + deltaWidth, y + height,                            // контрольная точка
+      x + deltaWidth - curveDepth, y + height                // конечная точка левой части кривой
+    );
+
+    // левая боковая сторона: поднимаемся к (x, y + height - curveDepth)
+    ctx.lineTo(x, y + height - curveDepth);
+
+    // замыкаем контур
+    ctx.closePath();
+
+    // Настройка стиля обводки и заливки
+    ctx.fillStyle = "#cceeff";
+    ctx.strokeStyle = "#3366aa";
+    ctx.lineWidth = 3;
+
+    ctx.fill();
+    ctx.stroke();
   }
 
   /* Вспомогательная функция для рисования скруглённого прямоугольника */
@@ -337,7 +398,6 @@ class GameEngine {
     ctx.closePath();
   }
 
-  // Остановка игры (например, при завершении)
   handleGameOver() {
     this.isGameOver = true;
     if (this.finishCallback) {
@@ -362,11 +422,8 @@ class GameEngine {
   }
 }
 
-/* === Экспорт API для взаимодействия с серверной частью === */
-export { init, proceed, finish };
-
 function init(canvas, init_game_data, tmp) {
-  console.log("Version: " + __VERSION__);
+  console.log("Version:", __VERSION__);
   const engine = new GameEngine(canvas, init_game_data, tmp);
   return engine.getTmp();
 }
@@ -374,6 +431,7 @@ function init(canvas, init_game_data, tmp) {
 function proceed(canvas, tmp, finish_func = (game_data) => { }) {
   const engine = GameEngine.getInstance(tmp);
   engine.setFinishCallback(finish_func);
+  engine.gameLoop();
   return tmp;
 }
 
@@ -381,3 +439,5 @@ function finish(canvas, tmp) {
   const engine = GameEngine.getInstance(tmp);
   engine.stopGameLoop();
 }
+
+export { init, proceed, finish };
