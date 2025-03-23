@@ -9,9 +9,10 @@ game_scripts_storage = FileSystemStorage(settings.BASE_DIR / 'games/', base_url=
 class User(models.Model):
     tg_id = models.CharField(
         max_length=512,
-        verbose_name="Score",
+        verbose_name="Telegram id",
         null=False,
-        blank=False
+        blank=False,
+        unique=True
     )
     # TODO birthdate
     score = models.BigIntegerField(

@@ -1,6 +1,5 @@
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 from django.db.models.manager import BaseManager
@@ -69,7 +68,6 @@ def get_game_links(req: HttpRequest) -> JsonResponse | HttpResponse:
         )
     return HttpResponse(status=400)
 
-@csrf_exempt
 def init_game(req: HttpRequest) -> None:
     """
      Inits game session for user on server side
@@ -117,7 +115,6 @@ def init_game(req: HttpRequest) -> None:
         )
     return HttpResponse(status=400)
 
-@csrf_exempt
 def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
     """
         Checks whether the game was played correctly and compute score
