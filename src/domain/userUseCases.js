@@ -1,8 +1,8 @@
 import { fetchScore } from '../infrastructure/index';
 
-async function loadUserScore(userName) {
+async function loadUserScore(authRawData) {
   try {
-    const data = await fetchScore(userName); // data: { score: number, score_for_coupon: number }
+    const data = await fetchScore(authRawData); // data: { score: number, score_for_coupon: number }
 
     if (typeof data.score !== 'number' || typeof data.score_for_coupon !== 'number') {
       throw new Error("Неверный формат данных");
