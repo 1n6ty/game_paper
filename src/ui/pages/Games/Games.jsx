@@ -1,22 +1,24 @@
 import React from 'react';
-import TopCards from '../../components/TopCards/TopCards';
-import ScoreBar from '../../components/ScoreBar/ScoreBar';
+import Profile from '../../components/Profile/Profile';
 import Card from '../../components/Card/Card';
 import GamesList from '../../components/GamesList/GamesList';
+
+import './Games.css';
 
 
 const Games = () => {
   return (
     <div className="container">
-      <TopCards />
-      <ScoreBar />
+      <Profile />
 
       <Card
         variant="white"
         title="Игры"
-        text="Сканируй код «Честный знак», чтобы открыть новую игру и участвовать в розыгрыше"
         enableQr={true}
       >
+        <div className="games-card-text">
+          Сканируй код «Честный знак», чтобы открыть новую игру и участвовать в розыгрыше
+        </div>
       </Card>
 
       <GamesList />

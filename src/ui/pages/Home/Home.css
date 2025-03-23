@@ -29,6 +29,16 @@
   }
 }
 
+.home-card-text {
+  font-family: 'Roboto';
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
+
+  color: var(--color-primary-blue);
+}
+
 .total-score {
   display: flex;
   margin-top: 14px;

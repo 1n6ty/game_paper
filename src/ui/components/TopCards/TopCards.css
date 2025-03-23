@@ -10,7 +10,7 @@
   gap: 17px;
 }
 
-.emblem-card {
+.top-cards-emblem-card {
   position: relative;
   text-align: center;
   background: white;
@@ -21,14 +21,14 @@
   box-shadow: var(--card-shadow);
 }
 
-.emblem-card .emblem-img {
+.top-cards-emblem-card .top-cards-emblem-img {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
 }
 
-.user-card {
+.top-cards-user-card {
   display: flex;
   align-items: center;
   background: var(--color-primary-light-blue);
@@ -40,16 +40,16 @@
   box-shadow: var(--card-shadow);
 }
 
-.user-card .milk-img {
+.top-cards-user-card .top-cards-milk-img {
   margin-right: 16px;
 }
 
-.user-info {
+.top-cards-user-info {
   margin: 0;
   padding: 0;
 }
 
-.user-info .username {
+.top-cards-user-info .top-cards-username {
   font-family: 'Roboto Semibold', sans-serif;
   font-weight: 600;
   font-size: 16px;
@@ -60,7 +60,7 @@
   padding: 0;
 }
 
-.user-info .score {
+.top-cards-user-info .top-cards-tickets {
   font-family: 'Roboto Light', sans-serif;
   font-weight: 400;
   font-size: 20px;

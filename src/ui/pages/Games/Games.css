@@ -1,0 +1,12 @@
+@import "../../styles/variables.css";
+@import "../../styles/common.css";
+
+.games-card-text {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 26px;
+    letter-spacing: 0.1px;
+
+    color: var(--color-primary-blue);
+}

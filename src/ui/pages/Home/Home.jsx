@@ -1,6 +1,5 @@
-import React, { useContext, useEffect } from 'react';
-import TopCards from '../../components/TopCards/TopCards';
-import ScoreBar from '../../components/ScoreBar/ScoreBar';
+import React, { useContext } from 'react';
+import Profile from '../../components/Profile/Profile';
 import Card from '../../components/Card/Card';
 import CardTip from '../../components/CardTip/CardTip';
 import { UserContext } from '../../contexts/UserContext';
@@ -8,17 +7,6 @@ import { UserContext } from '../../contexts/UserContext';
 import { GL_URL } from '../../../global';
 import './Home.css';
 
-const Profile = () => {
-  const { loadScore } = useContext(UserContext);
-  loadScore();
-
-  return (
-    <div>
-      <TopCards />
-      <ScoreBar />
-    </div>
-  )
-}
 
 const Home = () => {
   const { totalScore, tickets } = useContext(UserContext);
@@ -31,7 +19,7 @@ const Home = () => {
         variant="white"
         title="Правила игры"
       >
-        <div className="card-text">
+        <div className="home-card-text">
           <b>Сканируй код «Честный знак» на упаковках Городецкого молока и получай ламбиксы!</b>
           <br />
           При старте ты получишь приветственные 30 ламбиксов
