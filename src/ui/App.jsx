@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import TabBar from './components/TabBar/TabBar';
 
@@ -9,8 +9,16 @@ import Game from './pages/Game/Game';
 
 import { UserProvider } from './contexts/UserContext';
 
-
 function App() {
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.lockOrientation();
+      return () => {
+        window.Telegram.WebApp.unlockOrientation();
+      };
+    }
+  }, []);
+
   return (
     <UserProvider>
       <Routes>
