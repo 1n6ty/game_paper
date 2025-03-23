@@ -1,4 +1,4 @@
-const __VERSION__ = 9.9;
+const __VERSION__ = "9.21D";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -28,9 +28,8 @@ const grassUrl = `${PATH}grass.svg`;
 const cowIdleUrl = `${PATH}cowIdle.svg`;
 const cowPressedUrl = `${PATH}cowPressed.svg`;
 
-// Максимальные и базовые размеры canvas
-const MAX_CANVAS_WIDTH = 428;                         // максимальная ширина канваса
-const BASE_ASPECT = 720 / MAX_CANVAS_WIDTH;           // соотношение сторон (исходная высота / ширина)
+const MAX_CANVAS_WIDTH = 428;
+const BASE_ASPECT = 720 / MAX_CANVAS_WIDTH;
 const baseDimensions = {
   width: MAX_CANVAS_WIDTH,
   height: Math.floor(MAX_CANVAS_WIDTH * BASE_ASPECT),
@@ -81,7 +80,7 @@ function loadImage(src) {
 const BACKGROUNDS = [
   [ASSETS.ceilEvening, ["#67AAEB", "#D3E8FF", "#FFFFFF"]],
   [ASSETS.ceilSunset, ["#67AAEB", "#F7CDCE", "#FFFFFF"]],
-  [ASSETS.ceilSunrise, ["#97AA0FF", "#D1E8FF", "#FFFFFF"]],
+  [ASSETS.ceilSunrise, ["#97A0FF", "#D1E8FF", "#FFFFFF"]],
   [ASSETS.ceilDay, ["#A1D1FF", "#D1E8FF", "#FFFFFF"]],
   [ASSETS.ceilMorning, ["#AED7FF", "#D9ECFF", "#FEEEEF"]],
 ];
@@ -92,26 +91,36 @@ class LCG {
     this.modulus = 2 ** 31;
     this.multiplier = 1103515245;
     this.increment = 12345;
-    this.state = parseInt(seed, 16) % this.modulus;
+    this.state = LCG.hash(seed) % this.modulus;
   }
+
+  static hash(str) {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+      hash = hash & 0xffffffff;
+    }
+    return hash >>> 0;
+  }
+
   random() {
     this.state = (this.multiplier * this.state + this.increment) % this.modulus;
     return this.state / this.modulus;
   }
 }
 
+
 class GameEngine {
-  constructor(canvas, init_game_data, tmp) {
+  constructor(canvas, initGameData, tmp) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.tmp = tmp || {};
     this.tmp.engine = this;
 
-    // Используем seed из init_game_data, или генерируем его
-    this.seed = init_game_data.seed;
+    this.seed = initGameData.seed;
     console.log("Seed:", this.seed);
     this.randomGenerator = new LCG(this.seed);
-    this.bestScore = init_game_data.best_score;
+    this.bestScore = initGameData.best_score;
     console.log("Лучший счет:", this.bestScore);
 
     this.state = {
@@ -155,37 +164,60 @@ class GameEngine {
     this.images = {};
     this.loadAssets();
 
-    // Привязываем обработчик прыжка к window
+    this.lastCanvasHeight = 0;
+    this.isResizing = false;
+    this.resizeTimer = null;
+
     this.boundHandleJump = (e) => this.handleJump(e);
     window.addEventListener('keydown', this.boundHandleJump);
     this.canvas.addEventListener('touchstart', this.boundHandleJump);
 
-    // Привязываем обработчик ресайза
     this.boundResizeCanvas = () => this.resizeCanvas();
     window.addEventListener('resize', this.boundResizeCanvas);
     this.resizeCanvas();
   }
 
   resizeCanvas() {
-    // const parent = this.canvas.parentElement;
-    // if (!parent) return;
-    // const parentWidth = parent.clientWidth;
-    // // Устанавливаем ширину как минимум меньше или равную MAX_CANVAS_WIDTH
-    // const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
-    // const newHeight = Math.floor(newWidth * BASE_ASPECT);
-    // const dpr = window.devicePixelRatio || 1;
-    // this.canvas.width = newWidth * dpr;
-    // this.canvas.height = newHeight * dpr;
-    // this.canvas.style.width = `${newWidth}px`;
-    // this.canvas.style.height = `${newHeight}px`;
+    const parent = this.canvas.parentElement;
+    if (!parent) return;
+
+    console.log("Resize START");
+
+    if (this.resizeTimer)
+      clearTimeout(this.resizeTimer)
+
+    this.isResizing = true;
+
+    const parentWidth = parent.clientWidth;
+    const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
+    const newHeight = Math.floor(newWidth * BASE_ASPECT);
+    const dpr = window.devicePixelRatio || 1;
+    this.canvas.width = newWidth * dpr;
+    this.canvas.height = newHeight * dpr;
+    this.canvas.style.width = `${newWidth}px`;
+    this.canvas.style.height = `${newHeight}px`;
 
     const canvasStyleHeight = parseInt(this.canvas.style.height);
     if (canvasStyleHeight <= 716) {
       console.log(canvasStyleHeight);
-      this.floorHeight += 716 % canvasStyleHeight;
+      if ((canvasStyleHeight - this.lastCanvasHeight) < 0) {
+        this.floorHeight += 716 % canvasStyleHeight;
+      } else {
+        this.floorHeight -= 716 % canvasStyleHeight;
+      }
     } else
       this.floorHeight = DEFAULT_FLOOR_HEIGHT;
     console.log(this.floorHeight);
+    this.lastCanvasHeight = canvasStyleHeight;
+
+    this.resizeTimer = setInterval(() => this.resizeCanvasEnd(), 200);
+  }
+
+  resizeCanvasEnd() {
+    console.log("Resize END");
+    this.isResizing = false;
+    if (this.resizeTimer)
+      clearTimeout(this.resizeTimer)
   }
 
   handleJump(e) {
@@ -226,26 +258,33 @@ class GameEngine {
   }
 
   startGameLoop() {
+    console.log("Start GameLoop");
     this.lastFrameTime = performance.now();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   gameLoop() {
     if (this.state.isGameOver) return;
+    console.log("GameLoop");
     const now = performance.now();
-    let dt = (now - this.lastFrameTime) / 1000;
+    const dt = Math.min((now - this.lastFrameTime) / 1000, 0.1);
     this.lastFrameTime = now;
-    dt = Math.min(dt, 0.1);
     this.updateLogic(dt);
     this.drawScene();
-    this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+    // this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   stopGameLoop() {
+    console.log("Stop GameLoop");
     window.removeEventListener('keydown', this.boundHandleJump);
     this.canvas.removeEventListener('touchstart', this.boundHandleJump);
     window.removeEventListener('resize', this.boundResizeCanvas);
-    if (this.gameLoopId) cancelAnimationFrame(this.gameLoopId);
+    if (this.resizeTimer)
+      clearTimeout(this.resizeTimer)
+    if (this.gameLoopId) {
+      console.log("gameLoopId cleared");
+      cancelAnimationFrame(this.gameLoopId);
+    }
   }
 
   updateParallax(fps) {
@@ -335,6 +374,7 @@ class GameEngine {
   }
 
   detectGroundCollision() {
+    if (this.isResizing) return;
     const st = this.state;
     if (st.bird.y - BIRD_BOUNDARY_OFFSET < 0 || st.bird.y + BIRD_BOUNDARY_OFFSET > baseDimensions.height - this.floorHeight) {
       this.handleGameOver();
@@ -406,6 +446,7 @@ class GameEngine {
       this.ctx.drawImage(ceilingImg, this.state.groundX, 0, width, CEIL_DRAW_HEIGHT);
       this.ctx.drawImage(ceilingImg, this.state.groundX + width - 1, 0, width, CEIL_DRAW_HEIGHT);
     } else {
+      //
       this.ctx.fillStyle = this.state.selectedGradient[0];
       this.ctx.fillRect(0, 0, width, CEIL_DRAW_HEIGHT);
     }
@@ -440,18 +481,19 @@ class GameEngine {
   }
 
   handleGameOver() {
+    console.log("GameOver");
+
     this.state.isGameOver = true;
-    // if (this.state.passedPipes > bestScoreGlobal) {
-    //   bestScoreGlobal = this.state.passedPipes;
-    //   localStorage.setItem('bestScore', bestScoreGlobal);
-    // }
     if (this.finishCallback) {
-      const game_data = {
+      const gameData = {
         score: this.state.passedPipes,
       };
-      this.finishCallback(game_data);
+      this.finishCallback(gameData);
     }
-    cancelAnimationFrame(this.gameLoopId);
+    if (this.gameLoopId) {
+      console.log("gameLoopId cleared");
+      cancelAnimationFrame(this.gameLoopId);
+    }
   }
 
   setFinishCallback(callback) {
@@ -467,18 +509,18 @@ class GameEngine {
   }
 }
 
-// let bestScoreGlobal = 0;
-
-export function init(canvas, init_game_data, tmp) {
+export function init(canvas, initGameData, tmp) {
   console.log("Version:", __VERSION__);
-  const engine = new GameEngine(canvas, init_game_data, tmp);
+  const engine = new GameEngine(canvas, initGameData, tmp);
   engine.startGameLoop();
   return engine.getTmp();
 }
 
-export function proceed(canvas, tmp, finish_func = (game_data) => { }) {
+export function proceed(canvas, tmp, finish_func = (gameData) => { }) {
+  if (!canvas) console.log("Canvas does not exist!");
   const engine = GameEngine.getInstance(tmp);
   engine.setFinishCallback(finish_func);
+  engine.gameLoop();
   return tmp;
 }
 

@@ -6,46 +6,49 @@ class LCG:
         self.modulus = 2 ** 31
         self.multiplier = 1103515245
         self.increment = 12345
-        try:
-            self.state = int(seed, 16) % self.modulus
-        except Exception:
-            self.state = 0
+        # Используем хэш-функцию для seed, чтобы разные seed давали разные начальные состояния
+        self.state = self.hash(seed) % self.modulus
+
+    @staticmethod
+    def hash(s):
+        h = 5381
+        for c in s:
+            h = ((h << 5) + h) + ord(c)  # h * 33 + ord(c)
+            h = h & 0xffffffff  # ограничение до 32 бит
+        return h
 
     def random(self):
         self.state = (self.multiplier * self.state + self.increment) % self.modulus
         return self.state / self.modulus
 
+
 def simulate_expected_score(seed, simulation_time_seconds=60):
     """
-    Симулирует генерацию препятствий за заданное время
-    и возвращает максимально возможное количество труб, которое можно было бы сгенерировать.
+    Симулирует генерацию препятствий за заданное время с использованием
+    детерминированного генератора случайных чисел LCG.
     
-    Для упрощения будем считать, что:
-    - PIPE_INTERVAL = 100 (как на клиенте)
-    - FPS предполагаем равным 60
-    Таким образом, за 1 секунду теоретически можно сгенерировать (60 / PIPE_INTERVAL) * 60 = 36 препятствий,
-    но фактическое число зависит от случайной генерации.
-    ВАЖНО: если константы на клиенте изменены, то и здесь необходимо их поменять.
+    Для упрощения:
+      - PIPE_INTERVAL = 100 (как на клиенте)
+      - FPS предполагается равным 60.
+    Таким образом, ожидаемое число препятствий = (FPS * simulation_time_seconds) / PIPE_INTERVAL.
     
-    Мы будем симулировать генерацию препятствий до окончания simulation_time_seconds.
+    Используется LCG для генерации случайных чисел. Для каждого кадра, если
+    lcg.random() < (1/PIPE_INTERVAL), считается, что сгенерировалось препятствие.
     """
     FPS = 60
-    PIPE_INTERVAL = 100  # как в клиентском коде
+    PIPE_INTERVAL = 100  # должно совпадать с клиентским значением
     total_frames = simulation_time_seconds * FPS
 
     lcg = LCG(seed)
-    frame = 0
     pipe_count = 0
+    threshold = 1 / PIPE_INTERVAL
 
-    # Простая симуляция: каждое препятствие генерируется, если (frame % PIPE_INTERVAL < 1)
-    # (приблизительно, если frame кратен PIPE_INTERVAL)
-    while frame < total_frames:
-        # Приблизительно, каждые PIPE_INTERVAL кадров генерируется препятствие
-        # Для большей детерминированности можно смоделировать генерацию с учетом случайного числа
-        if frame % PIPE_INTERVAL < 1:
+    for _ in range(total_frames):
+        if lcg.random() < threshold:
             pipe_count += 1
-        frame += 1
+
     return pipe_count
+
 
 def init(perpetual: dict, tmp: dict) -> tuple[dict, dict, dict]:
     """
@@ -79,10 +82,8 @@ def finish(perpetual: dict, tmp: dict, game_data: dict) -> tuple[dict, int]:
     except ValueError:
         reported_score = 0
 
-    # Получаем seed, который мы отправили клиенту
     seed = perpetual.get("last_seed", "")
     if not seed:
-        # Если по каким-то причинам seed не получен, отклоняем игру
         return (perpetual, 0)
 
     # Симулируем ожидаемый счет за, например, 60 секунд игры (это параметр, который можно настроить)
