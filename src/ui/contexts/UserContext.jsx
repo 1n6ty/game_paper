@@ -6,8 +6,7 @@ import { TEST } from "../../global";
 
 const UserContext = createContext();
 
-const TOTAL_SCORE = 1000;
-const TEST_SCORE = 100;
+const ERROR_SCORE = -1;
 
 const UserProvider = ({ children }) => {
   const [score, setScore] = useState(0);
@@ -33,10 +32,8 @@ const UserProvider = ({ children }) => {
         .catch(error => {
           console.error("Ошибка загрузки очков:", error);
 
-          if (TEST) {
-            console.log("Установка тестовых очков.");
-            updateUserScoreData(TEST_SCORE, TOTAL_SCORE, 0);
-          }
+          console.log("Установка тестовых очков.");
+          updateUserScoreData(ERROR_SCORE, ERROR_SCORE, 0);
         });
     }
   }
@@ -48,9 +45,7 @@ const UserProvider = ({ children }) => {
     setTotalScore(newTotalScore);
     console.log("newTickets", newTickets);
     setTickets(newTickets);
-    // console.log("tickets:", tickets);
   };
-
 
   useEffect(() => {
     const tg = window.Telegram && window.Telegram.WebApp;
