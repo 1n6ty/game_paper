@@ -7,12 +7,11 @@ from subprocess import Popen, PIPE
 game_scripts_storage = FileSystemStorage(settings.BASE_DIR / 'games/', base_url=None)
 
 class User(models.Model):
-    nick = models.CharField(
-        verbose_name="Nickname",
-        max_length=255,
+    tg_id = models.CharField(
+        max_length=512,
+        verbose_name="Score",
         null=False,
-        blank=False,
-        unique=True
+        blank=False
     )
     # TODO birthdate
     score = models.BigIntegerField(

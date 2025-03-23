@@ -36,7 +36,7 @@ def send_start(msg: telebot.types.Message) -> None:
     finally:
         db.commit()
     try:
-        cursor.execute("INSERT INTO Paper_user (nick, score) VALUES (%s, %s);", (hashlib.sha256(msg.from_user.username.encode('utf-8')).hexdigest(), start_score))
+        cursor.execute("INSERT INTO Paper_user (tg_id, score) VALUES (%s, %s);", (hashlib.sha256(str(msg.from_user.id).encode('utf-8')).hexdigest(), start_score))
     except Exception:
         pass
     finally:
@@ -44,7 +44,7 @@ def send_start(msg: telebot.types.Message) -> None:
 
     bot.send_message(
         msg.chat.id, 
-        f"Ну что, @{msg.from_user.username}, готов погрузиться в игровой мир, прокачать свой скилл и начать собирать ламбиксы? 😉"
+        f"Ну что, {msg.from_user.first_name if msg.from_user.username == None else "@" + msg.from_user.username}, готов погрузиться в игровой мир, прокачать свой скилл и начать собирать ламбиксы? 😉"
     )
     bot.send_message(
         msg.chat.id,
