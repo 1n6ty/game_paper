@@ -5,6 +5,7 @@ import hashlib
 
 for_prize = set() # TODO REMOVE
 prize_user2chat = dict()
+info_user2chat = dict()
 
 db = mysql.connector.connect(
     host='mysql',
@@ -29,13 +30,15 @@ def send_prize(msg: telebot.types.Message) -> None:
     for k, v in prize_user2chat:
         if v != chat_win_id:
             bot.send_message(v, "🚀 Спасибо, что стали частью цифрового квеста на вебинаре «Геймификация упаковки»!\n\nПусть сегодня колонка отправилась к другому победителю, но ваше участие — уже шаг к новым возможностям Вашей упаковки!\n\nПока победитель наслаждается музыкой, вы можете глубже погрузиться в тему: изучайте чек-листы по «умной» упаковке, пробуйте игровые механики в данном web-приложении, и скоро именно Ваш бренд заставит клиентов улыбнуться от неожиданного выигрыша! 💡  \n\nОставайтесь с нами — вместе мы превратим упаковку в игру, где в выигрыше все! 🎮✨\n\nПАО «Ламбумиз»")
-    bot.send_message(msg.chat.id, winner) # TODO REMOVE
+        bot.send_document(v, 'https://milkclub.lambumiz.ru/media/assets/bot/file.txt')
+    bot.send_message(msg.chat.id, f'Победитель - {winner}\nИнфо - {info_user2chat[winner]}') # TODO REMOVE
 
 @bot.message_handler(commands=['start'])
 def send_start(msg: telebot.types.Message) -> None:
     global for_prize;
     for_prize |= set([msg.from_user.first_name if msg.from_user.username == None else "@" + msg.from_user.username]) # TODO REMOVE
     prize_user2chat[msg.from_user.first_name if msg.from_user.username == None else "@" + msg.from_user.username] = msg.chat.id
+    info_user2chat[msg.from_user.first_name if msg.from_user.username == None else "@" + msg.from_user.username] = msg.from_user.to_json()
     try:
         cursor.execute("SELECT start_score FROM Paper_settings WHERE id = 1;");
         start_score = int(cursor.fetchall()[0][0])
