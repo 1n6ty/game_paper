@@ -86,7 +86,7 @@ fetch('/score/', {method: "GET", headers: {'Authorization': auth_raw_data}}).the
     (response) => {
         response.json().then(
             (json_response) => {
-                // Do smth with json data {score: int, coupons: int}
+                // Do smth with json data {score: int, coupons: int, scores_for_coupon: int}
             }
         )
     }
