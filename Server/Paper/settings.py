@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = ['https://milkclub.lambumiz.ru']
+CSRF_USE_SESSIONS = True
 
 # Application definition
 

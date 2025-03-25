@@ -34,8 +34,7 @@ def send_prize(msg: telebot.types.Message) -> None:
     for k, v in prize_user2chat.items():
         if v != chat_win_id:
             bot.send_message(v, "🚀 Спасибо, что стали частью цифрового квеста на вебинаре «Геймификация упаковки»!\n\nПусть сегодня колонка отправилась к другому победителю, но ваше участие — уже шаг к новым возможностям Вашей упаковки!\n\nПока победитель наслаждается музыкой, вы можете глубже погрузиться в тему: изучайте чек-листы по «умной» упаковке, пробуйте игровые механики в данном web-приложении, и скоро именно Ваш бренд заставит клиентов улыбнуться от неожиданного выигрыша! 💡  \n\nОставайтесь с нами — вместе мы превратим упаковку в игру, где в выигрыше все! 🎮✨\n\nПАО «Ламбумиз»")
-        with open('./file.txt', 'rb') as d:
-            bot.send_document(v, d)
+        bot.send_message(msg.chat.id, 'https://forms.gle/bNnUwkcGXMhDjzT9A')
     bot.send_message(msg.chat.id, f'Победитель - {winner}\nИнфо - {info_user2chat[winner]}') # TODO REMOVE
 
 @bot.message_handler(commands=['start'])

@@ -135,13 +135,13 @@ class Game {
     }
 
     finish(game_data){
+        game_data.csrfmiddlewaretoken = window.CSRF_TOKEN;
         fetch('/gamefinish/', {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': this.auth_raw_data,
-                'X-CSRFToken': window.CSRF_TOKEN
+                'Authorization': this.auth_raw_data
             },
             body: JSON.stringify(game_data)
         }).then((response) => {
@@ -160,11 +160,11 @@ class Game {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': this.auth_raw_data,
-                'X-CSRFToken': window.CSRF_TOKEN
+                'Authorization': this.auth_raw_data
             },
             body: JSON.stringify({
-                game_name: this.game_name
+                game_name: this.game_name,
+                csrfmiddlewaretoken: window.CSRF_TOKEN
             })
         }).then(
             (response) => {
