@@ -1,4 +1,4 @@
-const __VERSION__ = "9.21D";
+const __VERSION__ = "17";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -25,26 +25,22 @@ const bushesLightUrl = `${PATH}bushesLight.svg`;
 
 const grassUrl = `${PATH}grass.svg`;
 
-const cowIdleUrl = `${PATH}cowIdle.svg`;
-const cowPressedUrl = `${PATH}cowPressed.svg`;
+const playerIdleUrl = `${PATH}cowIdle.svg`;
+const playerPressedUrl = `${PATH}cowPressed.svg`;
 
 const MAX_CANVAS_WIDTH = 428;
-const BASE_ASPECT = 720 / MAX_CANVAS_WIDTH;
-const baseDimensions = {
-  width: MAX_CANVAS_WIDTH,
-  height: Math.floor(MAX_CANVAS_WIDTH * BASE_ASPECT),
-};
+const MAX_CANVAS_HEIGHT = 774;
 
 const DEFAULT_FLOOR_HEIGHT = 36;
 
 // ====== Параметры игры ======
-const INITIAL_SPEED = 2.5;                // Начальная скорость
+const INITIAL_SPEED = 2.5;
 const SPEED_MULTIPLIER = 1.2;             // Увеличение скорости каждые 10 труб
 const PARALLAX_CLOUDS = 0.01;
 const PARALLAX_BUSHES_DARK = 0.03;
 const PARALLAX_BUSHES_LIGHT = 0.08;
 const PARALLAX_GRASS = 1;
-const FALL_ANGLE = 90;                    // Угол наклона при падении
+const FALL_ANGLE = 90;
 const GRAVITY = 0.6;
 const JUMP_FORCE = -10;
 
@@ -53,16 +49,20 @@ const PIPE_WIDTH = 66;
 const PIPE_INTERVAL = 100;
 const FLOOR_HEIGHT = DEFAULT_FLOOR_HEIGHT;
 
-// Ограничения для труб
-const MIN_TOP = 80;                                 // трубы не появляются слишком высоко
-const MAX_TOP = baseDimensions.height / 2 + MIN_TOP; // и не слишком низко
+// const MIN_TOP = 80;                                 // трубы не появляются слишком высоко
+// const MAX_TOP = MAX_CANVAS_HEIGHT / 2 + MIN_TOP;
 
-const BIRD_COLLISION_OFFSET = 20;
-const BIRD_BOUNDARY_OFFSET = 40;
+const PLAYER_COLLISION_OFFSET = 20;
+const PLAYER_BOUNDARY_OFFSET = 40;
+
 const CEIL_DRAW_HEIGHT = 33;
 const FLOOR_DRAW_HEIGHT = 36;
-const COW_WIDTH = 94.65;
-const COW_HEIGHT = 64.96;
+const PLAYER_WIDTH = 94.65;
+const PLAYER_HEIGHT = 64.96;
+
+const CLOUDS_WIDTH = MAX_CANVAS_WIDTH;
+const BUSHES_WIDTH = MAX_CANVAS_WIDTH;
+const GROUND_WIDTH = MAX_CANVAS_WIDTH;
 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -117,11 +117,16 @@ class GameEngine {
     this.tmp = tmp || {};
     this.tmp.engine = this;
 
-    this.seed = initGameData.seed;
+    this.seed = initGameData.seed || Date.now().toString(16);
     console.log("Seed:", this.seed);
     this.randomGenerator = new LCG(this.seed);
     this.bestScore = initGameData.best_score;
     console.log("Лучший счет:", this.bestScore);
+
+    this.dimensions = {
+      width: MAX_CANVAS_WIDTH,
+      height: MAX_CANVAS_HEIGHT,
+    };
 
     this.state = {
       speed: INITIAL_SPEED,
@@ -131,9 +136,9 @@ class GameEngine {
       bushesDarkX: 0,
       bushesLightX: 0,
       groundX: 0,
-      bird: {
-        x: baseDimensions.width / 2,
-        y: baseDimensions.height / 2,
+      player: {
+        x: this.dimensions.width / 2,
+        y: this.dimensions.height / 2,
         velocity: 0,
         frameCounter: 0,
         currentFrame: 0,
@@ -156,9 +161,7 @@ class GameEngine {
       isGameOver: false,
     };
 
-    this.floorHeight = FLOOR_HEIGHT;
-
-    this.lastFrameTime = performance.now();
+    // this.lastFrameTime = performance.now();
     this.gameLoopId = null;
     this.finishCallback = () => { };
     this.images = {};
@@ -189,26 +192,18 @@ class GameEngine {
     this.isResizing = true;
 
     const parentWidth = parent.clientWidth;
+    const parentHeight = parent.clientHeight;
     const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
-    const newHeight = Math.floor(newWidth * BASE_ASPECT);
+    const newHeight = Math.min(parentHeight - 60, MAX_CANVAS_HEIGHT);
+
+    this.dimensions.width = newWidth;
+    this.dimensions.height = newHeight;
+
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = newWidth * dpr;
     this.canvas.height = newHeight * dpr;
     this.canvas.style.width = `${newWidth}px`;
     this.canvas.style.height = `${newHeight}px`;
-
-    const canvasStyleHeight = parseInt(this.canvas.style.height);
-    if (canvasStyleHeight <= 716) {
-      console.log(canvasStyleHeight);
-      if ((canvasStyleHeight - this.lastCanvasHeight) < 0) {
-        this.floorHeight += 716 % canvasStyleHeight;
-      } else {
-        this.floorHeight -= 716 % canvasStyleHeight;
-      }
-    } else
-      this.floorHeight = DEFAULT_FLOOR_HEIGHT;
-    console.log(this.floorHeight);
-    this.lastCanvasHeight = canvasStyleHeight;
 
     this.resizeTimer = setInterval(() => this.resizeCanvasEnd(), 200);
   }
@@ -225,12 +220,12 @@ class GameEngine {
     const st = this.state;
     if (!st.isStarted) {
       st.isStarted = true;
-      st.bird.velocity = JUMP_FORCE;
+      st.player.velocity = JUMP_FORCE;
       return;
     }
     if (!st.isGameOver) {
-      st.bird.velocity = JUMP_FORCE;
-      st.bird.frameCounter = 0;
+      st.player.velocity = JUMP_FORCE;
+      st.player.frameCounter = 0;
     }
   }
 
@@ -242,8 +237,8 @@ class GameEngine {
       grass: loadImage(grassUrl),
       pipeDefault: loadImage(pipeDefaultUrl),
       pipeSpecial: loadImage(pipeSpecialUrl),
-      cowIdle: loadImage(cowIdleUrl),
-      cowPressed: loadImage(cowPressedUrl),
+      playerIdle: loadImage(playerIdleUrl),
+      playerPressed: loadImage(playerPressedUrl),
       ceilEvening: loadImage(ceilEveningUrl),
       ceilSunset: loadImage(ceilSunsetUrl),
       ceilSunrise: loadImage(ceilSunriseUrl),
@@ -259,19 +254,19 @@ class GameEngine {
 
   startGameLoop() {
     console.log("Start GameLoop");
-    this.lastFrameTime = performance.now();
+    // this.lastFrameTime = performance.now();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   gameLoop() {
     if (this.state.isGameOver) return;
     console.log("GameLoop");
-    const now = performance.now();
-    const dt = Math.min((now - this.lastFrameTime) / 1000, 0.1);
-    this.lastFrameTime = now;
+    // const now = performance.now();
+    const dt = Math.min(1 / 60, 0.1);  // please fix me
+    // this.lastFrameTime = now;
     this.updateLogic(dt);
     this.drawScene();
-    // this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+    this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   stopGameLoop() {
@@ -293,45 +288,58 @@ class GameEngine {
     st.bushesDarkX -= st.speed * PARALLAX_BUSHES_DARK * fps;
     st.bushesLightX -= st.speed * PARALLAX_BUSHES_LIGHT * fps;
     st.groundX -= st.speed * PARALLAX_GRASS * fps;
-    if (st.cloudsX <= -baseDimensions.width) st.cloudsX += baseDimensions.width;
-    if (st.bushesDarkX <= -baseDimensions.width) st.bushesDarkX += baseDimensions.width;
-    if (st.bushesLightX <= -baseDimensions.width) st.bushesLightX += baseDimensions.width;
-    if (st.groundX <= -baseDimensions.width) st.groundX += baseDimensions.width;
+    if (st.cloudsX <= -CLOUDS_WIDTH) st.cloudsX += CLOUDS_WIDTH;
+    if (st.bushesDarkX <= -BUSHES_WIDTH) st.bushesDarkX += BUSHES_WIDTH;
+    if (st.bushesLightX <= -BUSHES_WIDTH) st.bushesLightX += BUSHES_WIDTH;
+    if (st.groundX <= -GROUND_WIDTH) st.groundX += GROUND_WIDTH;
   }
 
-  animateBird(fps, dt) {
+  animatePlayerIdle(dt) {
     const st = this.state;
-    st.bird.frameCounter += fps;
-    const frameDelay = st.bird.velocity > 2 ? 3 : 5;
-    if (st.bird.frameCounter >= frameDelay) {
-      st.bird.currentFrame = (st.bird.currentFrame + 1) % 2;
-      st.bird.frameCounter = 0;
+    st.player.floatOffset += dt * 3;
+    st.player.y = this.dimensions.height / 2 + Math.sin(st.player.floatOffset) * 15;
+  }
+
+  calculatePlayerGravity(fps) {
+    const st = this.state;
+    st.player.velocity += GRAVITY * fps;
+    st.player.y += st.player.velocity * fps;
+    if (st.player.velocity > 0) {
+      st.player.rotation = Math.min(FALL_ANGLE, st.player.rotation + 2 * fps);
+    } else {
+      st.player.rotation = -15;
+    }
+  }
+
+  animatePlayer(fps, dt) {
+    const st = this.state;
+    st.player.frameCounter += fps;
+    const frameDelay = st.player.velocity > 2 ? 3 : 5;
+    if (st.player.frameCounter >= frameDelay) {
+      st.player.currentFrame = (st.player.currentFrame + 1) % 2;
+      st.player.frameCounter = 0;
     }
 
     if (!st.isStarted) {
-      st.bird.floatOffset += dt * 3;
-      st.bird.y = baseDimensions.height / 2 + Math.sin(st.bird.floatOffset) * 15;
+      this.animatePlayerIdle(dt);
       return;
     }
 
-    // Физика птицы
-    st.bird.velocity += GRAVITY * fps;
-    st.bird.y += st.bird.velocity * fps;
-    if (st.bird.velocity > 0) {
-      st.bird.rotation = Math.min(FALL_ANGLE, st.bird.rotation + 2 * fps);
-    } else {
-      st.bird.rotation = -15;
-    }
+    this.calculatePlayerGravity(fps);
   }
 
   generateTubes(fps) {
+    // Ограничения для труб
+    const minTubeTop = this.dimensions.height / 4;                     // трубы не появляются слишком высоко
+    const maxTubeTop = this.dimensions.height / 2;  // и не слишком низко
+
     const st = this.state;
     if (!st.isStarted) return;
     if (st.frame % PIPE_INTERVAL < fps) {
       st.pipeCount++;
-      const topHeight = Math.floor(this.randomGenerator.random() * (MAX_TOP - MIN_TOP)) + MIN_TOP;
+      const topHeight = Math.floor(this.randomGenerator.random() * (maxTubeTop - minTubeTop)) + minTubeTop;
       st.pipes.push({
-        x: baseDimensions.width,
+        x: this.dimensions.width,
         top: topHeight,
         bottom: topHeight + PIPE_GAP,
         width: PIPE_WIDTH,
@@ -346,7 +354,7 @@ class GameEngine {
     if (!st.isStarted) return;
     for (let pipe of st.pipes) {
       pipe.x -= st.speed;
-      if (!pipe.passed && pipe.x + PIPE_WIDTH < st.bird.x) {
+      if (!pipe.passed && pipe.x + PIPE_WIDTH < st.player.x) {
         pipe.passed = true;
         st.passedPipes++;
         if (st.passedPipes > 0 && st.passedPipes % 10 === 0 && st.lastAccelerated !== st.passedPipes) {
@@ -359,13 +367,14 @@ class GameEngine {
   }
 
   detectTubeCollision() {
+    if (this.isResizing) return;
     const st = this.state;
     if (!st.isStarted) return;
     for (let pipe of st.pipes) {
       if (
-        st.bird.x + BIRD_COLLISION_OFFSET > pipe.x &&
-        st.bird.x - BIRD_COLLISION_OFFSET < pipe.x + pipe.width &&
-        (st.bird.y - BIRD_COLLISION_OFFSET < pipe.top || st.bird.y + BIRD_COLLISION_OFFSET > pipe.bottom)
+        st.player.x + PLAYER_COLLISION_OFFSET > pipe.x &&
+        st.player.x - PLAYER_COLLISION_OFFSET < pipe.x + pipe.width &&
+        (st.player.y - PLAYER_COLLISION_OFFSET < pipe.top || st.player.y + PLAYER_COLLISION_OFFSET > pipe.bottom)
       ) {
         this.handleGameOver();
         return;
@@ -376,7 +385,7 @@ class GameEngine {
   detectGroundCollision() {
     if (this.isResizing) return;
     const st = this.state;
-    if (st.bird.y - BIRD_BOUNDARY_OFFSET < 0 || st.bird.y + BIRD_BOUNDARY_OFFSET > baseDimensions.height - this.floorHeight) {
+    if (st.player.y - PLAYER_BOUNDARY_OFFSET < 0 || st.player.y + PLAYER_BOUNDARY_OFFSET > this.dimensions.height - FLOOR_HEIGHT) {
       this.handleGameOver();
       return;
     }
@@ -388,7 +397,7 @@ class GameEngine {
 
     this.updateParallax(fps);
 
-    this.animateBird(fps, dt);
+    this.animatePlayer(fps, dt);
 
     this.generateTubes(fps);
 
@@ -402,7 +411,7 @@ class GameEngine {
     const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
     this.ctx.scale(dpr, dpr);
-    const { width, height } = baseDimensions;
+    const { width, height } = this.dimensions;
     this.ctx.clearRect(0, 0, width, height);
 
     // Фон - градиент
@@ -415,16 +424,16 @@ class GameEngine {
 
     // Параллакс-слои (облака, кусты)
     if (this.images.clouds) {
-      this.ctx.drawImage(this.images.clouds, this.state.cloudsX, height - this.floorHeight - 237, width, 387);
-      this.ctx.drawImage(this.images.clouds, this.state.cloudsX + width - 1, height - this.floorHeight - 237, width, 387);
+      this.ctx.drawImage(this.images.clouds, this.state.cloudsX, height - FLOOR_HEIGHT - 237, CLOUDS_WIDTH, 387);
+      this.ctx.drawImage(this.images.clouds, this.state.cloudsX + CLOUDS_WIDTH - 1, height - FLOOR_HEIGHT - 237, CLOUDS_WIDTH, 387);
     }
     if (this.images.bushesDark) {
-      this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX, height - this.floorHeight - 78, width, 228);
-      this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX + width - 1, height - this.floorHeight - 78, width, 228);
+      this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX, height - FLOOR_HEIGHT - 78, BUSHES_WIDTH, 228);
+      this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX + BUSHES_WIDTH - 1, height - FLOOR_HEIGHT - 78, BUSHES_WIDTH, 228);
     }
     if (this.images.bushesLight) {
-      this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX, height - this.floorHeight - 52, width, 202);
-      this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX + width - 1, height - this.floorHeight - 52, width, 202);
+      this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX, height - FLOOR_HEIGHT - 52, BUSHES_WIDTH, 202);
+      this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX + BUSHES_WIDTH - 1, height - FLOOR_HEIGHT - 52, BUSHES_WIDTH, 202);
     }
 
     // Трубы
@@ -443,27 +452,27 @@ class GameEngine {
     // Потолок
     const ceilingImg = this.images[this.state.selectedCeiling];
     if (ceilingImg) {
-      this.ctx.drawImage(ceilingImg, this.state.groundX, 0, width, CEIL_DRAW_HEIGHT);
-      this.ctx.drawImage(ceilingImg, this.state.groundX + width - 1, 0, width, CEIL_DRAW_HEIGHT);
+      this.ctx.drawImage(ceilingImg, this.state.groundX, 0, GROUND_WIDTH, CEIL_DRAW_HEIGHT);
+      this.ctx.drawImage(ceilingImg, this.state.groundX + GROUND_WIDTH - 1, 0, GROUND_WIDTH, CEIL_DRAW_HEIGHT);
     } else {
-      //
+      // Fallback
       this.ctx.fillStyle = this.state.selectedGradient[0];
-      this.ctx.fillRect(0, 0, width, CEIL_DRAW_HEIGHT);
+      this.ctx.fillRect(0, 0, GROUND_WIDTH, CEIL_DRAW_HEIGHT);
     }
 
     // Пол
     if (this.images.grass) {
-      this.ctx.drawImage(this.images.grass, this.state.groundX, height - this.floorHeight, width, FLOOR_DRAW_HEIGHT);
-      this.ctx.drawImage(this.images.grass, this.state.groundX + width - 1, height - this.floorHeight, width, FLOOR_DRAW_HEIGHT);
+      this.ctx.drawImage(this.images.grass, this.state.groundX, height - FLOOR_HEIGHT, GROUND_WIDTH, FLOOR_DRAW_HEIGHT);
+      this.ctx.drawImage(this.images.grass, this.state.groundX + GROUND_WIDTH - 1, height - FLOOR_HEIGHT, GROUND_WIDTH, FLOOR_DRAW_HEIGHT);
     }
 
     // Корова
     this.ctx.save();
-    this.ctx.translate(this.state.bird.x, this.state.bird.y);
-    this.ctx.rotate((this.state.bird.rotation * Math.PI) / 180);
-    const birdImg = this.state.bird.currentFrame === 0 ? this.images.cowIdle : this.images.cowPressed;
-    if (birdImg) {
-      this.ctx.drawImage(birdImg, -COW_WIDTH / 2, -COW_HEIGHT / 2, COW_WIDTH, COW_HEIGHT);
+    this.ctx.translate(this.state.player.x, this.state.player.y);
+    this.ctx.rotate((this.state.player.rotation * Math.PI) / 180);
+    const playerImg = this.state.player.currentFrame === 0 ? this.images.playerIdle : this.images.playerPressed;
+    if (playerImg) {
+      this.ctx.drawImage(playerImg, -PLAYER_WIDTH / 2, -PLAYER_HEIGHT / 2, PLAYER_WIDTH, PLAYER_HEIGHT);
     }
     this.ctx.restore();
 
@@ -475,7 +484,7 @@ class GameEngine {
 
     this.ctx.textAlign = "center";
     this.ctx.font = '500 48px/24px Roboto Mono';
-    this.ctx.fillText(`${this.state.passedPipes}`, this.canvas.width / 2, 120);
+    this.ctx.fillText(`${this.state.passedPipes}`, width / 2, 120);
 
     this.ctx.restore();
   }
@@ -503,28 +512,22 @@ class GameEngine {
   static getInstance(tmp) {
     return tmp.engine;
   }
-
-  getTmp() {
-    return this.tmp;
-  }
 }
 
-export function init(canvas, initGameData, tmp) {
+function init(canvas, initGameData, tmp, finish_func = (gameData) => { }) {
   console.log("Version:", __VERSION__);
+
+  if (!canvas) console.log("Canvas does not exist!");
+
   const engine = new GameEngine(canvas, initGameData, tmp);
   engine.startGameLoop();
-  return engine.getTmp();
-}
-
-export function proceed(canvas, tmp, finish_func = (gameData) => { }) {
-  if (!canvas) console.log("Canvas does not exist!");
-  const engine = GameEngine.getInstance(tmp);
   engine.setFinishCallback(finish_func);
-  engine.gameLoop();
   return tmp;
 }
 
-export function finish(canvas, tmp) {
+function deinit(canvas, tmp) {
   const engine = GameEngine.getInstance(tmp);
   engine.stopGameLoop();
 }
+
+// export { init, deinit };
