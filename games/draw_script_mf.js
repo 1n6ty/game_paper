@@ -128,7 +128,6 @@ class GameEngine {
     this.tutorialTimer = 0;
     console.log("Туториал активен:", this.tutorialActive);
 
-
     this.dimensions = {
       width: MAX_CANVAS_WIDTH,
       height: MAX_CANVAS_HEIGHT,
