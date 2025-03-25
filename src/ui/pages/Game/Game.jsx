@@ -11,11 +11,15 @@ function Game() {
   const { gameName } = useParams();
   const canvasRef = useRef(null);
   const gameInstanceRef = useRef(null);
-  const { user } = useContext(UserContext);
+  const { authRawData } = useContext(UserContext);
   const [gameConfig, setGameConfig] = useState(null);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    return () => gameInstanceRef?.current.finish({});
+  }, []);
 
   useEffect(() => {
     loadGameData(gameName)
@@ -32,7 +36,7 @@ function Game() {
     if (gameConfig && canvas) {
       const gameInstance = new GameAPI(
         canvas,
-        user.userName,
+        authRawData,
         gameConfig.gameName,
         gameConfig.gameUrl,
         () => {
@@ -48,7 +52,9 @@ function Game() {
       );
       gameInstanceRef.current = gameInstance;
     }
-  }, [gameConfig, user]);
+
+    // return 
+  }, [gameConfig, authRawData]);
 
   const handleRestart = () => {
     if (gameInstanceRef.current)

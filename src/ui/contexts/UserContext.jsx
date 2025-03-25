@@ -13,6 +13,7 @@ const UserProvider = ({ children }) => {
   const [totalScore, setTotalScore] = useState(0);
   const [tickets, setTickets] = useState(0);
   const [user, setUser] = useState();
+  const [authRawData, setAuthRawData] = useState("");
 
   // const updateTickets = (newTickets) => {
   //   setTickets(newTickets);
@@ -23,9 +24,16 @@ const UserProvider = ({ children }) => {
   //   // updateTickets(Math.floor(newScore / totalScore))
   // };
 
+  const updateAuthRawData = (authRawData) => {
+    setAuthRawData(authRawData);
+    console.log("Set raw user data:", authRawData);
+  }
+
   const loadScore = () => {
-    if (user && user.userName) {
-      loadUserScore(user.userName)
+    if (authRawData) {
+      console.log("Raw user data in loadScore:", authRawData);
+
+      loadUserScore(authRawData)
         .then(data => {
           updateUserScoreData(data.score, data.totalScore, data.tickets);
         })
@@ -50,8 +58,9 @@ const UserProvider = ({ children }) => {
   useEffect(() => {
     const tg = window.Telegram && window.Telegram.WebApp;
     tg.ready();
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      console.log(tg.initDataUnsafe.user);
+    if (tg && tg.initData && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      updateAuthRawData(tg.initData);
+
       setUser({
         userName: tg.initDataUnsafe.user.username,
         firstName: tg.initDataUnsafe.user.first_name,
@@ -78,7 +87,7 @@ const UserProvider = ({ children }) => {
   }, [user]);
 
   return (
-    <UserContext.Provider value={{ score, loadScore, tickets, user, totalScore }}>
+    <UserContext.Provider value={{ score, loadScore, tickets, user, authRawData, totalScore }}>
       {children}
     </UserContext.Provider>
   );
