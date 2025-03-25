@@ -124,7 +124,7 @@ class GameEngine {
     console.log("Лучший счет:", this.bestScore);
 
     const entrances = parseInt(initGameData.entrances);
-    this.tutorialActive = 1;  // initGameData.entrances && initGameData.entrances <= 3
+    this.tutorialActive = entrances && entrances <= 3;  // initGameData.entrances && initGameData.entrances <= 3
     this.tutorialTimer = 0;
     console.log("Туториал активен:", this.tutorialActive);
 
