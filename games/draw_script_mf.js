@@ -1,4 +1,4 @@
-const __VERSION__ = "18.1";
+const __VERSION__ = "18.2";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -584,6 +584,7 @@ class GameEngine {
 
 function init(canvas, initGameData, tmp, finish_func = (gameData) => { }) {
   console.log("Version:", __VERSION__);
+  console.log("Py Version:", initGameData.version);
 
   if (!canvas) console.log("Canvas does not exist!");
 
