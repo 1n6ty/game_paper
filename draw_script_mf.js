@@ -598,4 +598,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop();
 }
 
-// export { init, deinit };
+export { init, deinit };
