@@ -60,9 +60,6 @@ def init(perpetual: dict, tmp: dict) -> tuple[dict, dict, dict]:
         "seed": seed,
         "best_score": perpetual.get("best_score", "0")
     }
-    print("Init data:")
-    print(init_data)
-    print("Init data====")
     perpetual["last_seed"] = seed
     tmp["init_score"] = "0"
     return (perpetual, tmp, init_data)
