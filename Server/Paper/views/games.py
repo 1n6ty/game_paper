@@ -9,21 +9,29 @@ from requests import Session, Response
 import hashlib, hmac
 import json
 import os
-from urllib.parse import parse_qs
+from urllib.parse import parse_qsl
+from operator import itemgetter
 
 request_session = Session()
 request_session.trust_env = False
 
 BOT_TOKEN = os.getenv("MINIAPP_BOT_TOKEN", None)
+secret_key = hmac.new(
+    key=b"WebAppData", msg=BOT_TOKEN.encode(), digestmod=hashlib.sha256
+).digest()
 
-def _verify_authorization(parsed_data: str) -> bool:
-    try:
-        req_auth = '\n'.join([f"auth_date={parsed_data['auth_date'][0]}", f"query_id={parsed_data['query_id'][0]}", f"user={parsed_data['user'][0]}"])
-        signature = hmac.new("WebAppData".encode('latin-1'), msg = BOT_TOKEN.encode('latin-1'), digestmod = hashlib.sha256).digest()
-        return hmac.new(signature, msg = req_auth.encode('latin-1'), digestmod = hashlib.sha256).hexdigest() == parsed_data['hash'][0]
-    except Exception:
-        pass
-    return False
+def _verify_authorization(parsed_data: dict) -> bool:
+    if "hash" not in parsed_data:
+        return False
+
+    hash_ = parsed_data.pop('hash')
+    data_check_string = "\n".join(
+        f"{k}={v}" for k, v in sorted(parsed_data.items(), key=itemgetter(0))
+    )
+    calculated_hash = hmac.new(
+        key=secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256
+    ).hexdigest()
+    return calculated_hash == hash_
 
 def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
     """
@@ -32,28 +40,31 @@ def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
     if req.method == "GET":
         auth_header = req.headers.get("Authorization", None)
         if auth_header == None:
-            return HttpResponse(status=400)
+            return HttpResponse(status=400, content="No Authorization in header")
 
-        parsed_auth = parse_qs(auth_header)
+        try:
+            parsed_auth = dict(parse_qsl(auth_header))
+        except ValueError:
+            return HttpResponse(status=401, content="Corrupted initData")
         if not _verify_authorization(parsed_auth):
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="Denied, invalid hash")
 
-        tg_id = hashlib.sha256(str(json.loads(parsed_auth['user'][0])['id']).encode('utf-8')).hexdigest()
+        tg_id = hashlib.sha256(str(json.loads(parsed_auth["user"])["id"]).encode('utf-8')).hexdigest()
         usr: BaseManager[User] = User.objects.filter(tg_id = tg_id)
         if not usr.exists():
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="No such user")
         
         settings_app: Settings = Settings.objects.get(pk = 1)
 
         usr: User = usr[0]
         return JsonResponse(
             {
-                "score": int(usr.score) % int(settings_app.scores_for_coupon),
+                "scores": int(usr.score) % int(settings_app.scores_for_coupon),
                 "coupons": int(usr.score) // int(settings_app.scores_for_coupon),
                 "scores_for_coupon": int(settings_app.scores_for_coupon)
             }
         )
-    return HttpResponse(400)
+    return HttpResponse(400, content="No such method")
 
 def get_game_links(req: HttpRequest) -> JsonResponse | HttpResponse:
     """
@@ -67,7 +78,7 @@ def get_game_links(req: HttpRequest) -> JsonResponse | HttpResponse:
                 g.name: {"draw_url": g.paint_script.name, "cover_url": g.icon.name} for g in games
             }
         )
-    return HttpResponse(status=400)
+    return HttpResponse(status=400, content="No such method")
 
 def init_game(req: HttpRequest) -> None:
     """
@@ -76,29 +87,32 @@ def init_game(req: HttpRequest) -> None:
     if req.method == "POST":
         auth_header = req.headers.get("Authorization", None)
         if auth_header == None:
-            return HttpResponse(status=400)
+            return HttpResponse(status=400, content="No Authorization in header")
         
         data: dict = json.loads(req.body)
 
-        game_name: str | None = data.get("game_name", None)
+        game_name: str | None = data.pop("game_name", None)
         if game_name == None:
-            return HttpResponse(status=400)
+            return HttpResponse(status=400, content="No game_name")
 
-        parsed_auth = parse_qs(auth_header)
+        try:
+            parsed_auth = dict(parse_qsl(auth_header))
+        except ValueError:
+            return HttpResponse(status=401, content="Corrupted initData")
         if not _verify_authorization(parsed_auth):
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="Denied, invalid hash")
 
-        tg_id = hashlib.sha256(str(json.loads(parsed_auth['user'][0])['id']).encode('utf-8')).hexdigest()
+        tg_id = hashlib.sha256(str(json.loads(parsed_auth["user"])["id"]).encode('utf-8')).hexdigest()
         usr_obj: BaseManager[User] = User.objects.filter(tg_id = tg_id)
 
         game_obj: BaseManager[Game] = Game.objects.filter(name=game_name)
         if not (usr_obj.exists() and game_obj.exists()):
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="No such Game or User")
         usr_obj: User = usr_obj[0]
         game_obj: Game = game_obj[0]
 
         if usr_obj.score - game_obj.cost < 0:
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="Not enough score")
         
         usr_obj.score -= game_obj.cost
         usr_obj.save()
@@ -106,6 +120,7 @@ def init_game(req: HttpRequest) -> None:
         settings.REDIS.set(f'{tg_id}:game', game_obj.play_script.name)
 
         data["tg_id"] = tg_id
+        data["game_id"] = game_obj.pk
         response: Response = request_session.post(
             'http://score_app:8080/gameinit/',
             json=data
@@ -114,7 +129,7 @@ def init_game(req: HttpRequest) -> None:
         return JsonResponse(
             response.json()
         )
-    return HttpResponse(status=400)
+    return HttpResponse(status=400, content="No such method")
 
 def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
     """
@@ -123,31 +138,35 @@ def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
     if req.method == 'POST':
         auth_header = req.headers.get("Authorization", None)
         if auth_header == None:
-            return HttpResponse(status=400)
+            return HttpResponse(status=400, content="No Authorization in header")
         
         data: dict = json.loads(req.body)
 
-        parsed_auth = parse_qs(auth_header)
+        try:
+            parsed_auth = dict(parse_qsl(auth_header))
+        except ValueError:
+            return HttpResponse(status=401, content="Corrupted initData")
         if not _verify_authorization(parsed_auth):
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="Denied, invalid hash")
 
-        tg_id = hashlib.sha256(str(json.loads(parsed_auth['user'][0])['id']).encode('utf-8')).hexdigest()
+        tg_id = hashlib.sha256(str(json.loads(parsed_auth["user"])["id"]).encode('utf-8')).hexdigest()
 
         game_file: str | None = settings.REDIS.get(f'{tg_id}:game')
         if game_file == None:
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="game-session wasn't created")
 
         game_obj: BaseManager[Game] = Game.objects.filter(play_script__contains=game_file)
         usr_obj: BaseManager[User] = User.objects.filter(tg_id = tg_id)
         if not (usr_obj.exists() and game_obj.exists()):
-            return HttpResponse(status=401)
+            return HttpResponse(status=401, content="No such Game or User")
         game_obj: Game = game_obj[0]
         usr_obj: User = usr_obj[0]
 
         data["tg_id"] = tg_id
+        data["game_id"] = game_obj.pk
         response: Response = request_session.post(
             'http://score_app:8080/gamefinish/',
-            json={**data, "game_name": game_obj.name}
+            json=data
         )
 
         response_json = response.json()
@@ -159,4 +178,4 @@ def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
         return JsonResponse(
             response_json
         )
-    return HttpRequest(status=400)
+    return HttpRequest(status=400, content="No such method")

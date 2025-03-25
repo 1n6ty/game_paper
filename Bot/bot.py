@@ -21,6 +21,10 @@ bot = telebot.TeleBot(os.getenv("MINIAPP_BOT_TOKEN"))
 def send_help(msg: telebot.types.Message) -> None:
     bot.send_message(msg.chat.id, "Help")
 
+@bot.message_handler(commands=["supermilky"])
+def send_vk_link(msg: telebot.types.Message) -> None:
+    bot.send_message(msg.chat.id, "vk.com/supermilky")
+
 @bot.message_handler(commands=['prize'])
 def send_prize(msg: telebot.types.Message) -> None:
     import random

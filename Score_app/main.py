@@ -24,8 +24,8 @@ clear_old_data()
 async def init_game(req: Request):
     params: dict = await req.json()
     tg_id: str | None = params.get("tg_id", None)
-    game_name: str | None = params.get("game_name", None)
-    if tg_id == None or game_name == None:
+    game_id: str | None = params.get("game_id", None)
+    if tg_id == None or game_id == None:
         raise HTTPException(status_code=400, detail='incorrect params')
 
     game_file = REDIS.get(f"{tg_id}:game")
@@ -36,7 +36,7 @@ async def init_game(req: Request):
     except Exception:
         raise HTTPException(status_code=400, detail='incorrect gamefile')
     
-    perpetual: str | None = REDIS.get(f'{tg_id}:{str(game_name)}:perpetual')
+    perpetual: str | None = REDIS.get(f'{tg_id}:{str(game_id)}:perpetual')
     perpetual: str = perpetual if perpetual else "{}"
     perpetual: dict = json.loads(perpetual)
     
@@ -49,7 +49,7 @@ async def init_game(req: Request):
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
 
-    REDIS.set(f'{tg_id}:{str(game_name)}:perpetual', json.dumps(new_perpetual))
+    REDIS.set(f'{tg_id}:{str(game_id)}:perpetual', json.dumps(new_perpetual))
     REDIS.set(f'{tg_id}:tmp', json.dumps(new_tmp))
 
     return {
@@ -60,8 +60,8 @@ async def init_game(req: Request):
 async def finish_game(req: Request):
     params: dict = await req.json()
     tg_id: str | None = params.get("tg_id", None)
-    game_name: str | None = params.get("game_name", None)
-    if tg_id == None or game_name == None:
+    game_id: str | None = params.get("game_id", None)
+    if tg_id == None or game_id == None:
         raise HTTPException(status_code=400, detail='incorrect params')
 
     game_file = REDIS.get(f"{tg_id}:game")
@@ -72,7 +72,7 @@ async def finish_game(req: Request):
     except Exception:
         raise HTTPException(status_code=400, detail='incorrect gamefile')
     
-    perpetual: str | None = REDIS.get(f'{tg_id}:{str(game_name)}:perpetual')
+    perpetual: str | None = REDIS.get(f'{tg_id}:{str(game_id)}:perpetual')
     perpetual: str = perpetual if perpetual else "{}"
     perpetual: dict = json.loads(perpetual)
     
@@ -80,14 +80,14 @@ async def finish_game(req: Request):
     tmp: str = tmp if tmp else "{}"
     tmp: dict = json.loads(tmp)
 
-    game_data: dict = {k: v for k, v in params.items() if not (k in ["game_name", "tg_id"])}
+    game_data: dict = {k: v for k, v in params.items() if not (k in ["game_id", "tg_id"])}
 
     try:
         [new_perpetual, score] = game_module.finish(perpetual, tmp, game_data)
     except Exception:
         raise HTTPException(status_code=500, detail='Error occured while executing game module')
 
-    REDIS.set(f'{tg_id}:{str(game_name)}:perpetual', json.dumps(new_perpetual))
+    REDIS.set(f'{tg_id}:{str(game_id)}:perpetual', json.dumps(new_perpetual))
     REDIS.delete(f'{tg_id}:game')
 
     return {
