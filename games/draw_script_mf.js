@@ -1,4 +1,4 @@
-const __VERSION__ = "18";
+const __VERSION__ = "18.1";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -126,6 +126,7 @@ class GameEngine {
     const entrances = parseInt(initGameData.entrances);
     this.tutorialActive = entrances && entrances <= 3;  // initGameData.entrances && initGameData.entrances <= 3
     this.tutorialTimer = 0;
+    console.log("Число посещений:", entrances);
     console.log("Туториал активен:", this.tutorialActive);
 
     this.dimensions = {
