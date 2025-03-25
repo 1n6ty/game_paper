@@ -1,4 +1,4 @@
-const __VERSION__ = "17";
+const __VERSION__ = "18";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -8,7 +8,7 @@ const ASSETS = {
   ceilMorning: 'ceilMorning',
 };
 
-const PATH = "/media/assets/milkyFly/";
+const PATH = "/media/assets/milkyFly/";  // /media/assets/milkyFly/
 
 const ceilEveningUrl = `${PATH}ceil_evening.svg`;
 const ceilSunsetUrl = `${PATH}ceil_sunset.svg`;
@@ -44,7 +44,7 @@ const FALL_ANGLE = 90;
 const GRAVITY = 0.6;
 const JUMP_FORCE = -10;
 
-const PIPE_GAP = 150;
+const PIPE_GAP = 160;
 const PIPE_WIDTH = 66;
 const PIPE_INTERVAL = 100;
 const FLOOR_HEIGHT = DEFAULT_FLOOR_HEIGHT;
@@ -52,8 +52,8 @@ const FLOOR_HEIGHT = DEFAULT_FLOOR_HEIGHT;
 // const MIN_TOP = 80;                                 // трубы не появляются слишком высоко
 // const MAX_TOP = MAX_CANVAS_HEIGHT / 2 + MIN_TOP;
 
-const PLAYER_COLLISION_OFFSET = 20;
-const PLAYER_BOUNDARY_OFFSET = 40;
+const PLAYER_COLLISION_OFFSET = 30;
+const PLAYER_BOUNDARY_OFFSET = 50;
 
 const CEIL_DRAW_HEIGHT = 33;
 const FLOOR_DRAW_HEIGHT = 36;
@@ -123,6 +123,12 @@ class GameEngine {
     this.bestScore = initGameData.best_score;
     console.log("Лучший счет:", this.bestScore);
 
+    const entrances = parseInt(initGameData.entrances);
+    this.tutorialActive = 1;  // initGameData.entrances && initGameData.entrances <= 3
+    this.tutorialTimer = 0;
+    console.log("Туториал активен:", this.tutorialActive);
+
+
     this.dimensions = {
       width: MAX_CANVAS_WIDTH,
       height: MAX_CANVAS_HEIGHT,
@@ -191,10 +197,12 @@ class GameEngine {
 
     this.isResizing = true;
 
+    const GAP_FOR_GROUND = 60;
+
     const parentWidth = parent.clientWidth;
     const parentHeight = parent.clientHeight;
     const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
-    const newHeight = Math.min(parentHeight - 60, MAX_CANVAS_HEIGHT);
+    const newHeight = Math.min(parentHeight - GAP_FOR_GROUND, MAX_CANVAS_HEIGHT);
 
     this.dimensions.width = newWidth;
     this.dimensions.height = newHeight;
@@ -296,8 +304,21 @@ class GameEngine {
 
   animatePlayerIdle(dt) {
     const st = this.state;
-    st.player.floatOffset += dt * 3;
-    st.player.y = this.dimensions.height / 2 + Math.sin(st.player.floatOffset) * 15;
+    if (this.tutorialActive) {
+      const period = 2.5; // секунда
+      const amplitude = 50; // максимальное смещение вверх
+      this.tutorialTimer += dt;
+      const phase = this.tutorialTimer % period;
+      // Используем синус для плавного подъёма и спуска: от 0 до amplitude
+      const offset = amplitude * Math.sin(Math.PI * phase / period);
+      st.player.y = this.dimensions.height / 2 - offset;
+      st.player.velocity = JUMP_FORCE;
+
+    } else {
+      // Стандартная "плавающая" анимация
+      st.player.floatOffset += dt * 3;
+      st.player.y = this.dimensions.height / 2 + Math.sin(st.player.floatOffset) * 15;
+    }
   }
 
   calculatePlayerGravity(fps) {
@@ -370,11 +391,19 @@ class GameEngine {
     if (this.isResizing) return;
     const st = this.state;
     if (!st.isStarted) return;
+
+    const scaleX = this.dimensions.width / MAX_CANVAS_WIDTH;
+    const scaleY = 1;
+
+    const playerX = st.player.x * scaleX;
+    const playerY = st.player.y;
+    const collisionOffset = PLAYER_COLLISION_OFFSET * Math.min(scaleX, scaleY);
+
     for (let pipe of st.pipes) {
       if (
-        st.player.x + PLAYER_COLLISION_OFFSET > pipe.x &&
-        st.player.x - PLAYER_COLLISION_OFFSET < pipe.x + pipe.width &&
-        (st.player.y - PLAYER_COLLISION_OFFSET < pipe.top || st.player.y + PLAYER_COLLISION_OFFSET > pipe.bottom)
+        playerX + collisionOffset > pipe.x &&
+        playerX - collisionOffset < pipe.x + pipe.width &&
+        (playerY - collisionOffset < pipe.top || playerY + collisionOffset > pipe.bottom)
       ) {
         this.handleGameOver();
         return;
@@ -382,14 +411,21 @@ class GameEngine {
     }
   }
 
+
   detectGroundCollision() {
     if (this.isResizing) return;
     const st = this.state;
-    if (st.player.y - PLAYER_BOUNDARY_OFFSET < 0 || st.player.y + PLAYER_BOUNDARY_OFFSET > this.dimensions.height - FLOOR_HEIGHT) {
+
+    const scaleY = 1;
+    const playerY = st.player.y * scaleY;
+    const boundaryOffset = PLAYER_BOUNDARY_OFFSET * scaleY;
+
+    if (playerY - boundaryOffset < 0 || playerY + boundaryOffset > this.dimensions.height - FLOOR_HEIGHT) {
       this.handleGameOver();
       return;
     }
   }
+
 
   updateLogic(dt) {
     const fps = dt * 60;
@@ -468,13 +504,45 @@ class GameEngine {
 
     // Корова
     this.ctx.save();
-    this.ctx.translate(this.state.player.x, this.state.player.y);
+
+    const scaleX = this.dimensions.width / MAX_CANVAS_WIDTH;
+    // const scaleY = this.dimensions.height / MAX_CANVAS_HEIGHT;
+
+    const adjustedX = this.state.player.x * scaleX;
+    const adjustedY = this.state.player.y;
+
+    this.ctx.translate(adjustedX, adjustedY);
     this.ctx.rotate((this.state.player.rotation * Math.PI) / 180);
+
     const playerImg = this.state.player.currentFrame === 0 ? this.images.playerIdle : this.images.playerPressed;
     if (playerImg) {
-      this.ctx.drawImage(playerImg, -PLAYER_WIDTH / 2, -PLAYER_HEIGHT / 2, PLAYER_WIDTH, PLAYER_HEIGHT);
+      this.ctx.drawImage(
+        playerImg,
+        -PLAYER_WIDTH / 2,
+        -PLAYER_HEIGHT / 2,
+        PLAYER_WIDTH,
+        PLAYER_HEIGHT
+      );
     }
     this.ctx.restore();
+
+    // Туториал
+    if (!this.state.isStarted && this.tutorialActive) {
+      const textX = width / 2;
+      const textY = height / 2 + PLAYER_HEIGHT / 2 + 24;
+      const swingAmplitude = 0.1; // приблизительно 6 градусов
+      const period = 2; // секунды
+      const swingAngle = swingAmplitude * Math.sin((this.tutorialTimer * 2 * Math.PI) / period);
+
+      this.ctx.save();
+      this.ctx.translate(textX, textY);
+      this.ctx.rotate(swingAngle);
+      this.ctx.textAlign = "center";
+      this.ctx.font = '500 30px Roboto Mono';
+      this.ctx.fillStyle = '#4b4949';
+      this.ctx.fillText("Тап👆", 0, 0);
+      this.ctx.restore();
+    }
 
     // Текст счета
     this.ctx.textBaseline = "middle";
