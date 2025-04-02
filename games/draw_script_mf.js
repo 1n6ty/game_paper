@@ -1,4 +1,4 @@
-const __VERSION__ = "18.2";
+const __VERSION__ = "18.3";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -8,7 +8,7 @@ const ASSETS = {
   ceilMorning: 'ceilMorning',
 };
 
-const PATH = "/media/assets/milkyFly/";  // /media/assets/milkyFly/
+const PATH = "./assets/milkyFly/";  // /media/assets/milkyFly/
 
 const ceilEveningUrl = `${PATH}ceil_evening.svg`;
 const ceilSunsetUrl = `${PATH}ceil_sunset.svg`;
@@ -34,7 +34,7 @@ const MAX_CANVAS_HEIGHT = 774;
 const DEFAULT_FLOOR_HEIGHT = 36;
 
 // ====== Параметры игры ======
-const INITIAL_SPEED = 2.5;
+const INITIAL_SPEED = 2;
 const SPEED_MULTIPLIER = 1.2;             // Увеличение скорости каждые 10 труб
 const PARALLAX_CLOUDS = 0.01;
 const PARALLAX_BUSHES_DARK = 0.03;
@@ -49,10 +49,7 @@ const PIPE_WIDTH = 66;
 const PIPE_INTERVAL = 100;
 const FLOOR_HEIGHT = DEFAULT_FLOOR_HEIGHT;
 
-// const MIN_TOP = 80;                                 // трубы не появляются слишком высоко
-// const MAX_TOP = MAX_CANVAS_HEIGHT / 2 + MIN_TOP;
-
-const PLAYER_COLLISION_OFFSET = 30;
+const PLAYER_COLLISION_OFFSET = 28;
 const PLAYER_BOUNDARY_OFFSET = 50;
 
 const CEIL_DRAW_HEIGHT = 33;
@@ -85,7 +82,6 @@ const BACKGROUNDS = [
   [ASSETS.ceilMorning, ["#AED7FF", "#D9ECFF", "#FEEEEF"]],
 ];
 
-// Класс линейного конгруэнтного генератора для детерминированного random
 class LCG {
   constructor(seed) {
     this.modulus = 2 ** 31;
@@ -356,7 +352,7 @@ class GameEngine {
 
     const st = this.state;
     if (!st.isStarted) return;
-    if (st.frame % PIPE_INTERVAL < fps) {
+    if (st.frame % (PIPE_INTERVAL / (INITIAL_SPEED * 0.4)) < fps) {
       st.pipeCount++;
       const topHeight = Math.floor(this.randomGenerator.random() * (maxTubeTop - minTubeTop)) + minTubeTop;
       st.pipes.push({
@@ -599,4 +595,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop();
 }
 
-export { init, deinit };
+// export { init, deinit };
