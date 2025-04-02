@@ -8,7 +8,7 @@ const ASSETS = {
   ceilMorning: 'ceilMorning',
 };
 
-const PATH = "./assets/milkyFly/";  // /media/assets/milkyFly/
+const PATH = "/media/assets/milkyFly/";  // /media/assets/milkyFly/
 
 const ceilEveningUrl = `${PATH}ceil_evening.svg`;
 const ceilSunsetUrl = `${PATH}ceil_sunset.svg`;
@@ -595,4 +595,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop();
 }
 
-// export { init, deinit };
+export { init, deinit };
