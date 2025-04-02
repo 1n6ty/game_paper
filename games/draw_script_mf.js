@@ -1,4 +1,4 @@
-const __VERSION__ = "18.3";
+const __VERSION__ = "19";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -105,7 +105,6 @@ class LCG {
   }
 }
 
-
 class GameEngine {
   constructor(canvas, initGameData, tmp) {
     this.canvas = canvas;
@@ -120,7 +119,7 @@ class GameEngine {
     console.log("Лучший счет:", this.bestScore);
 
     const entrances = parseInt(initGameData.entrances);
-    this.tutorialActive = entrances && entrances <= 3;  // initGameData.entrances && initGameData.entrances <= 3
+    this.tutorialActive = entrances && entrances <= 3;
     this.tutorialTimer = 0;
     console.log("Число посещений:", entrances);
     console.log("Туториал активен:", this.tutorialActive);
@@ -129,6 +128,8 @@ class GameEngine {
       width: MAX_CANVAS_WIDTH,
       height: MAX_CANVAS_HEIGHT,
     };
+
+    this.inTime = null;
 
     this.state = {
       speed: INITIAL_SPEED,
@@ -221,6 +222,8 @@ class GameEngine {
 
   handleJump(e) {
     if (e.type === 'keydown' && e.code !== 'Space') return;
+    if (!this.inTime)
+      this.inTime = Date.now();
     const st = this.state;
     if (!st.isStarted) {
       st.isStarted = true;
@@ -558,8 +561,11 @@ class GameEngine {
 
     this.state.isGameOver = true;
     if (this.finishCallback) {
+      const spentTime = (this.inTime ? Date.now() - this.inTime : 0) / 1000;  // in seconds
+      console.log("spentTime", spentTime);
       const gameData = {
         score: this.state.passedPipes,
+        spentTime: spentTime
       };
       this.finishCallback(gameData);
     }
