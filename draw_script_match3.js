@@ -1,4 +1,4 @@
-const __VERSION__ = "2.0";
+const __VERSION__ = "3.0";
 
 const PATH = "./assets/match3/";
 const ASSET_PATHS = {
@@ -13,7 +13,7 @@ const lamBoyUrl = `${PATH}lamboy.svg`;
 
 const GRID_ROWS = 6;
 const GRID_COLS = 6;
-const CELL_PADDING = 6;
+const CELL_PADDING = 4.86;
 
 const MAX_CANVAS_WIDTH = 428;
 const BASE_ASPECT = 809 / MAX_CANVAS_WIDTH;
@@ -62,10 +62,14 @@ const GRID_ZONE_PADDING_LEFT = 21;
 const GRID_ZONE_PADDING_TOP = 97;
 const GRID_ZONE_WIDTH = 386;
 const GRID_ZONE_HEIGHT = 386;
-const GRID_ZONE_ARM_THICKNESS = 240;
+const GRID_ZONE_ARM_THICKNESS = 265;
 const GRID_ZONE_RADIUS = 16;
 
-const GRID_OFFSET_Y = 300;
+const GRID_PADDING_LEFT = 35.62;
+const GRID_PADDING_TOP = 110.49;
+
+const CELL_WIDTH = 54.73;
+const CELL_HEIGHT = 54.73;
 
 const loadImage = (src) =>
   new Promise((resolve) => {
@@ -114,12 +118,17 @@ class GameEngine {
   }
 
   initGrid() {
-    for (let r = 0; r < GRID_ROWS + 3; r++) {
+    for (let r = 0; r < GRID_ROWS; r++) {
       const row = [];
       for (let c = 0; c < GRID_COLS; c++) {
-        const key =
-          this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
-        row.push({ type: key });
+        if ((r % (GRID_ROWS - 1) === 0) && (c % (GRID_COLS - 1) === 0)) {
+          console.log(r, c);
+          row.push({ type: null });
+        } else {
+          const key =
+            this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
+          row.push({ type: key });
+        }
       }
       this.grid.push(row);
     }
@@ -151,14 +160,11 @@ class GameEngine {
   }
 
   startGameLoop() {
-    this.lastFrameTime = performance.now();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   gameLoop() {
-    const now = performance.now();
-    let dt = (now - this.lastFrameTime) / 1000;
-    this.lastFrameTime = now;
+    let dt = 1 / 60;
     dt = Math.min(dt, 0.1);
     this.updateLogic(dt);
     this.drawScene();
@@ -209,14 +215,14 @@ class GameEngine {
   }
 
   getCellCoordinates(pos) {
-    const { width, height } = this.dimensions;
-    const gridWidth = width;
-    const gridHeight = height - GRID_OFFSET_Y;
-    const cellW = gridWidth / GRID_COLS;
-    const cellH = gridHeight / GRID_ROWS;
+    // const { width, height } = this.dimensions;
+    // const gridWidth = width;
+    // const gridHeight = height - GRID_PADDING_TOP;
+    const cellW = CELL_WIDTH;
+    const cellH = CELL_HEIGHT;
     return {
-      x: pos.col * cellW,
-      y: GRID_OFFSET_Y + pos.row * cellH,
+      x: GRID_PADDING_LEFT + pos.col * (cellW + CELL_PADDING),
+      y: HEADER_HEIGHT + GRID_PADDING_TOP + pos.row * (cellH + CELL_PADDING),
       w: cellW,
       h: cellH,
     };
@@ -227,12 +233,12 @@ class GameEngine {
     const dpr = window.devicePixelRatio || 1;
     const x = (e.clientX - rect.left) * dpr;
     const y = (e.clientY - rect.top) * dpr;
-    if (y < GRID_OFFSET_Y || y > this.dimensions.height) return null;
-    const gridWidth = this.dimensions.width;
-    const gridHeight = this.dimensions.height - GRID_OFFSET_Y;
-    const cellW = gridWidth / GRID_COLS;
-    const cellH = gridHeight / GRID_ROWS;
-    const row = Math.floor((y - GRID_OFFSET_Y) / cellH);
+    if (y < GRID_PADDING_TOP || y > this.dimensions.height) return null;
+    // const gridWidth = this.dimensions.width;
+    // const gridHeight = this.dimensions.height - GRID_PADDING_TOP;
+    const cellW = CELL_WIDTH;
+    const cellH = CELL_HEIGHT;
+    const row = Math.floor((y - GRID_PADDING_TOP) / cellH);
     const col = Math.floor(x / cellW);
     return { row, col };
   }
@@ -245,7 +251,7 @@ class GameEngine {
 
   animateDropCells(duration = 500) {
     const startTime = performance.now();
-    const cellH = (this.dimensions.height - GRID_OFFSET_Y) / GRID_ROWS;
+    const cellH = (this.dimensions.height - GRID_PADDING_TOP) / GRID_ROWS;
     for (let c = 0; c < GRID_COLS; c++) {
       let emptyCount = 0;
       for (let r = GRID_ROWS - 1; r >= 0; r--) {
@@ -537,11 +543,11 @@ class GameEngine {
   drawGrid() {
     const { width, height } = this.dimensions;
     // const gridWidth = width;
-    // const gridHeight = height - GRID_OFFSET_Y;
+    // const gridHeight = height - GRID_PADDING_TOP;
 
     // TODO сделать динамичными
-    const cellW = 54.73;
-    const cellH = 54.73;
+    const cellW = CELL_WIDTH;
+    const cellH = CELL_HEIGHT;
 
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
@@ -565,15 +571,16 @@ class GameEngine {
 
         const cell = this.grid[r][c];
         if (!cell) continue;
-        const x = c * cellW;
-        const y = GRID_OFFSET_Y + r * cellH + (cell.currentFallOffset || 0);
+        if (!cell.type) continue;
+        const x = GRID_PADDING_LEFT + c * (cellW + CELL_PADDING);
+        const y = HEADER_HEIGHT + GRID_PADDING_TOP + r * (cellH + CELL_PADDING) + (cell.currentFallOffset || 0);
 
         const image = this.images[cell.type];
 
+        this.drawCard(x, y,
+          cellW, cellH, 9,
+          TARGET_STROKE_COLOR, TARGET_BG_COLOR);
         if (image) {
-          this.drawCard(x + CELL_PADDING, y + CELL_PADDING,
-            cellW - 2 * CELL_PADDING, cellH - 2 * CELL_PADDING, 9,
-            TARGET_STROKE_COLOR, TARGET_BG_COLOR);
           this.ctx.drawImage(
             image,
             x + CELL_PADDING,
