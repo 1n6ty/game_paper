@@ -1,4 +1,4 @@
-const __VERSION__ = "3.0";
+const __VERSION__ = "3.1";
 
 const PATH = "./assets/match3/";
 const ASSET_PATHS = {
@@ -30,7 +30,7 @@ const HEADER_HEIGHT = 279;
 const HEADER_TARGET_CARD_WIDTH = 70.72;
 const HEADER_TARGET_CARD_HEIGHT = 70.72;
 
-const LAMBOY_PADDING_LEFT = 84;
+const LAMBOY_PADDING_LEFT = 64;
 const LAMBOY_PADDING_TOP = 0;
 
 const LAMBOY_WIDTH = 344;
@@ -45,16 +45,18 @@ const BODY_BG_TOP_COLOR = "#EBF5FF";
 const BODY_BG_BOTTOM_COLOR = "#D8EBFF";
 
 const COUNTERS_PADDING_TOP = 18;
-
-const TARGET_BG_COLOR = "#FFFFFF";
-const TARGET_STROKE_COLOR = "#4E82B5";
-const TARGET_CARD_WIDTH = 134;
-const TARGET_CARD_HEIGHT = 61;
+const COUNTERS_PADDING_LEFT = 84;
+const COUNTERS_GAP = 10;
 
 const STEPS_BG_COLOR = "#FFFFFF";
 const STEPS_STROKE_COLOR = "#4E82B5";
-const STEPS_CARD_WIDTH = 116;
+const STEPS_CARD_WIDTH = 134;
 const STEPS_CARD_HEIGHT = 61;
+
+const TARGET_BG_COLOR = "#FFFFFF";
+const TARGET_STROKE_COLOR = "#4E82B5";
+const TARGET_CARD_WIDTH = 116;
+const TARGET_CARD_HEIGHT = 61;
 
 const GRID_ZONE_BG_COLOR = "#B2D2F3";
 const GRID_ZONE_STROKE_COLOR = "#4E82B5";
@@ -447,25 +449,50 @@ class GameEngine {
         70
       );
     }
+
+    this.ctx.fillStyle = HEADER_UP_DIVIDER_COLOR;
+    this.ctx.fillRect(0, HEADER_HEIGHT - HEADER_DOWN_DIVIDER_HEIGHT - HEADER_UP_DIVIDER_HEIGHT,
+      width, HEADER_UP_DIVIDER_HEIGHT);
+    this.ctx.fillStyle = HEADER_DOWN_DIVIDER_COLOR;
+    this.ctx.fillRect(0, HEADER_HEIGHT - HEADER_DOWN_DIVIDER_HEIGHT,
+      width, HEADER_DOWN_DIVIDER_HEIGHT);
   }
 
   drawCounters() {
     const { width } = this.dimensions;
 
-    this.drawCard(width / 2 + 5, HEADER_HEIGHT + COUNTERS_PADDING_TOP, TARGET_CARD_WIDTH, TARGET_CARD_HEIGHT, 12,
-      TARGET_STROKE_COLOR, TARGET_BG_COLOR
-    )
+    const targetCardX = COUNTERS_PADDING_LEFT;
+    const targetCardY = HEADER_HEIGHT + COUNTERS_PADDING_TOP;
+    const stepsCardX = COUNTERS_PADDING_LEFT + STEPS_CARD_WIDTH + COUNTERS_GAP;
+    const stepsCardY = HEADER_HEIGHT + COUNTERS_PADDING_TOP;
 
-    this.drawCard(width / 2 - 5 - STEPS_CARD_WIDTH, HEADER_HEIGHT + COUNTERS_PADDING_TOP, STEPS_CARD_WIDTH, STEPS_CARD_HEIGHT, 12,
+
+    this.drawCard(stepsCardX, stepsCardY,
+      STEPS_CARD_WIDTH, STEPS_CARD_HEIGHT, 12,
       STEPS_STROKE_COLOR, STEPS_BG_COLOR
     )
 
-    this.ctx.fillStyle = "#333";
-    this.ctx.font = "500 18px Roboto Mono";
-    this.ctx.textAlign = "left";
-    this.ctx.fillText("6/20", 20, 120);
-    this.ctx.textAlign = "right";
-    this.ctx.fillText("Шаги: 11", width - 20, 120);
+    this.drawCard(targetCardX, targetCardY,
+      TARGET_CARD_WIDTH, TARGET_CARD_HEIGHT, 12,
+      TARGET_STROKE_COLOR, TARGET_BG_COLOR
+    )
+
+    this.ctx.fillStyle = "#4E82B5";
+    this.ctx.font = "500 20px Roboto Mono";
+    // this.ctx.textAlign = "left";
+    this.ctx.fillText("Шаги 0/11", stepsCardX + 12, stepsCardY + STEPS_CARD_HEIGHT / 2 + 6, STEPS_CARD_WIDTH);
+    // this.ctx.textAlign = "right";
+    const orderProductImg = this.images[this.orderProduct];
+    if (orderProductImg) {
+      this.ctx.drawImage(
+        orderProductImg,
+        targetCardX + 12,
+        targetCardY,
+        orderProductImg.naturalWidth,
+        orderProductImg.naturalHeight
+      );
+    }
+    this.ctx.fillText("6/20", targetCardX + TARGET_CARD_WIDTH / 2, targetCardY + TARGET_CARD_HEIGHT / 2 + 6, TARGET_CARD_WIDTH);
   }
 
   drawBody() {
@@ -579,7 +606,7 @@ class GameEngine {
 
         this.drawCard(x, y,
           cellW, cellH, 9,
-          TARGET_STROKE_COLOR, TARGET_BG_COLOR);
+          STEPS_STROKE_COLOR, STEPS_BG_COLOR);
         if (image) {
           this.ctx.drawImage(
             image,
