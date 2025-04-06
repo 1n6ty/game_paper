@@ -6,6 +6,9 @@ const glassUrl = `${PATH}glass.svg`;
 const decorationsUrl = `${PATH}decorations.svg`;
 const fillingUrl = `${PATH}filling.svg`;
 
+const MAX_CANVAS_WIDTH = 428;
+const MAX_CANVAS_HEIGHT = 845;
+
 const GLASS_WIDTH = 179.77;
 const GLASS_HEIGHT = 259;
 const FILLING_WIDTH = 154.96;
@@ -30,8 +33,6 @@ const DAY_FILLED_FILL = "#9AD99D";
 const DAY_TEXT_EMPTY = "#9FBACF";
 const DAY_TEXT_FILLED = "#FFFFFF";
 
-const MAX_CANVAS_WIDTH = 428;
-const MAX_CANVAS_HEIGHT = 845;
 
 const loadImage = (src) =>
   new Promise((resolve, reject) => {
