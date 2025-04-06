@@ -1,4 +1,4 @@
-const __VERSION__ = "19";
+const __VERSION__ = "19.2";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
@@ -33,6 +33,15 @@ const MAX_CANVAS_HEIGHT = 774;
 
 const DEFAULT_FLOOR_HEIGHT = 36;
 
+const CEIL_DRAW_HEIGHT = 33;
+const FLOOR_DRAW_HEIGHT = 36;
+const PLAYER_WIDTH = 94.65;
+const PLAYER_HEIGHT = 64.96;
+
+const CLOUDS_WIDTH = MAX_CANVAS_WIDTH;
+const BUSHES_WIDTH = MAX_CANVAS_WIDTH;
+const GROUND_WIDTH = MAX_CANVAS_WIDTH;
+
 // ====== Параметры игры ======
 const INITIAL_SPEED = 2;
 const SPEED_MULTIPLIER = 1.2;             // Увеличение скорости каждые 10 труб
@@ -52,27 +61,6 @@ const FLOOR_HEIGHT = DEFAULT_FLOOR_HEIGHT;
 const PLAYER_COLLISION_OFFSET = 28;
 const PLAYER_BOUNDARY_OFFSET = 50;
 
-const CEIL_DRAW_HEIGHT = 33;
-const FLOOR_DRAW_HEIGHT = 36;
-const PLAYER_WIDTH = 94.65;
-const PLAYER_HEIGHT = 64.96;
-
-const CLOUDS_WIDTH = MAX_CANVAS_WIDTH;
-const BUSHES_WIDTH = MAX_CANVAS_WIDTH;
-const GROUND_WIDTH = MAX_CANVAS_WIDTH;
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = src;
-    img.onload = () => resolve(img);
-    img.onerror = (e) => {
-      console.error("Failed to load image:", src, e);
-      resolve(null); // возвращаем null, чтобы использовать fallback
-    };
-  });
-}
-
 // Массив вариантов заднего фона + потолок [ключ потолка, [цвет_верх, цвет_середина, цвет_низ]]
 const BACKGROUNDS = [
   [ASSETS.ceilEvening, ["#67AAEB", "#D3E8FF", "#FFFFFF"]],
@@ -81,6 +69,18 @@ const BACKGROUNDS = [
   [ASSETS.ceilDay, ["#A1D1FF", "#D1E8FF", "#FFFFFF"]],
   [ASSETS.ceilMorning, ["#AED7FF", "#D9ECFF", "#FEEEEF"]],
 ];
+
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => resolve(img);
+    img.onerror = (e) => {
+      console.error("Failed to load image:", src, e);
+      resolve(null); // возвращаем null, чтобы использовать fallback
+    };
+  });
+
 
 class LCG {
   constructor(seed) {
@@ -109,6 +109,11 @@ class GameEngine {
   constructor(canvas, initGameData, tmp) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.offscreenCanvas = document.createElement('canvas');
+    this.offscreenCanvas.width = MAX_CANVAS_WIDTH;
+    this.offscreenCanvas.height = MAX_CANVAS_HEIGHT;
+    this.offscreenCtx = this.offscreenCanvas.getContext('2d');
+
     this.tmp = tmp || {};
     this.tmp.engine = this;
 
@@ -164,7 +169,6 @@ class GameEngine {
       isGameOver: false,
     };
 
-    // this.lastFrameTime = performance.now();
     this.gameLoopId = null;
     this.finishCallback = () => { };
     this.images = {};
@@ -261,16 +265,13 @@ class GameEngine {
 
   startGameLoop() {
     console.log("Start GameLoop");
-    // this.lastFrameTime = performance.now();
+    this.drawStaticBackground();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   gameLoop() {
     if (this.state.isGameOver) return;
-    console.log("GameLoop");
-    // const now = performance.now();
-    const dt = Math.min(1 / 60, 0.1);  // please fix me
-    // this.lastFrameTime = now;
+    const dt = 1 / 60;
     this.updateLogic(dt);
     this.drawScene();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
@@ -410,7 +411,6 @@ class GameEngine {
     }
   }
 
-
   detectGroundCollision() {
     if (this.isResizing) return;
     const st = this.state;
@@ -424,7 +424,6 @@ class GameEngine {
       return;
     }
   }
-
 
   updateLogic(dt) {
     const fps = dt * 60;
@@ -442,6 +441,20 @@ class GameEngine {
     this.detectGroundCollision()
   }
 
+  drawStaticBackground() {
+    const ctx = this.offscreenCtx;
+    const { width, height } = this.dimensions;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, this.state.selectedGradient[0]);
+    gradient.addColorStop(0.5, this.state.selectedGradient[1]);
+    gradient.addColorStop(1, this.state.selectedGradient[2]);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+  }
+
   drawScene() {
     const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
@@ -449,13 +462,8 @@ class GameEngine {
     const { width, height } = this.dimensions;
     this.ctx.clearRect(0, 0, width, height);
 
-    // Фон - градиент
-    const gradient = this.ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, this.state.selectedGradient[0]);
-    gradient.addColorStop(0.5, this.state.selectedGradient[1]);
-    gradient.addColorStop(1, this.state.selectedGradient[2]);
-    this.ctx.fillStyle = gradient;
-    this.ctx.fillRect(0, 0, width, height);
+    // Отрисовка кэшированного статичного фона (градиента)
+    this.ctx.drawImage(this.offscreenCanvas, 0, 0, width, height);
 
     // Параллакс-слои (облака, кусты)
     if (this.images.clouds) {
