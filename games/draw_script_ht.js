@@ -1,6 +1,6 @@
-const __VERSION__ = "9";
+const __VERSION__ = "9.1";
 
-const PATH = "./assets/healthTracker/";  // /media/assets/healthTracker/
+const PATH = "/media/assets/healthTracker/";  // /media/assets/healthTracker/
 
 const glassUrl = `${PATH}glass.svg`;
 const decorationsUrl = `${PATH}decorations.svg`;
@@ -33,11 +33,8 @@ const DAY_TEXT_FILLED = "#FFFFFF";
 const MAX_CANVAS_WIDTH = 428;
 const MAX_CANVAS_HEIGHT = 845;
 
-const SCALE_CANVAS_WIDTH = 428;
-const SCALE_CANVAS_HEIGHT = 774;
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
     const img = new Image();
     img.src = src;
     img.onload = () => resolve(img);
@@ -46,7 +43,7 @@ function loadImage(src) {
       resolve(null); // fallback – вернуть null
     };
   });
-}
+
 
 class GameEngine {
   constructor(canvas, initGameData, tmp) {
@@ -73,7 +70,7 @@ class GameEngine {
     };
 
 
-    // Флаг игры – используется для остановки анимации, если игра завершена
+    // Флаг игры - используется для остановки анимации, если игра завершена
     this.isGameOver = false;
     this.gameLoopId = null;
     this.finishCallback = () => { };
@@ -251,7 +248,7 @@ class GameEngine {
 
     const cardX = this.dimensions.width / 2 - cardW / 2;
     const cardY = 20;
-    // Отрисовка фона карточки
+
     this.ctx.fillStyle = INSTRUCTION_CARD_COLOR;
     this.roundRect(this.ctx, cardX, cardY, cardW, cardH, 16);
     this.ctx.fill();
@@ -265,10 +262,8 @@ class GameEngine {
 Пропустишь день, и стакан опустеет. 
 Заполни его за 7 дней подряд и получи билет!`;
 
-    // Вычисляем максимальную ширину текста в карточке
     const maxTextWidth = cardW - TEXT_PADDING * 2;
 
-    // Функция для переноса текста
     const wrapText = (ctx, text, maxWidth) => {
       const words = text.split(" ");
       const lines = [];
@@ -290,16 +285,13 @@ class GameEngine {
 
     this.ctx.fillStyle = TEXT_COLOR;
 
-    // Устанавливаем шрифт для первой строки (жирный)
     this.ctx.font = "600 16px Roboto";
 
     const boldEnd = instructionText.indexOf("!") + 1;
     const boldText = instructionText.substring(0, boldEnd);
     const normalText = instructionText.substring(boldEnd).trim();
 
-    // Получаем массив строк для жирного текста
     const boldLines = wrapText(this.ctx, boldText, maxTextWidth);
-    // Устанавливаем обычный шрифт для оставшегося текста
     const normalLines = wrapText(this.ctx, normalText, maxTextWidth);
 
     // Рисуем жирные строки
