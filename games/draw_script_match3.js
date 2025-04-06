@@ -1,4 +1,4 @@
-const __VERSION__ = "3.1";
+const __VERSION__ = "4";
 
 const PATH = "./assets/match3/";
 const ASSET_PATHS = {
@@ -13,7 +13,6 @@ const lamBoyUrl = `${PATH}lamboy.svg`;
 
 const GRID_ROWS = 6;
 const GRID_COLS = 6;
-const CELL_PADDING = 4.86;
 
 const MAX_CANVAS_WIDTH = 428;
 const BASE_ASPECT = 809 / MAX_CANVAS_WIDTH;
@@ -27,9 +26,6 @@ const HEADER_BG_TOP_COLOR = "#FFFFFF";
 const HEADER_BG_BOTTOM_COLOR = "#9FC7F0";
 const HEADER_HEIGHT = 279;
 
-const HEADER_TARGET_CARD_WIDTH = 70.72;
-const HEADER_TARGET_CARD_HEIGHT = 70.72;
-
 const LAMBOY_PADDING_LEFT = 64;
 const LAMBOY_PADDING_TOP = 0;
 
@@ -41,6 +37,17 @@ const HEADER_DOWN_DIVIDER_COLOR = "#739BD3";
 const HEADER_UP_DIVIDER_HEIGHT = 4;
 const HEADER_DOWN_DIVIDER_HEIGHT = 22;
 
+const HEADER_TARGET_LEFT = 64;
+const HEADER_TARGET_TOP = 75;
+const HEADER_TARGET_CARD_WIDTH = 70.72;
+const HEADER_TARGET_CARD_HEIGHT = 70.72;
+const HEADER_TARGET_CARD_BORDER_RADIUS = 12;
+const HEADER_TARGET_CARD_IMAGE_WIDTH = 70.72;
+const HEADER_TARGET_CARD_IMAGE_HEIGHT = 70.72;
+const HEADER_TARGET_COUNTER_BG_COLOR = "#DB6971";
+const HEADER_TARGET_COUNTER_TEXT_COLOR = "#FFFFFF";
+const HEADER_TARGET_COUNTER_RADIUS = 24;
+
 const BODY_BG_TOP_COLOR = "#EBF5FF";
 const BODY_BG_BOTTOM_COLOR = "#D8EBFF";
 
@@ -50,6 +57,7 @@ const COUNTERS_GAP = 10;
 
 const STEPS_BG_COLOR = "#FFFFFF";
 const STEPS_STROKE_COLOR = "#4E82B5";
+const STEPS_TEXT_COLOR = "#4E82B5";
 const STEPS_CARD_WIDTH = 134;
 const STEPS_CARD_HEIGHT = 61;
 
@@ -72,6 +80,7 @@ const GRID_PADDING_TOP = 110.49;
 
 const CELL_WIDTH = 54.73;
 const CELL_HEIGHT = 54.73;
+const CELL_PADDING = 5;
 
 const loadImage = (src) =>
   new Promise((resolve) => {
@@ -91,18 +100,21 @@ class GameEngine {
     this.tmp = tmp;
     this.tmp.engine = this;
 
-    // Инициализация данных обучения
     this.trainingCount = parseInt(initGameData.trainingCount || "0", 10);
     this.showTutorial = this.trainingCount < 3;
 
-    // Инициализация игрового поля
+    this.stepsCount = 12;
+    this.currentStep = 0;
+
+    this.targetItemsCount = 100;
+    this.currentTargetItem = 30;
+
     this.grid = [];
     this.assetKeys = Object.keys(ASSET_PATHS);
     this.orderProduct =
       this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
     this.initGrid();
 
-    // Инициализация состояний
     this.selectedCell = null;
     this.draggingCell = null;
     this.currentMousePos = null;
@@ -110,30 +122,14 @@ class GameEngine {
     this.resizeCanvas();
     window.addEventListener("resize", () => this.resizeCanvas());
 
-    // Загрузка ассетов
     this.images = {};
     this.loadAssets();
 
     this.canvas.addEventListener("mousedown", (e) => this.handleMouseDown(e));
     this.canvas.addEventListener("mousemove", (e) => this.handleMouseMove(e));
     this.canvas.addEventListener("mouseup", (e) => this.handleMouseUp(e));
-  }
 
-  initGrid() {
-    for (let r = 0; r < GRID_ROWS; r++) {
-      const row = [];
-      for (let c = 0; c < GRID_COLS; c++) {
-        if ((r % (GRID_ROWS - 1) === 0) && (c % (GRID_COLS - 1) === 0)) {
-          console.log(r, c);
-          row.push({ type: null });
-        } else {
-          const key =
-            this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
-          row.push({ type: key });
-        }
-      }
-      this.grid.push(row);
-    }
+    this.handleMatches();
   }
 
   resizeCanvas() {
@@ -166,8 +162,7 @@ class GameEngine {
   }
 
   gameLoop() {
-    let dt = 1 / 60;
-    dt = Math.min(dt, 0.1);
+    const dt = 1 / 60;
     this.updateLogic(dt);
     this.drawScene();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
@@ -179,6 +174,68 @@ class GameEngine {
       : 0;
   }
 
+  isCellActive(row, col) {
+    // Например, для "квадрата без углов" - угловые ячейки неактивны:
+    if ((row === 0 || row === GRID_ROWS - 1) && (col === 0 || col === GRID_COLS - 1)) {
+      return false;
+    }
+    return true;
+  }
+
+  initGrid() {
+    for (let r = 0; r < GRID_ROWS; r++) {
+      const row = [];
+      for (let c = 0; c < GRID_COLS; c++) {
+        if (!this.isCellActive(r, c)) {
+          row.push({ type: 'disabled' });
+        } else {
+          const key = this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
+          row.push({ type: key });
+        }
+      }
+      this.grid.push(row);
+    }
+  }
+
+  areAdjacent(cell1, cell2) {
+    console.log(cell1, cell2);
+    const dr = Math.abs(cell1.row - cell2.row);
+    const dc = Math.abs(cell1.col - cell2.col);
+    return dr + dc === 1;
+  }
+
+  handleMatches() {
+    let matched;
+    let removedCount = 0;
+    do {
+      matched = this.checkMatches();
+      const removed = this.removeMatches(matched);
+      if (removed > 0) {
+        removedCount += removed;
+        this.animateDropCells();
+      }
+    } while (removedCount > 0 && this.checkMatches().flat().includes(true));
+
+    this.currentTargetItem += removedCount;
+  }
+
+  getGridPosition(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    // Получаем координаты в физическом пространстве
+    const x = (e.clientX - rect.left) * dpr;
+    const y = (e.clientY - rect.top) * dpr;
+    // Используем физические размеры для вычислений
+    const gridPaddingTop = GRID_PADDING_TOP * dpr;
+    const gridWidth = CELL_WIDTH * dpr;
+    const gridHeight = CELL_HEIGHT * dpr;
+    // Проверка выхода за пределы игрового поля (с учетом физ. размеров)
+    if (y < gridPaddingTop || y > this.canvas.height) return null;
+    const row = Math.floor((y - gridPaddingTop) / gridHeight);
+    const col = Math.floor(x / gridWidth);
+    return { row, col };
+  }
+
   handleMouseDown(e) {
     const pos = this.getGridPosition(e);
     if (pos) {
@@ -187,6 +244,7 @@ class GameEngine {
       const rect = this.canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       const cellPos = this.getCellCoordinates(pos);
+      // Вычисляем смещение в физическом пространстве
       this.dragOffsetX = (e.clientX - rect.left) * dpr - cellPos.x;
       this.dragOffsetY = (e.clientY - rect.top) * dpr - cellPos.y;
       this.currentMousePos = {
@@ -217,50 +275,80 @@ class GameEngine {
   }
 
   getCellCoordinates(pos) {
-    // const { width, height } = this.dimensions;
-    // const gridWidth = width;
-    // const gridHeight = height - GRID_PADDING_TOP;
-    const cellW = CELL_WIDTH;
-    const cellH = CELL_HEIGHT;
+    const dpr = window.devicePixelRatio || 1;
+    const cellW = CELL_WIDTH * dpr;
+    const cellH = CELL_HEIGHT * dpr;
     return {
-      x: GRID_PADDING_LEFT + pos.col * (cellW + CELL_PADDING),
-      y: HEADER_HEIGHT + GRID_PADDING_TOP + pos.row * (cellH + CELL_PADDING),
+      x: GRID_PADDING_LEFT * dpr + pos.col * (cellW + CELL_PADDING * dpr),
+      y: HEADER_HEIGHT * dpr + GRID_PADDING_TOP * dpr + pos.row * (cellH + CELL_PADDING * dpr),
       w: cellW,
       h: cellH,
     };
   }
 
-  getGridPosition(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const x = (e.clientX - rect.left) * dpr;
-    const y = (e.clientY - rect.top) * dpr;
-    if (y < GRID_PADDING_TOP || y > this.dimensions.height) return null;
-    // const gridWidth = this.dimensions.width;
-    // const gridHeight = this.dimensions.height - GRID_PADDING_TOP;
-    const cellW = CELL_WIDTH;
-    const cellH = CELL_HEIGHT;
-    const row = Math.floor((y - GRID_PADDING_TOP) / cellH);
-    const col = Math.floor(x / cellW);
-    return { row, col };
+  dropCells() {
+    for (let c = 0; c < GRID_COLS; c++)
+      for (let r = GRID_ROWS - 1; r >= 0; r--)
+        if (this.grid[r][c] === null)
+          for (let k = r - 1; k >= 0; k--)
+            if (this.grid[k][c] !== null) {
+              this.grid[r][c] = this.grid[k][c];
+              this.grid[k][c] = null;
+              break;
+            }
   }
 
-  areAdjacent(cell1, cell2) {
-    const dr = Math.abs(cell1.row - cell2.row);
-    const dc = Math.abs(cell1.col - cell2.col);
-    return dr + dc === 1;
+  fillEmptyCells() {
+    for (let r = 0; r < GRID_ROWS; r++)
+      for (let c = 0; c < GRID_COLS; c++) {
+        if (!this.isCellActive(r, c)) continue;
+        if (this.grid[r][c] === null) {
+          const key = this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
+          this.grid[r][c] = { type: key, fallOffset: -CELL_HEIGHT, currentFallOffset: -CELL_HEIGHT };
+        }
+      }
+  }
+
+  animateNewCells(duration = 500) {
+    const startTime = performance.now();
+    const animate = () => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      for (let r = 0; r < GRID_ROWS; r++)
+        for (let c = 0; c < GRID_COLS; c++) {
+          const cell = this.grid[r][c];
+          if (cell && cell.fallOffset < 0)
+            cell.currentFallOffset = cell.fallOffset * (1 - progress);
+        }
+
+      this.drawScene();
+      if (progress < 1)
+        requestAnimationFrame(animate);
+      else {
+        for (let r = 0; r < GRID_ROWS; r++)
+          for (let c = 0; c < GRID_COLS; c++) {
+            const cell = this.grid[r][c];
+            if (cell && cell.currentFallOffset !== undefined && cell.fallOffset < 0) {
+              cell.currentFallOffset = 0;
+              cell.fallOffset = 0;
+            }
+          }
+        this.handleMatches();
+      }
+    };
+    animate();
   }
 
   animateDropCells(duration = 500) {
     const startTime = performance.now();
-    const cellH = (this.dimensions.height - GRID_PADDING_TOP) / GRID_ROWS;
+    const cellH = CELL_HEIGHT;
     for (let c = 0; c < GRID_COLS; c++) {
       let emptyCount = 0;
       for (let r = GRID_ROWS - 1; r >= 0; r--) {
         const cell = this.grid[r][c];
-        if (cell === null) {
+        if (cell === null || cell.type === 'disabled')
           emptyCount++;
-        } else if (emptyCount > 0) {
+        else if (emptyCount > 0) {
           cell.fallOffset = emptyCount * cellH;
           cell.currentFallOffset = cell.fallOffset;
         } else {
@@ -276,16 +364,16 @@ class GameEngine {
       for (let r = 0; r < GRID_ROWS; r++) {
         for (let c = 0; c < GRID_COLS; c++) {
           const cell = this.grid[r][c];
-          if (cell && cell.fallOffset !== undefined) {
+
+          if (cell && cell.fallOffset !== undefined)
             cell.currentFallOffset = cell.fallOffset * progress;
-          }
         }
       }
       this.drawScene();
-      if (progress < 1) {
+      if (progress < 1)
         requestAnimationFrame(animate);
-      } else {
-        for (let r = 0; r < GRID_ROWS; r++) {
+      else {
+        for (let r = 0; r < GRID_ROWS; r++)
           for (let c = 0; c < GRID_COLS; c++) {
             const cell = this.grid[r][c];
             if (cell && cell.currentFallOffset !== undefined) {
@@ -293,8 +381,10 @@ class GameEngine {
               cell.fallOffset = 0;
             }
           }
-        }
+
+        this.dropCells();
         this.fillEmptyCells();
+        this.animateNewCells();
       }
     };
     animate();
@@ -309,9 +399,12 @@ class GameEngine {
     for (let r = 0; r < GRID_ROWS; r++) {
       let count = 1;
       for (let c = 1; c < GRID_COLS; c++) {
-        if (this.grid[r][c].type === this.grid[r][c - 1].type) {
+        const cell = this.grid[r][c];
+        const prevCell = this.grid[r][c - 1];
+        if (!cell || !cell.type || !prevCell || !prevCell.type) continue;
+        if (cell.type === prevCell.type)
           count++;
-        } else {
+        else {
           if (count >= 3) {
             for (let k = c - count; k < c; k++) {
               matches[r][k] = true;
@@ -321,9 +414,8 @@ class GameEngine {
         }
       }
       if (count >= 3) {
-        for (let k = GRID_COLS - count; k < GRID_COLS; k++) {
+        for (let k = GRID_COLS - count; k < GRID_COLS; k++)
           matches[r][k] = true;
-        }
       }
     }
 
@@ -331,79 +423,102 @@ class GameEngine {
     for (let c = 0; c < GRID_COLS; c++) {
       let count = 1;
       for (let r = 1; r < GRID_ROWS; r++) {
-        if (this.grid[r][c].type === this.grid[r - 1][c].type) {
+        const cell = this.grid[r][c];
+        const prevCell = this.grid[r - 1][c];
+        if (!cell || !cell.type || !prevCell || !prevCell.type) continue;
+        if (cell.type === prevCell.type)
           count++;
-        } else {
+        else {
           if (count >= 3) {
-            for (let k = r - count; k < r; k++) {
+            for (let k = r - count; k < r; k++)
               matches[k][c] = true;
-            }
           }
           count = 1;
         }
       }
       if (count >= 3) {
-        for (let k = GRID_ROWS - count; k < GRID_ROWS; k++) {
+        for (let k = GRID_ROWS - count; k < GRID_ROWS; k++)
           matches[k][c] = true;
-        }
       }
     }
     return matches;
   }
 
   removeMatches(matched) {
-    let anyMatch = false;
-    for (let r = 0; r < GRID_ROWS; r++) {
-      for (let c = 0; c < GRID_COLS; c++) {
+    let removedCount = 0;
+    for (let r = 0; r < GRID_ROWS; r++)
+      for (let c = 0; c < GRID_COLS; c++)
         if (matched[r][c]) {
           this.grid[r][c] = null;
-          anyMatch = true;
+          removedCount++;
         }
-      }
-    }
-    return anyMatch;
+    return removedCount;
   }
 
-  dropCells() {
-    for (let c = 0; c < GRID_COLS; c++) {
-      for (let r = GRID_ROWS - 1; r >= 0; r--) {
-        if (this.grid[r][c] === null) {
-          for (let k = r - 1; k >= 0; k--) {
-            if (this.grid[k][c] !== null) {
-              this.grid[r][c] = this.grid[k][c];
-              this.grid[k][c] = null;
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
+  animateSwap(cell1, cell2, onComplete, duration = 800, reverse = false) {
+    const startTime = performance.now();
+    const startPosA = this.getCellCoordinates(cell1);
+    const startPosB = this.getCellCoordinates(cell2);
 
-  fillEmptyCells() {
-    for (let r = 0; r < GRID_ROWS; r++) {
-      for (let c = 0; c < GRID_COLS; c++) {
-        if (this.grid[r][c] === null) {
-          const key =
-            this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
-          this.grid[r][c] = { type: key, fallOffset: 0, currentFallOffset: 0 };
-        }
-      }
-    }
-  }
+    const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
 
-  handleMatches() {
-    const matched = this.checkMatches();
-    if (this.removeMatches(matched)) {
-      this.animateDropCells();
-    }
+    const animate = () => {
+      const elapsed = performance.now() - startTime;
+      let progress = Math.min(elapsed / duration, 1);
+
+      const effectiveProgress = reverse ? easeInOutQuad(1 - progress) : easeInOutQuad(progress);
+
+      const posA = {
+        x: startPosA.x + (startPosB.x - startPosA.x) * effectiveProgress,
+        y: startPosA.y + (startPosB.y - startPosA.y) * effectiveProgress,
+      };
+      const posB = {
+        x: startPosB.x + (startPosA.x - startPosB.x) * effectiveProgress,
+        y: startPosB.y + (startPosA.y - startPosB.y) * effectiveProgress,
+      };
+
+      this.grid[cell1.row][cell1.col].tempPos = posA;
+      this.grid[cell2.row][cell2.col].tempPos = posB;
+
+      this.drawScene();
+
+      if (elapsed < duration) {
+        requestAnimationFrame(animate);
+      } else {
+        delete this.grid[cell1.row][cell1.col].tempPos;
+        delete this.grid[cell2.row][cell2.col].tempPos;
+        onComplete();
+      }
+    };
+
+    animate();
   }
 
   swapCells(cell1, cell2) {
-    [this.grid[cell1.row][cell1.col], this.grid[cell2.row][cell2.col]] =
-      [this.grid[cell2.row][cell2.col], this.grid[cell1.row][cell1.col]];
-    this.handleMatches();
+    const cellA = this.grid[cell1.row][cell1.col];
+    const cellB = this.grid[cell2.row][cell2.col];
+
+    if (cellA.type == 'disabled' || cellB.type === 'disabled') return;
+
+    this.animateSwap(cell1, cell2, () => {
+      this.grid[cell1.row][cell1.col] = cellB;
+      this.grid[cell2.row][cell2.col] = cellA;
+
+      const matched = this.checkMatches();
+      const anyMatch = matched.some(row => row.some(match => match));
+
+      if (!anyMatch) {
+        this.animateSwap(cell1, cell2, () => {
+          this.grid[cell1.row][cell1.col] = cellA;
+          this.grid[cell2.row][cell2.col] = cellB;
+        }, true);
+      } else {
+        this.currentStep++;
+        this.handleMatches();
+      }
+    });
   }
+
 
   roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
@@ -423,8 +538,62 @@ class GameEngine {
     this.ctx.fillStyle = fillColor;
     this.ctx.strokeStyle = strokeColor;
     this.roundRect(this.ctx, x, y, width, height, radius);
-    this.ctx.fill();
     this.ctx.stroke();
+    this.ctx.fill();
+  }
+
+  drawImageInCell(image, drawX, drawY, cellW, cellH, cellPadding) {
+    const availableWidth = cellW - 2 * cellPadding;
+    const availableHeight = cellH - 2 * cellPadding;
+    const scale = Math.min(availableWidth / image.naturalWidth, availableHeight / image.naturalHeight);
+    const drawWidth = image.naturalWidth * scale;
+    const drawHeight = image.naturalHeight * scale;
+    const offsetX = (availableWidth - drawWidth) / 2;
+    const offsetY = (availableHeight - drawHeight) / 2;
+    this.ctx.drawImage(
+      image,
+      drawX + cellPadding + offsetX,
+      drawY + cellPadding + offsetY,
+      drawWidth,
+      drawHeight
+    );
+  };
+
+  drawHighlightedTarget() {
+    const { width } = this.dimensions;
+
+    const highlightedTargetX = HEADER_TARGET_LEFT;
+    const highlightedTargetY = HEADER_TARGET_TOP;
+
+    const highlightedTargetCounterX = highlightedTargetX + 55 + HEADER_TARGET_COUNTER_RADIUS;
+    const highlightedTargetCounterY = highlightedTargetY + 33 + HEADER_TARGET_COUNTER_RADIUS;
+
+    this.drawCard(highlightedTargetX, highlightedTargetY,
+      HEADER_TARGET_CARD_WIDTH, HEADER_TARGET_CARD_HEIGHT, HEADER_TARGET_CARD_BORDER_RADIUS,
+      STEPS_STROKE_COLOR, STEPS_BG_COLOR
+    )
+
+    if (this.images[this.orderProduct]) {
+      this.drawImageInCell(this.images[this.orderProduct],
+        highlightedTargetX, highlightedTargetY,
+        HEADER_TARGET_CARD_IMAGE_WIDTH, HEADER_TARGET_CARD_IMAGE_HEIGHT, CELL_PADDING)
+    }
+
+    this.ctx.fillStyle = HEADER_TARGET_COUNTER_BG_COLOR;
+    this.ctx.beginPath();
+    this.ctx.arc(highlightedTargetCounterX, highlightedTargetCounterY,
+      HEADER_TARGET_COUNTER_RADIUS, 0, 2 * Math.PI, false);
+    this.ctx.fill();
+    this.ctx.closePath();
+
+    this.ctx.save();
+    this.ctx.fillStyle = HEADER_TARGET_COUNTER_TEXT_COLOR;
+    this.ctx.font = "500 16px Roboto Mono";
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.fillText(`x${this.targetItemsCount}`,
+      highlightedTargetCounterX, highlightedTargetCounterY, STEPS_CARD_WIDTH);
+    this.ctx.restore();
   }
 
   drawHeader() {
@@ -440,15 +609,8 @@ class GameEngine {
     if (this.images.lamBoy) {
       this.ctx.drawImage(this.images.lamBoy, LAMBOY_PADDING_LEFT, LAMBOY_PADDING_TOP, LAMBOY_WIDTH, LAMBOY_HEIGHT);
     }
-    if (this.images[this.orderProduct]) {
-      this.ctx.drawImage(
-        this.images[this.orderProduct],
-        width - 90,
-        20,
-        70,
-        70
-      );
-    }
+
+    this.drawHighlightedTarget();
 
     this.ctx.fillStyle = HEADER_UP_DIVIDER_COLOR;
     this.ctx.fillRect(0, HEADER_HEIGHT - HEADER_DOWN_DIVIDER_HEIGHT - HEADER_UP_DIVIDER_HEIGHT,
@@ -463,9 +625,8 @@ class GameEngine {
 
     const targetCardX = COUNTERS_PADDING_LEFT;
     const targetCardY = HEADER_HEIGHT + COUNTERS_PADDING_TOP;
-    const stepsCardX = COUNTERS_PADDING_LEFT + STEPS_CARD_WIDTH + COUNTERS_GAP;
+    const stepsCardX = COUNTERS_PADDING_LEFT + TARGET_CARD_WIDTH + COUNTERS_GAP;
     const stepsCardY = HEADER_HEIGHT + COUNTERS_PADDING_TOP;
-
 
     this.drawCard(stepsCardX, stepsCardY,
       STEPS_CARD_WIDTH, STEPS_CARD_HEIGHT, 12,
@@ -477,22 +638,22 @@ class GameEngine {
       TARGET_STROKE_COLOR, TARGET_BG_COLOR
     )
 
-    this.ctx.fillStyle = "#4E82B5";
+    this.ctx.fillStyle = STEPS_TEXT_COLOR;
     this.ctx.font = "500 20px Roboto Mono";
-    // this.ctx.textAlign = "left";
-    this.ctx.fillText("Шаги 0/11", stepsCardX + 12, stepsCardY + STEPS_CARD_HEIGHT / 2 + 6, STEPS_CARD_WIDTH);
-    // this.ctx.textAlign = "right";
+    this.ctx.textAlign = "left";
+    this.ctx.textBaseline = "middle";
+
     const orderProductImg = this.images[this.orderProduct];
     if (orderProductImg) {
-      this.ctx.drawImage(
-        orderProductImg,
-        targetCardX + 12,
-        targetCardY,
-        orderProductImg.naturalWidth,
-        orderProductImg.naturalHeight
-      );
+      this.drawImageInCell(orderProductImg,
+        targetCardX + 4, targetCardY + 2,
+        CELL_WIDTH, CELL_HEIGHT, CELL_PADDING)
     }
-    this.ctx.fillText("6/20", targetCardX + TARGET_CARD_WIDTH / 2, targetCardY + TARGET_CARD_HEIGHT / 2 + 6, TARGET_CARD_WIDTH);
+    this.ctx.fillText(`${this.currentTargetItem}/${this.targetItemsCount}`,
+      targetCardX + TARGET_CARD_WIDTH / 2, targetCardY + TARGET_CARD_HEIGHT / 2, TARGET_CARD_WIDTH / 2 - 2);
+
+    this.ctx.fillText(`Шаги ${this.currentStep}/${this.stepsCount}`,
+      stepsCardX + 12, stepsCardY + STEPS_CARD_HEIGHT / 2, STEPS_CARD_WIDTH);
   }
 
   drawBody() {
@@ -569,69 +730,45 @@ class GameEngine {
 
   drawGrid() {
     const { width, height } = this.dimensions;
-    // const gridWidth = width;
-    // const gridHeight = height - GRID_PADDING_TOP;
-
-    // TODO сделать динамичными
     const cellW = CELL_WIDTH;
     const cellH = CELL_HEIGHT;
 
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (this.draggingCell && this.currentMousePos) {
-          if (r == this.draggingCell.row && c == this.draggingCell.col) {
-            const cellData = this.grid[this.draggingCell.row][this.draggingCell.col];
-            if (this.images[cellData.type]) {
-              const drawX = this.currentMousePos.x - this.dragOffsetX;
-              const drawY = this.currentMousePos.y - this.dragOffsetY;
-              this.ctx.drawImage(
-                this.images[cellData.type],
-                drawX + CELL_PADDING,
-                drawY + CELL_PADDING,
-                cellW - 2 * CELL_PADDING,
-                cellH - 2 * CELL_PADDING
-              );
-            }
-            continue;
-          };
+        if (this.draggingCell && r == this.draggingCell.row && c == this.draggingCell.col) {
+          continue;
         }
 
         const cell = this.grid[r][c];
-        if (!cell) continue;
-        if (!cell.type) continue;
-        const x = GRID_PADDING_LEFT + c * (cellW + CELL_PADDING);
-        const y = HEADER_HEIGHT + GRID_PADDING_TOP + r * (cellH + CELL_PADDING) + (cell.currentFallOffset || 0);
+        if (!cell || !cell.type || cell.type == 'disabled') continue;
+
+        const pos = cell.tempPos || {
+          x: GRID_PADDING_LEFT + c * (cellW + CELL_PADDING),
+          y: HEADER_HEIGHT + GRID_PADDING_TOP + r * (cellH + CELL_PADDING) + (cell.currentFallOffset || 0)
+        };
 
         const image = this.images[cell.type];
 
-        this.drawCard(x, y,
-          cellW, cellH, 9,
-          STEPS_STROKE_COLOR, STEPS_BG_COLOR);
+        this.drawCard(pos.x, pos.y, cellW, cellH, 9, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
         if (image) {
-          this.ctx.drawImage(
-            image,
-            x + CELL_PADDING,
-            y + CELL_PADDING,
-            image.naturalWidth,
-            image.naturalHeight
-          );
+          this.drawImageInCell(image, pos.x, pos.y, cellW, cellH, CELL_PADDING);
         }
       }
     }
-    // if (this.draggingCell && this.currentMousePos) {
-    //   const cellData = this.grid[this.draggingCell.row][this.draggingCell.col];
-    //   if (this.images[cellData.type]) {
-    //     const drawX = this.currentMousePos.x - this.dragOffsetX;
-    //     const drawY = this.currentMousePos.y - this.dragOffsetY;
-    //     this.ctx.drawImage(
-    //       this.images[cellData.type],
-    //       drawX + CELL_PADDING,
-    //       drawY + CELL_PADDING,
-    //       cellW - 2 * CELL_PADDING,
-    //       cellH - 2 * CELL_PADDING
-    //     );
-    //   }
-    // }
+
+    if (this.draggingCell && this.currentMousePos) {
+      const cellData = this.grid[this.draggingCell.row][this.draggingCell.col];
+      if (cellData && cellData.type) {
+        const drawX = this.currentMousePos.x - this.dragOffsetX;
+        const drawY = this.currentMousePos.y - this.dragOffsetY;
+        const image = this.images[cellData.type];
+
+        this.drawCard(drawX, drawY, cellW, cellH, 9, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
+        if (image) {
+          this.drawImageInCell(image, drawX, drawY, cellW, cellH, CELL_PADDING);
+        }
+      }
+    }
   }
 
   drawGridZone() {
@@ -680,10 +817,6 @@ class GameEngine {
 
   static getInstance(tmp) {
     return tmp.engine;
-  }
-
-  getTmp() {
-    return this.tmp;
   }
 }
 
