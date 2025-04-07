@@ -1,6 +1,7 @@
-const __VERSION__ = "4";
+const __VERSION__ = "5";
 
-const PATH = "./assets/match3/";
+const PATH = "/media/assets/match3/";
+
 const ASSET_PATHS = {
   smetanaGlass: `${PATH}smetana_glass.svg`,
   curd: `${PATH}curd.svg`,
@@ -15,18 +16,13 @@ const GRID_ROWS = 6;
 const GRID_COLS = 6;
 
 const MAX_CANVAS_WIDTH = 428;
-const BASE_ASPECT = 809 / MAX_CANVAS_WIDTH;
-
-const baseDimensions = {
-  width: MAX_CANVAS_WIDTH,
-  height: Math.floor(MAX_CANVAS_WIDTH * BASE_ASPECT),
-};
+const MAX_CANVAS_HEIGHT = 809;
 
 const HEADER_BG_TOP_COLOR = "#FFFFFF";
 const HEADER_BG_BOTTOM_COLOR = "#9FC7F0";
 const HEADER_HEIGHT = 279;
 
-const LAMBOY_PADDING_LEFT = 64;
+const LAMBOY_PADDING_LEFT = 84;
 const LAMBOY_PADDING_TOP = 0;
 
 const LAMBOY_WIDTH = 344;
@@ -129,20 +125,29 @@ class GameEngine {
     this.canvas.addEventListener("mousemove", (e) => this.handleMouseMove(e));
     this.canvas.addEventListener("mouseup", (e) => this.handleMouseUp(e));
 
+    this.canvas.addEventListener("touchstart", (e) => this.handleTouchStart(e));
+    this.canvas.addEventListener("touchmove", (e) => this.handleTouchMove(e));
+    this.canvas.addEventListener("touchend", (e) => this.handleTouchEnd(e));
+
     this.handleMatches();
   }
 
   resizeCanvas() {
     const parent = this.canvas.parentElement;
     if (!parent) return;
-    const newWidth = Math.min(parent.clientWidth, MAX_CANVAS_WIDTH);
-    const newHeight = Math.floor(newWidth * BASE_ASPECT);
+
+    const parentWidth = parent.clientWidth;
+    const parentHeight = parent.clientHeight;
+    const newWidth = parentWidth;
+    const newHeight = parentHeight /* - 60 */;
+
+    this.dimensions = { width: newWidth, height: newHeight };
+
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = newWidth * dpr;
     this.canvas.height = newHeight * dpr;
     this.canvas.style.width = `${newWidth}px`;
     this.canvas.style.height = `${newHeight}px`;
-    this.dimensions = { width: newWidth, height: newHeight };
   }
 
   async loadAssets() {
@@ -219,20 +224,67 @@ class GameEngine {
     this.currentTargetItem += removedCount;
   }
 
+  getCellCoordinates(pos) {
+    const cellW = CELL_WIDTH;
+    const cellH = CELL_HEIGHT;
+    return {
+      x: GRID_PADDING_LEFT + pos.col * (cellW + CELL_PADDING),
+      y: HEADER_HEIGHT + GRID_PADDING_TOP + pos.row * (cellH + CELL_PADDING),
+      w: cellW,
+      h: cellH,
+    };
+  }
+
+  // getGridPosition(e) {
+  //   const rect = this.canvas.getBoundingClientRect();
+  //   const x = e.clientX - rect.left;
+  //   const y = e.clientY - rect.top;
+
+  //   const gridStartX = GRID_PADDING_LEFT;
+  //   const gridStartY = HEADER_HEIGHT + GRID_PADDING_TOP;
+
+  //   const gridEndX = gridStartX + GRID_COLS * (CELL_WIDTH + CELL_PADDING);
+  //   const gridEndY = gridStartY + GRID_ROWS * (CELL_HEIGHT + CELL_PADDING);
+
+  //   if (x < gridStartX || y < gridStartY || x > gridEndX || y > gridEndY) {
+  //     return null; // клик вне области сетки
+  //   }
+
+  //   const gridX = x - gridStartX;
+  //   const gridY = y - gridStartY;
+
+  //   const row = Math.floor(gridY / (CELL_HEIGHT + CELL_PADDING));
+  //   const col = Math.floor(gridX / (CELL_WIDTH + CELL_PADDING));
+
+  //   return { row, col };
+  // }
+
   getGridPosition(e) {
+    const { width, height } = this.dimensions;
+
     const rect = this.canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    // Получаем координаты в физическом пространстве
-    const x = (e.clientX - rect.left) * dpr;
-    const y = (e.clientY - rect.top) * dpr;
-    // Используем физические размеры для вычислений
-    const gridPaddingTop = GRID_PADDING_TOP * dpr;
-    const gridWidth = CELL_WIDTH * dpr;
-    const gridHeight = CELL_HEIGHT * dpr;
-    // Проверка выхода за пределы игрового поля (с учетом физ. размеров)
-    if (y < gridPaddingTop || y > this.canvas.height) return null;
-    const row = Math.floor((y - gridPaddingTop) / gridHeight);
-    const col = Math.floor(x / gridWidth);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
+    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
+    const gridStartX = (offsetX + GRID_PADDING_LEFT) * scale;
+    const gridStartY = (offsetY + HEADER_HEIGHT + GRID_PADDING_TOP) * scale;
+
+    const gridEndX = (offsetX + gridStartX + GRID_COLS * (CELL_WIDTH + CELL_PADDING)) * scale;
+    const gridEndY = (offsetY + gridStartY + GRID_ROWS * (CELL_HEIGHT + CELL_PADDING)) * scale;
+
+    if (x < gridStartX || y < gridStartY || x > gridEndX || y > gridEndY) {
+      return null; // клик вне области сетки
+    }
+
+    const gridX = x - gridStartX;
+    const gridY = y - gridStartY;
+
+    const row = Math.floor(gridY / (CELL_HEIGHT + CELL_PADDING));
+    const col = Math.floor(gridX / (CELL_WIDTH + CELL_PADDING));
+
     return { row, col };
   }
 
@@ -242,14 +294,13 @@ class GameEngine {
       this.selectedCell = pos;
       this.draggingCell = pos;
       const rect = this.canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
       const cellPos = this.getCellCoordinates(pos);
       // Вычисляем смещение в физическом пространстве
-      this.dragOffsetX = (e.clientX - rect.left) * dpr - cellPos.x;
-      this.dragOffsetY = (e.clientY - rect.top) * dpr - cellPos.y;
+      this.dragOffsetX = (e.clientX - rect.left) - cellPos.x;
+      this.dragOffsetY = (e.clientY - rect.top) - cellPos.y;
       this.currentMousePos = {
-        x: (e.clientX - rect.left) * dpr,
-        y: (e.clientY - rect.top) * dpr,
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
       };
     }
   }
@@ -257,10 +308,9 @@ class GameEngine {
   handleMouseMove(e) {
     if (!this.draggingCell) return;
     const rect = this.canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
     this.currentMousePos = {
-      x: (e.clientX - rect.left) * dpr,
-      y: (e.clientY - rect.top) * dpr,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     };
   }
 
@@ -274,16 +324,45 @@ class GameEngine {
     this.currentMousePos = null;
   }
 
-  getCellCoordinates(pos) {
-    const dpr = window.devicePixelRatio || 1;
-    const cellW = CELL_WIDTH * dpr;
-    const cellH = CELL_HEIGHT * dpr;
-    return {
-      x: GRID_PADDING_LEFT * dpr + pos.col * (cellW + CELL_PADDING * dpr),
-      y: HEADER_HEIGHT * dpr + GRID_PADDING_TOP * dpr + pos.row * (cellH + CELL_PADDING * dpr),
-      w: cellW,
-      h: cellH,
+  handleTouchStart(e) {
+    e.preventDefault(); // предотвращаем стандартное поведение
+    const touch = e.touches[0];
+    const pos = this.getGridPosition(touch);
+    if (pos) {
+      this.selectedCell = pos;
+      this.draggingCell = pos;
+      const rect = this.canvas.getBoundingClientRect();
+      const cellPos = this.getCellCoordinates(pos);
+      this.dragOffsetX = (touch.clientX - rect.left) - cellPos.x;
+      this.dragOffsetY = (touch.clientY - rect.top) - cellPos.y;
+      this.currentMousePos = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      };
+    }
+  }
+
+  handleTouchMove(e) {
+    e.preventDefault();
+    if (!this.draggingCell) return;
+    const touch = e.touches[0];
+    const rect = this.canvas.getBoundingClientRect();
+    this.currentMousePos = {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
     };
+  }
+
+  handleTouchEnd(e) {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    const pos = this.getGridPosition(touch);
+    if (this.selectedCell && pos && this.areAdjacent(this.selectedCell, pos)) {
+      this.swapCells(this.selectedCell, pos);
+    }
+    this.selectedCell = null;
+    this.draggingCell = null;
+    this.currentMousePos = null;
   }
 
   dropCells() {
@@ -291,7 +370,7 @@ class GameEngine {
       for (let r = GRID_ROWS - 1; r >= 0; r--)
         if (this.grid[r][c] === null)
           for (let k = r - 1; k >= 0; k--)
-            if (this.grid[k][c] !== null) {
+            if (this.grid[k][c] !== null && this.grid[k][c].type !== 'disabled') {
               this.grid[r][c] = this.grid[k][c];
               this.grid[k][c] = null;
               break;
@@ -321,7 +400,7 @@ class GameEngine {
             cell.currentFallOffset = cell.fallOffset * (1 - progress);
         }
 
-      this.drawScene();
+      // this.drawScene();
       if (progress < 1)
         requestAnimationFrame(animate);
       else {
@@ -346,8 +425,10 @@ class GameEngine {
       let emptyCount = 0;
       for (let r = GRID_ROWS - 1; r >= 0; r--) {
         const cell = this.grid[r][c];
-        if (cell === null || cell.type === 'disabled')
+        if (cell === null)
           emptyCount++;
+        else if (cell.type === 'disabled')
+          continue;
         else if (emptyCount > 0) {
           cell.fallOffset = emptyCount * cellH;
           cell.currentFallOffset = cell.fallOffset;
@@ -365,18 +446,18 @@ class GameEngine {
         for (let c = 0; c < GRID_COLS; c++) {
           const cell = this.grid[r][c];
 
-          if (cell && cell.fallOffset !== undefined)
+          if (cell && cell.type !== 'disabled' && cell.fallOffset !== undefined)
             cell.currentFallOffset = cell.fallOffset * progress;
         }
       }
-      this.drawScene();
+      // this.drawScene();
       if (progress < 1)
         requestAnimationFrame(animate);
       else {
         for (let r = 0; r < GRID_ROWS; r++)
           for (let c = 0; c < GRID_COLS; c++) {
             const cell = this.grid[r][c];
-            if (cell && cell.currentFallOffset !== undefined) {
+            if (cell && cell.type !== 'disabled' && cell.currentFallOffset !== undefined) {
               cell.currentFallOffset = 0;
               cell.fallOffset = 0;
             }
@@ -519,7 +600,6 @@ class GameEngine {
     });
   }
 
-
   roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -597,7 +677,7 @@ class GameEngine {
   }
 
   drawHeader() {
-    const { width } = this.dimensions;
+    const { width, height } = this.dimensions;
 
     const gradient = this.ctx.createLinearGradient(0, 0, 0, HEADER_HEIGHT);
     gradient.addColorStop(0, HEADER_BG_TOP_COLOR);
@@ -606,12 +686,22 @@ class GameEngine {
     this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, width, HEADER_HEIGHT);
 
+    this.ctx.save();
+
+    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
+    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
+
+    this.ctx.translate(offsetX, offsetY);
+    this.ctx.scale(scale, scale);
+
     if (this.images.lamBoy) {
       this.ctx.drawImage(this.images.lamBoy, LAMBOY_PADDING_LEFT, LAMBOY_PADDING_TOP, LAMBOY_WIDTH, LAMBOY_HEIGHT);
     }
 
     this.drawHighlightedTarget();
 
+    this.ctx.restore();
     this.ctx.fillStyle = HEADER_UP_DIVIDER_COLOR;
     this.ctx.fillRect(0, HEADER_HEIGHT - HEADER_DOWN_DIVIDER_HEIGHT - HEADER_UP_DIVIDER_HEIGHT,
       width, HEADER_UP_DIVIDER_HEIGHT);
@@ -621,7 +711,15 @@ class GameEngine {
   }
 
   drawCounters() {
-    const { width } = this.dimensions;
+    const { width, height } = this.dimensions;
+    this.ctx.save();
+
+    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
+    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
+
+    this.ctx.translate(offsetX, offsetY);
+    this.ctx.scale(scale, scale);
 
     const targetCardX = COUNTERS_PADDING_LEFT;
     const targetCardY = HEADER_HEIGHT + COUNTERS_PADDING_TOP;
@@ -654,6 +752,8 @@ class GameEngine {
 
     this.ctx.fillText(`Шаги ${this.currentStep}/${this.stepsCount}`,
       stepsCardX + 12, stepsCardY + STEPS_CARD_HEIGHT / 2, STEPS_CARD_WIDTH);
+
+    this.ctx.restore();
   }
 
   drawBody() {
@@ -740,7 +840,7 @@ class GameEngine {
         }
 
         const cell = this.grid[r][c];
-        if (!cell || !cell.type || cell.type == 'disabled') continue;
+        if (!cell || !cell.type) continue;
 
         const pos = cell.tempPos || {
           x: GRID_PADDING_LEFT + c * (cellW + CELL_PADDING),
@@ -772,18 +872,35 @@ class GameEngine {
   }
 
   drawGridZone() {
+    const { width, height } = this.dimensions;
+    this.ctx.save();
+
+    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
+    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
+
+    this.ctx.translate(offsetX, offsetY);
+    this.ctx.scale(scale, scale);
+
     this.ctx.fillStyle = GRID_ZONE_BG_COLOR;
     this.ctx.strokeStyle = GRID_ZONE_STROKE_COLOR;
     this.ctx.lineWidth = 1;
+
     this.drawRoundedPlus(
       this.ctx,
-      GRID_ZONE_PADDING_LEFT, HEADER_HEIGHT + GRID_ZONE_PADDING_TOP,
-      GRID_ZONE_WIDTH, GRID_ZONE_HEIGHT,
-      GRID_ZONE_ARM_THICKNESS, GRID_ZONE_RADIUS);
+      GRID_ZONE_PADDING_LEFT,
+      HEADER_HEIGHT + GRID_ZONE_PADDING_TOP,
+      GRID_ZONE_WIDTH,
+      GRID_ZONE_HEIGHT,
+      GRID_ZONE_ARM_THICKNESS,
+      GRID_ZONE_RADIUS
+    );
     this.ctx.fill();
     this.ctx.stroke();
 
     this.drawGrid();
+
+    this.ctx.restore();
   }
 
   drawScene() {
@@ -832,3 +949,5 @@ function deinit(canvas, tmp) {
   const engine = GameEngine.getInstance(tmp);
   engine.stopGameLoop && engine.stopGameLoop();
 }
+
+export { init, deinit };
