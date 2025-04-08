@@ -1,4 +1,4 @@
-const __VERSION__ = "5";
+const __VERSION__ = "6";
 
 const PATH = "/media/assets/match3/";
 
@@ -235,55 +235,34 @@ class GameEngine {
     };
   }
 
-  // getGridPosition(e) {
-  //   const rect = this.canvas.getBoundingClientRect();
-  //   const x = e.clientX - rect.left;
-  //   const y = e.clientY - rect.top;
-
-  //   const gridStartX = GRID_PADDING_LEFT;
-  //   const gridStartY = HEADER_HEIGHT + GRID_PADDING_TOP;
-
-  //   const gridEndX = gridStartX + GRID_COLS * (CELL_WIDTH + CELL_PADDING);
-  //   const gridEndY = gridStartY + GRID_ROWS * (CELL_HEIGHT + CELL_PADDING);
-
-  //   if (x < gridStartX || y < gridStartY || x > gridEndX || y > gridEndY) {
-  //     return null; // клик вне области сетки
-  //   }
-
-  //   const gridX = x - gridStartX;
-  //   const gridY = y - gridStartY;
-
-  //   const row = Math.floor(gridY / (CELL_HEIGHT + CELL_PADDING));
-  //   const col = Math.floor(gridX / (CELL_WIDTH + CELL_PADDING));
-
-  //   return { row, col };
-  // }
-
   getGridPosition(e) {
     const { width, height } = this.dimensions;
-
     const rect = this.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
     const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+
     const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
     const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
-    const gridStartX = (offsetX + GRID_PADDING_LEFT) * scale;
-    const gridStartY = (offsetY + HEADER_HEIGHT + GRID_PADDING_TOP) * scale;
 
-    const gridEndX = (offsetX + gridStartX + GRID_COLS * (CELL_WIDTH + CELL_PADDING)) * scale;
-    const gridEndY = (offsetY + gridStartY + GRID_ROWS * (CELL_HEIGHT + CELL_PADDING)) * scale;
+    const gridStartX = offsetX + GRID_PADDING_LEFT * scale;
+    const gridStartY = offsetY + (HEADER_HEIGHT + GRID_PADDING_TOP) * scale;
+
+    const gridWidth = GRID_COLS * (CELL_WIDTH + CELL_PADDING) * scale;
+    const gridHeight = GRID_ROWS * (CELL_HEIGHT + CELL_PADDING) * scale;
+    const gridEndX = gridStartX + gridWidth;
+    const gridEndY = gridStartY + gridHeight;
 
     if (x < gridStartX || y < gridStartY || x > gridEndX || y > gridEndY) {
-      return null; // клик вне области сетки
+      return null;
     }
 
-    const gridX = x - gridStartX;
-    const gridY = y - gridStartY;
+    const relX = x - gridStartX;
+    const relY = y - gridStartY;
 
-    const row = Math.floor(gridY / (CELL_HEIGHT + CELL_PADDING));
-    const col = Math.floor(gridX / (CELL_WIDTH + CELL_PADDING));
+    const col = Math.floor(relX / ((CELL_WIDTH + CELL_PADDING) * scale));
+    const row = Math.floor(relY / ((CELL_HEIGHT + CELL_PADDING) * scale));
 
     return { row, col };
   }
@@ -295,7 +274,7 @@ class GameEngine {
       this.draggingCell = pos;
       const rect = this.canvas.getBoundingClientRect();
       const cellPos = this.getCellCoordinates(pos);
-      // Вычисляем смещение в физическом пространстве
+
       this.dragOffsetX = (e.clientX - rect.left) - cellPos.x;
       this.dragOffsetY = (e.clientY - rect.top) - cellPos.y;
       this.currentMousePos = {
