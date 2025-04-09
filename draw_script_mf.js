@@ -109,10 +109,6 @@ class GameEngine {
   constructor(canvas, initGameData, tmp) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    this.offscreenCanvas = document.createElement('canvas');
-    this.offscreenCanvas.width = MAX_CANVAS_WIDTH;
-    this.offscreenCanvas.height = MAX_CANVAS_HEIGHT;
-    this.offscreenCtx = this.offscreenCanvas.getContext('2d');
 
     this.tmp = tmp || {};
     this.tmp.engine = this;
