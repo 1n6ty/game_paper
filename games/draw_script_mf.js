@@ -1,4 +1,4 @@
-const __VERSION__ = "19.2";
+const __VERSION__ = "19.3";
 
 const ASSETS = {
   ceilEvening: 'ceilEvening',
