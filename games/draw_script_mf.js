@@ -8,7 +8,7 @@ const ASSETS = {
   ceilMorning: 'ceilMorning',
 };
 
-const PATH = "/media/assets/milkyFly/";  // /media/assets/milkyFly/
+const PATH = "./assets/milkyFly/";  // /media/assets/milkyFly/
 
 const ceilEveningUrl = `${PATH}ceil_evening.svg`;
 const ceilSunsetUrl = `${PATH}ceil_sunset.svg`;
@@ -43,7 +43,7 @@ const BUSHES_WIDTH = MAX_CANVAS_WIDTH;
 const GROUND_WIDTH = MAX_CANVAS_WIDTH;
 
 // ====== Параметры игры ======
-const INITIAL_SPEED = 2;
+const INITIAL_SPEED = 2.3;
 const SPEED_MULTIPLIER = 1.2;             // Увеличение скорости каждые 10 труб
 const PARALLAX_CLOUDS = 0.01;
 const PARALLAX_BUSHES_DARK = 0.03;
@@ -220,6 +220,7 @@ class GameEngine {
   resizeCanvasEnd() {
     console.log("Resize END");
     this.isResizing = false;
+
     if (this.resizeTimer)
       clearTimeout(this.resizeTimer)
   }
@@ -265,7 +266,6 @@ class GameEngine {
 
   startGameLoop() {
     console.log("Start GameLoop");
-    this.drawStaticBackground();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
@@ -441,20 +441,6 @@ class GameEngine {
     this.detectGroundCollision()
   }
 
-  drawStaticBackground() {
-    const ctx = this.offscreenCtx;
-    const { width, height } = this.dimensions;
-
-    ctx.clearRect(0, 0, width, height);
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, this.state.selectedGradient[0]);
-    gradient.addColorStop(0.5, this.state.selectedGradient[1]);
-    gradient.addColorStop(1, this.state.selectedGradient[2]);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-  }
-
   drawScene() {
     const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
@@ -462,8 +448,13 @@ class GameEngine {
     const { width, height } = this.dimensions;
     this.ctx.clearRect(0, 0, width, height);
 
-    // Отрисовка кэшированного статичного фона (градиента)
-    this.ctx.drawImage(this.offscreenCanvas, 0, 0, width, height);
+    // Фон - градиент
+    const gradient = this.ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, this.state.selectedGradient[0]);
+    gradient.addColorStop(0.5, this.state.selectedGradient[1]);
+    gradient.addColorStop(1, this.state.selectedGradient[2]);
+    this.ctx.fillStyle = gradient;
+    this.ctx.fillRect(0, 0, width, height);
 
     // Параллакс-слои (облака, кусты)
     if (this.images.clouds) {
@@ -609,4 +600,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop();
 }
 
-export { init, deinit };
+// export { init, deinit };
