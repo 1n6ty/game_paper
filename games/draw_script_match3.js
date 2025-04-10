@@ -1,4 +1,4 @@
-const __VERSION__ = "6";
+const __VERSION__ = "7.2";
 
 const PATH = "/media/assets/match3/";
 
@@ -89,6 +89,29 @@ const loadImage = (src) =>
     };
   });
 
+class LCG {
+  constructor(seed) {
+    this.modulus = 2 ** 31;
+    this.multiplier = 1103515245;
+    this.increment = 12345;
+    this.state = LCG.hash(seed) % this.modulus;
+  }
+
+  static hash(str) {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+      hash = hash & 0xffffffff;
+    }
+    return hash >>> 0;
+  }
+
+  random() {
+    this.state = (this.multiplier * this.state + this.increment) % this.modulus;
+    return this.state / this.modulus;
+  }
+}
+
 class GameEngine {
   constructor(canvas, initGameData, tmp = {}) {
     this.canvas = canvas;
@@ -96,19 +119,29 @@ class GameEngine {
     this.tmp = tmp;
     this.tmp.engine = this;
 
+    const seed = initGameData.seed || Date.now().toString(16);
+    console.log("Seed:", seed);
+    this.randomGenerator = new LCG(seed);
+
     this.trainingCount = parseInt(initGameData.trainingCount || "0", 10);
     this.showTutorial = this.trainingCount < 3;
 
-    this.stepsCount = 12;
+    this.stepsCount = parseInt(initGameData.maxStepsCount || 20);
     this.currentStep = 0;
 
-    this.targetItemsCount = 100;
-    this.currentTargetItem = 30;
+    this.targetItemsCount = parseInt(initGameData.targetItemsCount || 20);
+    this.currentTargetItem = 0;
+
+    this.dimensions = { width: MAX_CANVAS_WIDTH, height: MAX_CANVAS_HEIGHT };
+    this.isGameOver = false;
+    this.canDrag = true;
+    this.gameLoopId = null;
+    this.finishCallback = () => { };
 
     this.grid = [];
     this.assetKeys = Object.keys(ASSET_PATHS);
     this.orderProduct =
-      this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
+      this.assetKeys[Math.floor(this.randomGenerator.random() * this.assetKeys.length)];
     this.initGrid();
 
     this.selectedCell = null;
@@ -121,13 +154,13 @@ class GameEngine {
     this.images = {};
     this.loadAssets();
 
-    this.canvas.addEventListener("mousedown", (e) => this.handleMouseDown(e));
-    this.canvas.addEventListener("mousemove", (e) => this.handleMouseMove(e));
-    this.canvas.addEventListener("mouseup", (e) => this.handleMouseUp(e));
+    this.boundHandlePointerDown = (e) => this.handlePointerDown(e);
+    this.boundHandlePointerMove = (e) => this.handlePointerMove(e)
+    this.boundHandlePointerUp = (e) => this.handlePointerUp(e)
 
-    this.canvas.addEventListener("touchstart", (e) => this.handleTouchStart(e));
-    this.canvas.addEventListener("touchmove", (e) => this.handleTouchMove(e));
-    this.canvas.addEventListener("touchend", (e) => this.handleTouchEnd(e));
+    this.canvas.addEventListener("pointerdown", (e) => this.boundHandlePointerDown(e));
+    this.canvas.addEventListener("pointermove", (e) => this.boundHandlePointerMove(e));
+    this.canvas.addEventListener("pointerup", (e) => this.boundHandlePointerUp(e));
 
     this.handleMatches();
   }
@@ -139,7 +172,7 @@ class GameEngine {
     const parentWidth = parent.clientWidth;
     const parentHeight = parent.clientHeight;
     const newWidth = parentWidth;
-    const newHeight = parentHeight /* - 60 */;
+    const newHeight = parentHeight - 60;
 
     this.dimensions = { width: newWidth, height: newHeight };
 
@@ -167,10 +200,25 @@ class GameEngine {
   }
 
   gameLoop() {
+    if (this.isGameOver) return;
+    console.log("Gameloop");
+
     const dt = 1 / 60;
     this.updateLogic(dt);
     this.drawScene();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+  }
+
+  stopGameLoop() {
+    console.log("Stop GameLoop");
+    this.canvas.removeEventListener("pointerdown", (e) => this.boundHandlePointerDown(e));
+    this.canvas.removeEventListener("pointermove", (e) => this.boundHandlePointerMove(e));
+    this.canvas.removeEventListener("pointerup", (e) => this.boundHandlePointerUp(e));
+
+    if (this.gameLoopId) {
+      console.log("gameLoopId cleared");
+      cancelAnimationFrame(this.gameLoopId);
+    }
   }
 
   updateLogic(dt) {
@@ -194,7 +242,7 @@ class GameEngine {
         if (!this.isCellActive(r, c)) {
           row.push({ type: 'disabled' });
         } else {
-          const key = this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
+          const key = this.assetKeys[Math.floor(this.randomGenerator.random() * this.assetKeys.length)];
           row.push({ type: key });
         }
       }
@@ -212,16 +260,23 @@ class GameEngine {
   handleMatches() {
     let matched;
     let removedCount = 0;
+    let rightRemovedCount = 0;
     do {
       matched = this.checkMatches();
-      const removed = this.removeMatches(matched);
+      let { removedCount: removed, rightRemovedCount: rightRemoved } = this.removeMatches(matched);
+      console.log("Removed", removed);
+      console.log("RightRemoved", rightRemoved);
       if (removed > 0) {
         removedCount += removed;
+        rightRemovedCount += rightRemoved;
         this.animateDropCells();
       }
     } while (removedCount > 0 && this.checkMatches().flat().includes(true));
 
-    this.currentTargetItem += removedCount;
+    this.currentTargetItem += rightRemovedCount;
+    if (this.currentTargetItem >= this.targetItemsCount) {
+      this.handleGameOver();
+    }
   }
 
   getCellCoordinates(pos) {
@@ -235,6 +290,7 @@ class GameEngine {
     };
   }
 
+  // TODO rewrite to sync with this.gridZone[word] fields
   getGridPosition(e) {
     const { width, height } = this.dimensions;
     const rect = this.canvas.getBoundingClientRect();
@@ -267,75 +323,61 @@ class GameEngine {
     return { row, col };
   }
 
-  handleMouseDown(e) {
-    const pos = this.getGridPosition(e);
-    if (pos) {
-      this.selectedCell = pos;
-      this.draggingCell = pos;
-      const rect = this.canvas.getBoundingClientRect();
-      const cellPos = this.getCellCoordinates(pos);
-
-      this.dragOffsetX = (e.clientX - rect.left) - cellPos.x;
-      this.dragOffsetY = (e.clientY - rect.top) - cellPos.y;
-      this.currentMousePos = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-  }
-
-  handleMouseMove(e) {
-    if (!this.draggingCell) return;
+  getEventPosition(e) {
     const rect = this.canvas.getBoundingClientRect();
-    this.currentMousePos = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
     };
   }
 
-  handleMouseUp(e) {
-    const pos = this.getGridPosition(e);
-    if (this.selectedCell && pos && this.areAdjacent(this.selectedCell, pos)) {
-      this.swapCells(this.selectedCell, pos);
+  getGamePosition(e) {
+    const pos = this.getEventPosition(e);
+    if (this.gridZoneScale === undefined || this.gridZoneOffsetX === undefined || this.gridZoneOffsetY === undefined) {
+      return pos;
     }
-    this.selectedCell = null;
-    this.draggingCell = null;
-    this.currentMousePos = null;
-  }
-
-  handleTouchStart(e) {
-    e.preventDefault(); // предотвращаем стандартное поведение
-    const touch = e.touches[0];
-    const pos = this.getGridPosition(touch);
-    if (pos) {
-      this.selectedCell = pos;
-      this.draggingCell = pos;
-      const rect = this.canvas.getBoundingClientRect();
-      const cellPos = this.getCellCoordinates(pos);
-      this.dragOffsetX = (touch.clientX - rect.left) - cellPos.x;
-      this.dragOffsetY = (touch.clientY - rect.top) - cellPos.y;
-      this.currentMousePos = {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top,
-      };
-    }
-  }
-
-  handleTouchMove(e) {
-    e.preventDefault();
-    if (!this.draggingCell) return;
-    const touch = e.touches[0];
-    const rect = this.canvas.getBoundingClientRect();
-    this.currentMousePos = {
-      x: touch.clientX - rect.left,
-      y: touch.clientY - rect.top,
+    return {
+      x: (pos.x - this.gridZoneOffsetX) / this.gridZoneScale,
+      y: (pos.y - this.gridZoneOffsetY) / this.gridZoneScale
     };
   }
 
-  handleTouchEnd(e) {
-    e.preventDefault();
-    const touch = e.changedTouches[0];
-    const pos = this.getGridPosition(touch);
+  handlePointerDown(e) {
+    e.preventDefault && e.preventDefault();
+    const pos = this.getGridPosition(e);
+    if (pos && this.canDrag) {
+      console.log("Can drag", this.canDrag);
+      this.selectedCell = pos;
+      this.draggingCell = pos;
+      const cellPos = this.getCellCoordinates(pos);
+      const gamePos = this.getGamePosition(e);
+
+      this.dragOffsetX = gamePos.x - cellPos.x;
+      this.dragOffsetY = gamePos.y - cellPos.y;
+      this.currentMousePos = gamePos;
+    }
+  }
+
+  handlePointerMove(e) {
+    e.preventDefault && e.preventDefault();
+    if (!this.draggingCell) return;
+    this.currentMousePos = this.getGamePosition(e);
+  }
+
+  handlePointerUp(e) {
+    e.preventDefault && e.preventDefault();
+    const pos = this.getGridPosition(e);
     if (this.selectedCell && pos && this.areAdjacent(this.selectedCell, pos)) {
       this.swapCells(this.selectedCell, pos);
     }
@@ -361,8 +403,9 @@ class GameEngine {
       for (let c = 0; c < GRID_COLS; c++) {
         if (!this.isCellActive(r, c)) continue;
         if (this.grid[r][c] === null) {
-          const key = this.assetKeys[Math.floor(Math.random() * this.assetKeys.length)];
-          this.grid[r][c] = { type: key, fallOffset: -CELL_HEIGHT, currentFallOffset: -CELL_HEIGHT };
+          const key = this.assetKeys[Math.floor(this.randomGenerator.random() * this.assetKeys.length)];
+          const fallOffset = -(GRID_PADDING_TOP - GRID_ZONE_PADDING_TOP);
+          this.grid[r][c] = { type: key, fallOffset: fallOffset, currentFallOffset: fallOffset };
         }
       }
   }
@@ -379,7 +422,6 @@ class GameEngine {
             cell.currentFallOffset = cell.fallOffset * (1 - progress);
         }
 
-      // this.drawScene();
       if (progress < 1)
         requestAnimationFrame(animate);
       else {
@@ -391,6 +433,7 @@ class GameEngine {
               cell.fallOffset = 0;
             }
           }
+        this.canDrag = true;
         this.handleMatches();
       }
     };
@@ -415,7 +458,9 @@ class GameEngine {
           cell.fallOffset = 0;
           cell.currentFallOffset = 0;
         }
+
       }
+      console.log("Empty count", emptyCount);
     }
 
     const animate = () => {
@@ -447,7 +492,10 @@ class GameEngine {
         this.animateNewCells();
       }
     };
+    this.canDrag = false;
     animate();
+    console.log("Can drag", this.canDrag);
+
   }
 
   checkMatches() {
@@ -506,13 +554,24 @@ class GameEngine {
 
   removeMatches(matched) {
     let removedCount = 0;
-    for (let r = 0; r < GRID_ROWS; r++)
-      for (let c = 0; c < GRID_COLS; c++)
+    let rightRemovedCount = 0;
+    for (let r = 0; r < GRID_ROWS; r++) {
+      for (let c = 0; c < GRID_COLS; c++) {
         if (matched[r][c]) {
+          const cell = this.grid[r][c];
+
           this.grid[r][c] = null;
           removedCount++;
+          if (cell && (cell.type === this.orderProduct)) {
+            console.log("Right removed", this.orderProduct);
+            rightRemovedCount++;
+          }
         }
-    return removedCount;
+      }
+    }
+    console.log("Removed", removedCount);
+    console.log("RightRemoved", rightRemovedCount);
+    return { removedCount, rightRemovedCount };
   }
 
   animateSwap(cell1, cell2, onComplete, duration = 800, reverse = false) {
@@ -574,6 +633,9 @@ class GameEngine {
         }, true);
       } else {
         this.currentStep++;
+        if (this.currentStep >= this.stepsCount) {
+          this.handleGameOver();
+        }
         this.handleMatches();
       }
     });
@@ -616,7 +678,7 @@ class GameEngine {
       drawWidth,
       drawHeight
     );
-  };
+  }
 
   drawHighlightedTarget() {
     const { width } = this.dimensions;
@@ -658,35 +720,33 @@ class GameEngine {
   drawHeader() {
     const { width, height } = this.dimensions;
 
-    const gradient = this.ctx.createLinearGradient(0, 0, 0, HEADER_HEIGHT);
+    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+    const scaledHeaderHeight = HEADER_HEIGHT * scale;
+
+    const gradient = this.ctx.createLinearGradient(0, 0, 0, scaledHeaderHeight);
     gradient.addColorStop(0, HEADER_BG_TOP_COLOR);
     gradient.addColorStop(0.71, HEADER_BG_BOTTOM_COLOR);
-
     this.ctx.fillStyle = gradient;
-    this.ctx.fillRect(0, 0, width, HEADER_HEIGHT);
+    this.ctx.fillRect(0, 0, width, scaledHeaderHeight);
 
     this.ctx.save();
-
-    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
     const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
-    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
-
+    const offsetY = (scaledHeaderHeight - HEADER_HEIGHT * scale) / 2;
     this.ctx.translate(offsetX, offsetY);
     this.ctx.scale(scale, scale);
 
     if (this.images.lamBoy) {
       this.ctx.drawImage(this.images.lamBoy, LAMBOY_PADDING_LEFT, LAMBOY_PADDING_TOP, LAMBOY_WIDTH, LAMBOY_HEIGHT);
     }
-
     this.drawHighlightedTarget();
 
     this.ctx.restore();
+
     this.ctx.fillStyle = HEADER_UP_DIVIDER_COLOR;
-    this.ctx.fillRect(0, HEADER_HEIGHT - HEADER_DOWN_DIVIDER_HEIGHT - HEADER_UP_DIVIDER_HEIGHT,
-      width, HEADER_UP_DIVIDER_HEIGHT);
+    this.ctx.fillRect(0, scaledHeaderHeight - HEADER_DOWN_DIVIDER_HEIGHT - HEADER_UP_DIVIDER_HEIGHT, width, HEADER_UP_DIVIDER_HEIGHT);
+
     this.ctx.fillStyle = HEADER_DOWN_DIVIDER_COLOR;
-    this.ctx.fillRect(0, HEADER_HEIGHT - HEADER_DOWN_DIVIDER_HEIGHT,
-      width, HEADER_DOWN_DIVIDER_HEIGHT);
+    this.ctx.fillRect(0, scaledHeaderHeight - HEADER_DOWN_DIVIDER_HEIGHT, width, HEADER_DOWN_DIVIDER_HEIGHT);
   }
 
   drawCounters() {
@@ -737,12 +797,14 @@ class GameEngine {
 
   drawBody() {
     const { width, height } = this.dimensions;
+    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+    const scaledHeaderHeight = HEADER_HEIGHT * scale;
 
-    const gradient = this.ctx.createLinearGradient(0, HEADER_HEIGHT, 0, height - HEADER_HEIGHT);
+    const gradient = this.ctx.createLinearGradient(0, scaledHeaderHeight, 0, height);
     gradient.addColorStop(0, BODY_BG_TOP_COLOR);
     gradient.addColorStop(1, BODY_BG_BOTTOM_COLOR);
-    this.ctx.fillStyle = gradient
-    this.ctx.fillRect(0, HEADER_HEIGHT, width, height - HEADER_HEIGHT);
+    this.ctx.fillStyle = gradient;
+    this.ctx.fillRect(0, scaledHeaderHeight, width, height - scaledHeaderHeight);
 
     this.drawCounters();
   }
@@ -814,12 +876,12 @@ class GameEngine {
 
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (this.draggingCell && r == this.draggingCell.row && c == this.draggingCell.col) {
-          continue;
-        }
+        // if (this.draggingCell && r == this.draggingCell.row && c == this.draggingCell.col) {
+        //   continue;
+        // }
 
         const cell = this.grid[r][c];
-        if (!cell || !cell.type) continue;
+        if (!cell || !cell.type || cell.type === 'disabled') continue;
 
         const pos = cell.tempPos || {
           x: GRID_PADDING_LEFT + c * (cellW + CELL_PADDING),
@@ -835,19 +897,19 @@ class GameEngine {
       }
     }
 
-    if (this.draggingCell && this.currentMousePos) {
-      const cellData = this.grid[this.draggingCell.row][this.draggingCell.col];
-      if (cellData && cellData.type) {
-        const drawX = this.currentMousePos.x - this.dragOffsetX;
-        const drawY = this.currentMousePos.y - this.dragOffsetY;
-        const image = this.images[cellData.type];
+    // if (this.draggingCell && this.currentMousePos && this.canDrag) {
+    //   const cellData = this.grid[this.draggingCell.row][this.draggingCell.col];
+    //   if (cellData && cellData.type && cellData.type !== 'disabled') {
+    //     const drawX = this.currentMousePos.x - this.dragOffsetX;
+    //     const drawY = this.currentMousePos.y - this.dragOffsetY;
+    //     const image = this.images[cellData.type];
 
-        this.drawCard(drawX, drawY, cellW, cellH, 9, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
-        if (image) {
-          this.drawImageInCell(image, drawX, drawY, cellW, cellH, CELL_PADDING);
-        }
-      }
-    }
+    //     this.drawCard(drawX, drawY, cellW, cellH, 9, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
+    //     if (image) {
+    //       this.drawImageInCell(image, drawX, drawY, cellW, cellH, CELL_PADDING);
+    //     }
+    //   }
+    // }
   }
 
   drawGridZone() {
@@ -857,6 +919,10 @@ class GameEngine {
     const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
     const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
     const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
+
+    this.gridZoneScale = scale;
+    this.gridZoneOffsetX = offsetX;
+    this.gridZoneOffsetY = offsetY;
 
     this.ctx.translate(offsetX, offsetY);
     this.ctx.scale(scale, scale);
@@ -897,9 +963,13 @@ class GameEngine {
   }
 
   handleGameOver() {
-    this.isGameOver = true;
+    console.log("GameOver!");
+    // this.isGameOver = true;
     if (this.finishCallback) {
-      const gameData = { /* данные */ };
+      const gameData = {
+        stepsCount: this.currentStep,
+        itemsCount: this.currentTargetItem
+      };
       this.finishCallback(gameData);
     }
     if (this.gameLoopId) {
@@ -918,6 +988,8 @@ class GameEngine {
 
 function init(canvas, initGameData, tmp, finishFunc = (gameData) => { }) {
   console.log("Version:", __VERSION__);
+  console.log("Py Version:", initGameData.version);
+
   const engine = new GameEngine(canvas, initGameData, tmp);
   engine.startGameLoop();
   engine.setFinishCallback(finishFunc);
