@@ -1,5 +1,6 @@
-const __VERSION__ = "7.2";
+const __VERSION__ = "7.3";
 
+// const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
 
 const ASSET_PATHS = {
@@ -148,8 +149,12 @@ class GameEngine {
     this.draggingCell = null;
     this.currentMousePos = null;
 
+    this.isAnimatingCells = false;
+
+    this.isResizing = false;
+    this.resizeTimeout = null;
     this.resizeCanvas();
-    window.addEventListener("resize", () => this.resizeCanvas());
+    window.addEventListener("resize", () => this.onResize());
 
     this.images = {};
     this.loadAssets();
@@ -163,6 +168,19 @@ class GameEngine {
     this.canvas.addEventListener("pointerup", (e) => this.boundHandlePointerUp(e));
 
     this.handleMatches();
+  }
+
+  onResize() {
+    this.isResizing = true;
+    this.resizeCanvas();
+    this.drawScene();
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    this.resizeTimeout = setTimeout(() => {
+      this.isResizing = false;
+      this.resizeTimeout = null;
+    }, 300);
   }
 
   resizeCanvas() {
@@ -196,16 +214,19 @@ class GameEngine {
   }
 
   startGameLoop() {
+    this.drawScene();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   gameLoop() {
     if (this.isGameOver) return;
-    console.log("Gameloop");
+    // console.log("Gameloop");
 
     const dt = 1 / 60;
     this.updateLogic(dt);
-    this.drawScene();
+    if (this.isAnimatingCells || this.isResizing) {
+      this.drawScene();
+    }
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
@@ -422,6 +443,7 @@ class GameEngine {
             cell.currentFallOffset = cell.fallOffset * (1 - progress);
         }
 
+      this.isAnimatingCells = true;
       if (progress < 1)
         requestAnimationFrame(animate);
       else {
@@ -434,6 +456,7 @@ class GameEngine {
             }
           }
         this.canDrag = true;
+        this.isAnimatingCells = false;
         this.handleMatches();
       }
     };
@@ -474,7 +497,7 @@ class GameEngine {
             cell.currentFallOffset = cell.fallOffset * progress;
         }
       }
-      // this.drawScene();
+
       if (progress < 1)
         requestAnimationFrame(animate);
       else {
@@ -493,6 +516,7 @@ class GameEngine {
       }
     };
     this.canDrag = false;
+    this.isAnimatingCells = true;
     animate();
     console.log("Can drag", this.canDrag);
 
@@ -574,7 +598,7 @@ class GameEngine {
     return { removedCount, rightRemovedCount };
   }
 
-  animateSwap(cell1, cell2, onComplete, duration = 800, reverse = false) {
+  animateSwap(cell1, cell2, onComplete, duration, reverse = false) {
     const startTime = performance.now();
     const startPosA = this.getCellCoordinates(cell1);
     const startPosB = this.getCellCoordinates(cell2);
@@ -585,7 +609,7 @@ class GameEngine {
       const elapsed = performance.now() - startTime;
       let progress = Math.min(elapsed / duration, 1);
 
-      const effectiveProgress = reverse ? easeInOutQuad(1 - progress) : easeInOutQuad(progress);
+      const effectiveProgress = reverse ? easeInOutQuad(progress) : easeInOutQuad(progress);
 
       const posA = {
         x: startPosA.x + (startPosB.x - startPosA.x) * effectiveProgress,
@@ -599,13 +623,14 @@ class GameEngine {
       this.grid[cell1.row][cell1.col].tempPos = posA;
       this.grid[cell2.row][cell2.col].tempPos = posB;
 
-      this.drawScene();
+      this.isAnimatingCells = true;
 
       if (elapsed < duration) {
         requestAnimationFrame(animate);
       } else {
         delete this.grid[cell1.row][cell1.col].tempPos;
         delete this.grid[cell2.row][cell2.col].tempPos;
+        this.isAnimatingCells = false;
         onComplete();
       }
     };
@@ -620,6 +645,7 @@ class GameEngine {
     if (cellA.type == 'disabled' || cellB.type === 'disabled') return;
 
     this.animateSwap(cell1, cell2, () => {
+      console.log("Back swap");
       this.grid[cell1.row][cell1.col] = cellB;
       this.grid[cell2.row][cell2.col] = cellA;
 
@@ -630,7 +656,7 @@ class GameEngine {
         this.animateSwap(cell1, cell2, () => {
           this.grid[cell1.row][cell1.col] = cellA;
           this.grid[cell2.row][cell2.col] = cellB;
-        }, true);
+        }, 800, true);
       } else {
         this.currentStep++;
         if (this.currentStep >= this.stepsCount) {
@@ -638,7 +664,7 @@ class GameEngine {
         }
         this.handleMatches();
       }
-    });
+    }, 800);
   }
 
   roundRect(ctx, x, y, width, height, radius) {
@@ -949,6 +975,7 @@ class GameEngine {
   }
 
   drawScene() {
+    console.log("Scene is drawn");
     const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
     this.ctx.scale(dpr, dpr);
