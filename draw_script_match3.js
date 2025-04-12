@@ -1,4 +1,4 @@
-const __VERSION__ = "7.3";
+const __VERSION__ = "8";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -73,7 +73,7 @@ const GRID_ZONE_ARM_THICKNESS = 265;
 const GRID_ZONE_RADIUS = 16;
 
 const GRID_PADDING_LEFT = 35.62;
-const GRID_PADDING_TOP = 110.49;
+const GRID_PADDING_TOP = 113.49;
 
 const CELL_WIDTH = 54.73;
 const CELL_HEIGHT = 54.73;
@@ -118,7 +118,15 @@ class GameEngine {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.tmp = tmp;
-    this.tmp.engine = this;
+    this.dimensions = {
+      width: MAX_CANVAS_WIDTH,
+      height: MAX_CANVAS_HEIGHT
+    };
+    this.scale = Math.min(this.dimensions.width / MAX_CANVAS_WIDTH, this.dimensions.height / MAX_CANVAS_HEIGHT);
+    this.offset = {
+      x: (this.dimensions.width - MAX_CANVAS_WIDTH * this.scale) / 2,
+      y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
+    }
 
     const seed = initGameData.seed || Date.now().toString(16);
     console.log("Seed:", seed);
@@ -133,7 +141,6 @@ class GameEngine {
     this.targetItemsCount = parseInt(initGameData.targetItemsCount || 20);
     this.currentTargetItem = 0;
 
-    this.dimensions = { width: MAX_CANVAS_WIDTH, height: MAX_CANVAS_HEIGHT };
     this.isGameOver = false;
     this.canDrag = true;
     this.gameLoopId = null;
@@ -146,8 +153,7 @@ class GameEngine {
     this.initGrid();
 
     this.selectedCell = null;
-    this.draggingCell = null;
-    this.currentMousePos = null;
+    this.secondSelectedCell = null;
 
     this.isAnimatingCells = false;
 
@@ -160,12 +166,10 @@ class GameEngine {
     this.loadAssets();
 
     this.boundHandlePointerDown = (e) => this.handlePointerDown(e);
-    this.boundHandlePointerMove = (e) => this.handlePointerMove(e)
     this.boundHandlePointerUp = (e) => this.handlePointerUp(e)
 
-    this.canvas.addEventListener("pointerdown", (e) => this.boundHandlePointerDown(e));
-    this.canvas.addEventListener("pointermove", (e) => this.boundHandlePointerMove(e));
-    this.canvas.addEventListener("pointerup", (e) => this.boundHandlePointerUp(e));
+    this.canvas.addEventListener("pointerdown", this.boundHandlePointerDown);
+    this.canvas.addEventListener("pointerup", this.boundHandlePointerUp);
 
     this.handleMatches();
   }
@@ -183,6 +187,11 @@ class GameEngine {
     }, 300);
   }
 
+  onAssetsLoaded() {
+    this.drawScene();
+    this.startGameLoop();
+  }
+
   resizeCanvas() {
     const parent = this.canvas.parentElement;
     if (!parent) return;
@@ -193,6 +202,11 @@ class GameEngine {
     const newHeight = parentHeight - 60;
 
     this.dimensions = { width: newWidth, height: newHeight };
+    this.scale = Math.min(this.dimensions.width / MAX_CANVAS_WIDTH, this.dimensions.height / MAX_CANVAS_HEIGHT);
+    this.offset = {
+      x: (this.dimensions.width - MAX_CANVAS_WIDTH * this.scale) / 2,
+      y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
+    }
 
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = newWidth * dpr;
@@ -211,10 +225,11 @@ class GameEngine {
     entries.forEach(([key], idx) => {
       this.images[key] = loaded[idx] || null;
     });
+
+    this.onAssetsLoaded();
   }
 
   startGameLoop() {
-    this.drawScene();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
@@ -233,7 +248,6 @@ class GameEngine {
   stopGameLoop() {
     console.log("Stop GameLoop");
     this.canvas.removeEventListener("pointerdown", (e) => this.boundHandlePointerDown(e));
-    this.canvas.removeEventListener("pointermove", (e) => this.boundHandlePointerMove(e));
     this.canvas.removeEventListener("pointerup", (e) => this.boundHandlePointerUp(e));
 
     if (this.gameLoopId) {
@@ -272,7 +286,6 @@ class GameEngine {
   }
 
   areAdjacent(cell1, cell2) {
-    console.log(cell1, cell2);
     const dr = Math.abs(cell1.row - cell2.row);
     const dc = Math.abs(cell1.col - cell2.col);
     return dr + dc === 1;
@@ -285,8 +298,6 @@ class GameEngine {
     do {
       matched = this.checkMatches();
       let { removedCount: removed, rightRemovedCount: rightRemoved } = this.removeMatches(matched);
-      console.log("Removed", removed);
-      console.log("RightRemoved", rightRemoved);
       if (removed > 0) {
         removedCount += removed;
         rightRemovedCount += rightRemoved;
@@ -301,33 +312,22 @@ class GameEngine {
   }
 
   getCellCoordinates(pos) {
-    const cellW = CELL_WIDTH;
-    const cellH = CELL_HEIGHT;
     return {
-      x: GRID_PADDING_LEFT + pos.col * (cellW + CELL_PADDING),
-      y: HEADER_HEIGHT + GRID_PADDING_TOP + pos.row * (cellH + CELL_PADDING),
-      w: cellW,
-      h: cellH,
+      x: GRID_PADDING_LEFT + pos.col * (CELL_WIDTH + CELL_PADDING),
+      y: HEADER_HEIGHT + GRID_PADDING_TOP + pos.row * (CELL_HEIGHT + CELL_PADDING)
     };
   }
 
-  // TODO rewrite to sync with this.gridZone[word] fields
   getGridPosition(e) {
-    const { width, height } = this.dimensions;
     const rect = this.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
+    const gridStartX = this.offset.x + GRID_PADDING_LEFT * this.scale;
+    const gridStartY = this.offset.y + (HEADER_HEIGHT + GRID_PADDING_TOP) * this.scale;
 
-    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
-    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
-
-    const gridStartX = offsetX + GRID_PADDING_LEFT * scale;
-    const gridStartY = offsetY + (HEADER_HEIGHT + GRID_PADDING_TOP) * scale;
-
-    const gridWidth = GRID_COLS * (CELL_WIDTH + CELL_PADDING) * scale;
-    const gridHeight = GRID_ROWS * (CELL_HEIGHT + CELL_PADDING) * scale;
+    const gridWidth = GRID_COLS * (CELL_WIDTH + CELL_PADDING) * this.scale;
+    const gridHeight = GRID_ROWS * (CELL_HEIGHT + CELL_PADDING) * this.scale;
     const gridEndX = gridStartX + gridWidth;
     const gridEndY = gridStartY + gridHeight;
 
@@ -338,73 +338,48 @@ class GameEngine {
     const relX = x - gridStartX;
     const relY = y - gridStartY;
 
-    const col = Math.floor(relX / ((CELL_WIDTH + CELL_PADDING) * scale));
-    const row = Math.floor(relY / ((CELL_HEIGHT + CELL_PADDING) * scale));
+    const col = Math.floor(relX / ((CELL_WIDTH + CELL_PADDING) * this.scale));
+    const row = Math.floor(relY / ((CELL_HEIGHT + CELL_PADDING) * this.scale));
 
     return { row, col };
-  }
-
-  getEventPosition(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    let clientX, clientY;
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if (e.changedTouches && e.changedTouches.length > 0) {
-      clientX = e.changedTouches[0].clientX;
-      clientY = e.changedTouches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
-  }
-
-  getGamePosition(e) {
-    const pos = this.getEventPosition(e);
-    if (this.gridZoneScale === undefined || this.gridZoneOffsetX === undefined || this.gridZoneOffsetY === undefined) {
-      return pos;
-    }
-    return {
-      x: (pos.x - this.gridZoneOffsetX) / this.gridZoneScale,
-      y: (pos.y - this.gridZoneOffsetY) / this.gridZoneScale
-    };
   }
 
   handlePointerDown(e) {
     e.preventDefault && e.preventDefault();
     const pos = this.getGridPosition(e);
     if (pos && this.canDrag) {
-      console.log("Can drag", this.canDrag);
-      this.selectedCell = pos;
-      this.draggingCell = pos;
-      const cellPos = this.getCellCoordinates(pos);
-      const gamePos = this.getGamePosition(e);
+      if (this.selectedCell === null) { // нажатие первое
+        this.selectedCell = pos;
+      } else if (this.selectedCell.col === pos.col && this.selectedCell.row === pos.row) {
+        this.selectedCell = null;
+      } else {                          // нажатие второе, так как первая выделенная клетка не null
+        this.secondSelectedCell = pos;
+      }
 
-      this.dragOffsetX = gamePos.x - cellPos.x;
-      this.dragOffsetY = gamePos.y - cellPos.y;
-      this.currentMousePos = gamePos;
+      if (this.selectedCell && this.secondSelectedCell &&
+        this.selectedCell.col !== this.secondSelectedCell.col &&
+        this.selectedCell.row !== this.secondSelectedCell.row) {
+        if (this.areAdjacent(this.selectedCell, this.secondSelectedCell)) {
+          console.log("Swapped");
+          this.swapCells(this.selectedCell, this.secondSelectedCell);
+          this.selectedCell = null;
+          this.secondSelectedCell = null;
+        }
+      }
+
+      this.drawScene();
     }
-  }
-
-  handlePointerMove(e) {
-    e.preventDefault && e.preventDefault();
-    if (!this.draggingCell) return;
-    this.currentMousePos = this.getGamePosition(e);
   }
 
   handlePointerUp(e) {
     e.preventDefault && e.preventDefault();
     const pos = this.getGridPosition(e);
-    if (this.selectedCell && pos && this.areAdjacent(this.selectedCell, pos)) {
-      this.swapCells(this.selectedCell, pos);
+    if (this.selectedCell && pos) {
+      if (this.areAdjacent(this.selectedCell, pos)) {
+        this.swapCells(this.selectedCell, pos);
+        this.selectedCell = null;
+      }
     }
-    this.selectedCell = null;
-    this.draggingCell = null;
-    this.currentMousePos = null;
   }
 
   dropCells() {
@@ -481,9 +456,7 @@ class GameEngine {
           cell.fallOffset = 0;
           cell.currentFallOffset = 0;
         }
-
       }
-      console.log("Empty count", emptyCount);
     }
 
     const animate = () => {
@@ -518,8 +491,6 @@ class GameEngine {
     this.canDrag = false;
     this.isAnimatingCells = true;
     animate();
-    console.log("Can drag", this.canDrag);
-
   }
 
   checkMatches() {
@@ -587,18 +558,16 @@ class GameEngine {
           this.grid[r][c] = null;
           removedCount++;
           if (cell && (cell.type === this.orderProduct)) {
-            console.log("Right removed", this.orderProduct);
             rightRemovedCount++;
           }
         }
       }
     }
-    console.log("Removed", removedCount);
-    console.log("RightRemoved", rightRemovedCount);
+
     return { removedCount, rightRemovedCount };
   }
 
-  animateSwap(cell1, cell2, onComplete, duration, reverse = false) {
+  animateSwap(cell1, cell2, onComplete, duration = 800) {
     const startTime = performance.now();
     const startPosA = this.getCellCoordinates(cell1);
     const startPosB = this.getCellCoordinates(cell2);
@@ -609,7 +578,7 @@ class GameEngine {
       const elapsed = performance.now() - startTime;
       let progress = Math.min(elapsed / duration, 1);
 
-      const effectiveProgress = reverse ? easeInOutQuad(progress) : easeInOutQuad(progress);
+      const effectiveProgress = easeInOutQuad(progress);
 
       const posA = {
         x: startPosA.x + (startPosB.x - startPosA.x) * effectiveProgress,
@@ -645,7 +614,6 @@ class GameEngine {
     if (cellA.type == 'disabled' || cellB.type === 'disabled') return;
 
     this.animateSwap(cell1, cell2, () => {
-      console.log("Back swap");
       this.grid[cell1.row][cell1.col] = cellB;
       this.grid[cell2.row][cell2.col] = cellA;
 
@@ -656,7 +624,7 @@ class GameEngine {
         this.animateSwap(cell1, cell2, () => {
           this.grid[cell1.row][cell1.col] = cellA;
           this.grid[cell2.row][cell2.col] = cellB;
-        }, 800, true);
+        });
       } else {
         this.currentStep++;
         if (this.currentStep >= this.stepsCount) {
@@ -664,7 +632,7 @@ class GameEngine {
         }
         this.handleMatches();
       }
-    }, 800);
+    });
   }
 
   roundRect(ctx, x, y, width, height, radius) {
@@ -707,8 +675,6 @@ class GameEngine {
   }
 
   drawHighlightedTarget() {
-    const { width } = this.dimensions;
-
     const highlightedTargetX = HEADER_TARGET_LEFT;
     const highlightedTargetY = HEADER_TARGET_TOP;
 
@@ -733,21 +699,18 @@ class GameEngine {
     this.ctx.fill();
     this.ctx.closePath();
 
-    this.ctx.save();
     this.ctx.fillStyle = HEADER_TARGET_COUNTER_TEXT_COLOR;
     this.ctx.font = "500 16px Roboto Mono";
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillText(`x${this.targetItemsCount}`,
       highlightedTargetCounterX, highlightedTargetCounterY, STEPS_CARD_WIDTH);
-    this.ctx.restore();
   }
 
   drawHeader() {
     const { width, height } = this.dimensions;
 
-    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
-    const scaledHeaderHeight = HEADER_HEIGHT * scale;
+    const scaledHeaderHeight = HEADER_HEIGHT * this.scale;
 
     const gradient = this.ctx.createLinearGradient(0, 0, 0, scaledHeaderHeight);
     gradient.addColorStop(0, HEADER_BG_TOP_COLOR);
@@ -756,10 +719,10 @@ class GameEngine {
     this.ctx.fillRect(0, 0, width, scaledHeaderHeight);
 
     this.ctx.save();
-    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
-    const offsetY = (scaledHeaderHeight - HEADER_HEIGHT * scale) / 2;
+    const offsetX = (width - MAX_CANVAS_WIDTH * this.scale) / 2;
+    const offsetY = (scaledHeaderHeight - HEADER_HEIGHT * this.scale) / 2;
     this.ctx.translate(offsetX, offsetY);
-    this.ctx.scale(scale, scale);
+    this.ctx.scale(this.scale, this.scale);
 
     if (this.images.lamBoy) {
       this.ctx.drawImage(this.images.lamBoy, LAMBOY_PADDING_LEFT, LAMBOY_PADDING_TOP, LAMBOY_WIDTH, LAMBOY_HEIGHT);
@@ -776,15 +739,10 @@ class GameEngine {
   }
 
   drawCounters() {
-    const { width, height } = this.dimensions;
     this.ctx.save();
 
-    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
-    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
-    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
-
-    this.ctx.translate(offsetX, offsetY);
-    this.ctx.scale(scale, scale);
+    this.ctx.translate(this.offset.x, this.offset.y);
+    this.ctx.scale(this.scale, this.scale);
 
     const targetCardX = COUNTERS_PADDING_LEFT;
     const targetCardY = HEADER_HEIGHT + COUNTERS_PADDING_TOP;
@@ -823,8 +781,7 @@ class GameEngine {
 
   drawBody() {
     const { width, height } = this.dimensions;
-    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
-    const scaledHeaderHeight = HEADER_HEIGHT * scale;
+    const scaledHeaderHeight = HEADER_HEIGHT * this.scale;
 
     const gradient = this.ctx.createLinearGradient(0, scaledHeaderHeight, 0, height);
     gradient.addColorStop(0, BODY_BG_TOP_COLOR);
@@ -896,62 +853,51 @@ class GameEngine {
   }
 
   drawGrid() {
-    const { width, height } = this.dimensions;
-    const cellW = CELL_WIDTH;
-    const cellH = CELL_HEIGHT;
+    // const dpr = window.devicePixelRatio || 1;
+    // this.ctx.save();
+    // this.ctx.scale(dpr, dpr);
+
+    // this.ctx.translate(this.offset.x, this.offset.y);
+    // this.ctx.scale(this.scale, this.scale);
 
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        // if (this.draggingCell && r == this.draggingCell.row && c == this.draggingCell.col) {
-        //   continue;
-        // }
-
         const cell = this.grid[r][c];
         if (!cell || !cell.type || cell.type === 'disabled') continue;
 
-        const pos = cell.tempPos || {
-          x: GRID_PADDING_LEFT + c * (cellW + CELL_PADDING),
-          y: HEADER_HEIGHT + GRID_PADDING_TOP + r * (cellH + CELL_PADDING) + (cell.currentFallOffset || 0)
-        };
+        const pos = cell.tempPos || this.getCellCoordinates({ col: c, row: r });
+        pos.y += (cell.currentFallOffset || 0);
+
+        let cellW = CELL_WIDTH, cellH = CELL_HEIGHT;
+        let posX = pos.x, posY = pos.y;
+        let strokeColor = STEPS_STROKE_COLOR;
+        let fillColor = STEPS_BG_COLOR;
+
+        const scaleFactor = 1.10;  // увеличиваем на 10%
+        if (this.selectedCell && this.selectedCell.col === c && this.selectedCell.row === r) {
+          cellW = CELL_WIDTH * scaleFactor;
+          cellH = CELL_HEIGHT * scaleFactor;
+          posX = pos.x - (cellW - CELL_WIDTH) / 2;
+          posY = pos.y - (cellH - CELL_HEIGHT) / 2;
+          strokeColor = STEPS_STROKE_COLOR;
+          fillColor = BODY_BG_BOTTOM_COLOR;
+        }
 
         const image = this.images[cell.type];
-
-        this.drawCard(pos.x, pos.y, cellW, cellH, 9, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
+        this.drawCard(posX, posY, cellW, cellH, 9, strokeColor, fillColor);
         if (image) {
-          this.drawImageInCell(image, pos.x, pos.y, cellW, cellH, CELL_PADDING);
+          this.drawImageInCell(image, posX, posY, cellW, cellH, CELL_PADDING);
         }
       }
     }
 
-    // if (this.draggingCell && this.currentMousePos && this.canDrag) {
-    //   const cellData = this.grid[this.draggingCell.row][this.draggingCell.col];
-    //   if (cellData && cellData.type && cellData.type !== 'disabled') {
-    //     const drawX = this.currentMousePos.x - this.dragOffsetX;
-    //     const drawY = this.currentMousePos.y - this.dragOffsetY;
-    //     const image = this.images[cellData.type];
-
-    //     this.drawCard(drawX, drawY, cellW, cellH, 9, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
-    //     if (image) {
-    //       this.drawImageInCell(image, drawX, drawY, cellW, cellH, CELL_PADDING);
-    //     }
-    //   }
-    // }
+    // this.ctx.restore();
   }
 
   drawGridZone() {
-    const { width, height } = this.dimensions;
     this.ctx.save();
-
-    const scale = Math.min(width / MAX_CANVAS_WIDTH, height / MAX_CANVAS_HEIGHT);
-    const offsetX = (width - MAX_CANVAS_WIDTH * scale) / 2;
-    const offsetY = (height - MAX_CANVAS_HEIGHT * scale) / 2;
-
-    this.gridZoneScale = scale;
-    this.gridZoneOffsetX = offsetX;
-    this.gridZoneOffsetY = offsetY;
-
-    this.ctx.translate(offsetX, offsetY);
-    this.ctx.scale(scale, scale);
+    this.ctx.translate(this.offset.x, this.offset.y);
+    this.ctx.scale(this.scale, this.scale);
 
     this.ctx.fillStyle = GRID_ZONE_BG_COLOR;
     this.ctx.strokeStyle = GRID_ZONE_STROKE_COLOR;
@@ -987,6 +933,7 @@ class GameEngine {
     this.drawGridZone();
 
     this.ctx.restore();
+    // this.drawGrid();
   }
 
   handleGameOver() {
@@ -999,8 +946,12 @@ class GameEngine {
       };
       this.finishCallback(gameData);
     }
+
+    this.canvas.removeEventListener("pointerdown", this.boundHandlePointerDown);
+    this.canvas.removeEventListener("pointerup", this.boundHandlePointerUp);
+
     if (this.gameLoopId) {
-      cancelAnimationFrame(this.gameLoopId);
+      // cancelAnimationFrame(this.gameLoopId);
     }
   }
 
@@ -1018,7 +969,6 @@ function init(canvas, initGameData, tmp, finishFunc = (gameData) => { }) {
   console.log("Py Version:", initGameData.version);
 
   const engine = new GameEngine(canvas, initGameData, tmp);
-  engine.startGameLoop();
   engine.setFinishCallback(finishFunc);
   return tmp;
 }
