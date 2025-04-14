@@ -1,4 +1,4 @@
-const __VERSION__ = "8";
+const __VERSION__ = "8.1";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -341,6 +341,9 @@ class GameEngine {
     const col = Math.floor(relX / ((CELL_WIDTH + CELL_PADDING) * this.scale));
     const row = Math.floor(relY / ((CELL_HEIGHT + CELL_PADDING) * this.scale));
 
+    if (this.grid[row][col].type == 'disabled')
+      return null;
+
     return { row, col };
   }
 
@@ -406,19 +409,24 @@ class GameEngine {
       }
   }
 
-  animateNewCells(duration = 500) {
+  animateNewCells(duration = 250) {
     const startTime = performance.now();
+    const easeOut = t => 1 - Math.pow(1 - t, 1.5);
+
     const animate = () => {
       const elapsed = performance.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
+      const easeOutProgress = easeOut(progress);
       for (let r = 0; r < GRID_ROWS; r++)
         for (let c = 0; c < GRID_COLS; c++) {
           const cell = this.grid[r][c];
           if (cell && cell.fallOffset < 0)
-            cell.currentFallOffset = cell.fallOffset * (1 - progress);
+            cell.currentFallOffset = cell.fallOffset * (1 - easeOutProgress);
         }
 
-      this.isAnimatingCells = true;
+      // this.isAnimatingCells = true;
+      this.drawScene();
+
       if (progress < 1)
         requestAnimationFrame(animate);
       else {
@@ -431,14 +439,14 @@ class GameEngine {
             }
           }
         this.canDrag = true;
-        this.isAnimatingCells = false;
+        // this.isAnimatingCells = false;
         this.handleMatches();
       }
     };
     animate();
   }
 
-  animateDropCells(duration = 500) {
+  animateDropCells(duration = 200) {
     const startTime = performance.now();
     const cellH = CELL_HEIGHT;
     for (let c = 0; c < GRID_COLS; c++) {
@@ -459,19 +467,29 @@ class GameEngine {
       }
     }
 
+    const easeOut = t => {
+      // if (0.6 < t < 0.8) {
+      //   return 1.1 - 2 * Math.pow(1.13 - 1.5 * t, 2);
+      // }
+
+      return 1 - Math.pow(1 - t, 1.5);
+    }
     const animate = () => {
       const elapsed = performance.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
+      const easeOutProgress = easeOut(progress);
       for (let r = 0; r < GRID_ROWS; r++) {
         for (let c = 0; c < GRID_COLS; c++) {
           const cell = this.grid[r][c];
 
           if (cell && cell.type !== 'disabled' && cell.fallOffset !== undefined)
-            cell.currentFallOffset = cell.fallOffset * progress;
+            cell.currentFallOffset = cell.fallOffset * easeOutProgress;
         }
       }
 
-      if (progress < 1)
+      this.drawScene();
+
+      if (elapsed < duration)
         requestAnimationFrame(animate);
       else {
         for (let r = 0; r < GRID_ROWS; r++)
@@ -483,13 +501,15 @@ class GameEngine {
             }
           }
 
+        this.drawScene();
+
         this.dropCells();
         this.fillEmptyCells();
         this.animateNewCells();
       }
     };
     this.canDrag = false;
-    this.isAnimatingCells = true;
+    // this.isAnimatingCells = true;
     animate();
   }
 
@@ -567,7 +587,7 @@ class GameEngine {
     return { removedCount, rightRemovedCount };
   }
 
-  animateSwap(cell1, cell2, onComplete, duration = 800) {
+  animateSwap(cell1, cell2, onComplete, duration = 500) {
     const startTime = performance.now();
     const startPosA = this.getCellCoordinates(cell1);
     const startPosB = this.getCellCoordinates(cell2);
@@ -592,14 +612,15 @@ class GameEngine {
       this.grid[cell1.row][cell1.col].tempPos = posA;
       this.grid[cell2.row][cell2.col].tempPos = posB;
 
-      this.isAnimatingCells = true;
+      // this.isAnimatingCells = true;
+      this.drawScene();
 
       if (elapsed < duration) {
         requestAnimationFrame(animate);
       } else {
         delete this.grid[cell1.row][cell1.col].tempPos;
         delete this.grid[cell2.row][cell2.col].tempPos;
-        this.isAnimatingCells = false;
+        // this.isAnimatingCells = false;
         onComplete();
       }
     };
