@@ -1,4 +1,4 @@
-const __VERSION__ = "8.1";
+const __VERSION__ = "8.2";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -425,6 +425,7 @@ class GameEngine {
         }
 
       // this.isAnimatingCells = true;
+      this.canDrag = false;
       this.drawScene();
 
       if (progress < 1)
@@ -487,6 +488,7 @@ class GameEngine {
         }
       }
 
+      this.canDrag = false;
       this.drawScene();
 
       if (elapsed < duration)
@@ -587,7 +589,7 @@ class GameEngine {
     return { removedCount, rightRemovedCount };
   }
 
-  animateSwap(cell1, cell2, onComplete, duration = 500) {
+  animateSwap(cell1, cell2, onComplete, duration = 400) {
     const startTime = performance.now();
     const startPosA = this.getCellCoordinates(cell1);
     const startPosB = this.getCellCoordinates(cell2);
@@ -634,6 +636,8 @@ class GameEngine {
 
     if (cellA.type == 'disabled' || cellB.type === 'disabled') return;
 
+    this.canDrag = false;
+
     this.animateSwap(cell1, cell2, () => {
       this.grid[cell1.row][cell1.col] = cellB;
       this.grid[cell2.row][cell2.col] = cellA;
@@ -653,6 +657,8 @@ class GameEngine {
         }
         this.handleMatches();
       }
+
+      this.canDrag = true;
     });
   }
 
