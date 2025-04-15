@@ -1,4 +1,4 @@
-const __VERSION__ = "8.2";
+const __VERSION__ = "8.5";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -117,7 +117,10 @@ class GameEngine {
   constructor(canvas, initGameData, tmp = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
-    this.tmp = tmp;
+
+    this.tmp = tmp || {};
+    this.tmp.engine = this;
+
     this.dimensions = {
       width: MAX_CANVAS_WIDTH,
       height: MAX_CANVAS_HEIGHT
@@ -136,10 +139,10 @@ class GameEngine {
     this.showTutorial = this.trainingCount < 3;
 
     this.stepsCount = parseInt(initGameData.maxStepsCount || 20);
-    this.currentStep = 0;
+    this.currentStepsCount = 0;
 
     this.targetItemsCount = parseInt(initGameData.targetItemsCount || 20);
-    this.currentTargetItem = 0;
+    this.score = 0;
 
     this.isGameOver = false;
     this.canDrag = true;
@@ -305,8 +308,8 @@ class GameEngine {
       }
     } while (removedCount > 0 && this.checkMatches().flat().includes(true));
 
-    this.currentTargetItem += rightRemovedCount;
-    if (this.currentTargetItem >= this.targetItemsCount) {
+    this.score += rightRemovedCount;
+    if (this.score >= this.targetItemsCount) {
       this.handleGameOver();
     }
   }
@@ -350,39 +353,42 @@ class GameEngine {
   handlePointerDown(e) {
     e.preventDefault && e.preventDefault();
     const pos = this.getGridPosition(e);
+    let action = false;
     if (pos && this.canDrag) {
       if (this.selectedCell === null) { // нажатие первое
+        action = true;
         this.selectedCell = pos;
       } else if (this.selectedCell.col === pos.col && this.selectedCell.row === pos.row) {
+        action = true;
         this.selectedCell = null;
       } else {                          // нажатие второе, так как первая выделенная клетка не null
         this.secondSelectedCell = pos;
       }
 
-      if (this.selectedCell && this.secondSelectedCell &&
-        this.selectedCell.col !== this.secondSelectedCell.col &&
-        this.selectedCell.row !== this.secondSelectedCell.row) {
+      if (this.selectedCell && this.secondSelectedCell && (
+        this.selectedCell.col !== this.secondSelectedCell.col ^
+        this.selectedCell.row !== this.secondSelectedCell.row)) {
         if (this.areAdjacent(this.selectedCell, this.secondSelectedCell)) {
-          console.log("Swapped");
           this.swapCells(this.selectedCell, this.secondSelectedCell);
           this.selectedCell = null;
           this.secondSelectedCell = null;
+          action = true;
         }
       }
-
-      this.drawScene();
+      if (action)
+        this.drawScene();
     }
   }
 
   handlePointerUp(e) {
     e.preventDefault && e.preventDefault();
-    const pos = this.getGridPosition(e);
-    if (this.selectedCell && pos) {
-      if (this.areAdjacent(this.selectedCell, pos)) {
-        this.swapCells(this.selectedCell, pos);
-        this.selectedCell = null;
-      }
-    }
+    // const pos = this.getGridPosition(e);
+    // if (this.selectedCell && pos) {
+    //   if (this.areAdjacent(this.selectedCell, pos)) {
+    //     this.swapCells(this.selectedCell, pos);
+    //     this.selectedCell = null;
+    //   }
+    // }
   }
 
   dropCells() {
@@ -651,8 +657,8 @@ class GameEngine {
           this.grid[cell2.row][cell2.col] = cellB;
         });
       } else {
-        this.currentStep++;
-        if (this.currentStep >= this.stepsCount) {
+        this.currentStepsCount++;
+        if (this.currentStepsCount >= this.stepsCount) {
           this.handleGameOver();
         }
         this.handleMatches();
@@ -786,22 +792,23 @@ class GameEngine {
       TARGET_STROKE_COLOR, TARGET_BG_COLOR
     )
 
-    this.ctx.fillStyle = STEPS_TEXT_COLOR;
-    this.ctx.font = "500 20px Roboto Mono";
-    this.ctx.textAlign = "left";
-    this.ctx.textBaseline = "middle";
-
     const orderProductImg = this.images[this.orderProduct];
     if (orderProductImg) {
       this.drawImageInCell(orderProductImg,
-        targetCardX + 4, targetCardY + 2,
-        CELL_WIDTH, CELL_HEIGHT, CELL_PADDING)
+        targetCardX + 4, targetCardY + 7,
+        CELL_WIDTH * 6 / 7, CELL_HEIGHT * 6 / 7, CELL_PADDING)
     }
-    this.ctx.fillText(`${this.currentTargetItem}/${this.targetItemsCount}`,
-      targetCardX + TARGET_CARD_WIDTH / 2, targetCardY + TARGET_CARD_HEIGHT / 2, TARGET_CARD_WIDTH / 2 - 2);
 
-    this.ctx.fillText(`Шаги ${this.currentStep}/${this.stepsCount}`,
-      stepsCardX + 12, stepsCardY + STEPS_CARD_HEIGHT / 2, STEPS_CARD_WIDTH);
+    this.ctx.fillStyle = STEPS_TEXT_COLOR;
+    this.ctx.font = "500 20px Roboto Mono";
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+
+    this.ctx.fillText(`${this.score}/${this.targetItemsCount}`,
+      targetCardX + TARGET_CARD_WIDTH * 3 / 4 - 6, targetCardY + TARGET_CARD_HEIGHT / 2, TARGET_CARD_WIDTH / 2 - 4);
+
+    this.ctx.fillText(`Шаги ${this.currentStepsCount}/${this.stepsCount}`,
+      stepsCardX + STEPS_CARD_WIDTH / 2, stepsCardY + STEPS_CARD_HEIGHT / 2, STEPS_CARD_WIDTH - 13);
 
     this.ctx.restore();
   }
@@ -965,11 +972,11 @@ class GameEngine {
 
   handleGameOver() {
     console.log("GameOver!");
-    // this.isGameOver = true;
+    this.isGameOver = true;
     if (this.finishCallback) {
       const gameData = {
-        stepsCount: this.currentStep,
-        itemsCount: this.currentTargetItem
+        score: this.score,
+        currentStepsCount: this.currentStepsCount
       };
       this.finishCallback(gameData);
     }
@@ -978,7 +985,7 @@ class GameEngine {
     this.canvas.removeEventListener("pointerup", this.boundHandlePointerUp);
 
     if (this.gameLoopId) {
-      // cancelAnimationFrame(this.gameLoopId);
+      cancelAnimationFrame(this.gameLoopId);
     }
   }
 
