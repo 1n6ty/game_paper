@@ -21,7 +21,7 @@ const CARD_PATHS = {
 const bushesUrl = `${PATH}bushes.svg`;
 const groundUrl = `${PATH}ground.svg`;
 
-const BACK_COOLDOWN = 100;
+const BACK_COOLDOWN = 900;
 
 const GRID_ROWS = 5;
 const GRID_COLS = 5;
