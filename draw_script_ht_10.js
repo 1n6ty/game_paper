@@ -1,6 +1,7 @@
 const __VERSION__ = "10.1";
 
-const PATH = "/media/assets/healthTracker/";  // /media/assets/healthTracker/
+// const PATH = "./assets/healthTracker/";
+const PATH = "/media/assets/healthTracker/";
 
 const glassUrl = `${PATH}glass.svg`;
 const decorationsUrl = `${PATH}decorations.svg`;
@@ -53,6 +54,8 @@ class GameEngine {
     this.tmp = tmp || {};
     this.tmp.engine = this;
 
+    console.log(initGameData.time);
+
     this.timerSeconds = 23 * 60 * 60 + 32 * 60 + 1; // 23:32:00 в секундах
     this.consecutiveDays = parseInt(initGameData.days || "6", 10);
     if (this.consecutiveDays == TOTAL_DAYS) {  // TODO
@@ -84,7 +87,6 @@ class GameEngine {
     window.addEventListener("resize", this.boundResizeCanvas);
     this.resizeCanvas();
 
-    this.lastFrameTime = performance.now();
     this.startGameLoop();
 
     this.images = {};
@@ -130,11 +132,9 @@ class GameEngine {
     this.ctx.closePath();
     this.ctx.fill();
 
-    // Определяем координаты клика с учетом масштабирования
-    // Рассчитываем прямоугольную область стакана (центрирован по горизонтали, внизу)
     const canvasWidth = this.dimensions.width;
     const canvasHeight = this.dimensions.height;
-    const GLASS_GAP = 40;  // Используем тот же отступ, что и в drawGlass
+    const GLASS_GAP = 40;
     const glassX = canvasWidth / 2 - GLASS_WIDTH / 2;
     const glassY = canvasHeight - GLASS_HEIGHT - GLASS_GAP;
     if (
@@ -169,15 +169,12 @@ class GameEngine {
   }
 
   startGameLoop() {
-    this.lastFrameTime = performance.now();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   gameLoop() {
     if (this.isGameOver) return;
-    const now = performance.now();
     const dt = 1 / 60;
-    this.lastFrameTime = now;
 
     const fillSpeed = 1; // уровней в секунду
     if (this.currentFillLevel < this.targetFillLevel) {
@@ -320,16 +317,13 @@ class GameEngine {
 
     this.ctx.fillStyle = TEXT_COLOR;
 
-    // Устанавливаем шрифт для первой строки (жирный)
     this.ctx.font = "600 16px Roboto";
 
     const boldEnd = instructionText.indexOf("!") + 1;
     const boldText = instructionText.substring(0, boldEnd);
     const normalText = instructionText.substring(boldEnd).trim();
 
-    // Получаем массив строк для жирного текста
     const boldLines = wrapText(this.ctx, boldText, maxTextWidth);
-    // Устанавливаем обычный шрифт для оставшегося текста
     const normalLines = wrapText(this.ctx, normalText, maxTextWidth);
 
     // Рисуем жирные строки
@@ -397,12 +391,10 @@ class GameEngine {
     const fillingX = width / 2 - FILLING_WIDTH / 2;
     const fillingY = height - FILLING_HEIGHT - FILLING_GAP;
 
-    // Отрисовка контура стакана
     if (this.images.glass) {
       this.ctx.drawImage(this.images.glass, glassX, glassY, GLASS_WIDTH, GLASS_HEIGHT);
     }
 
-    // Отрисовка заливки стакана с клиппингом по контуру
     const fillPercent = Math.min(this.currentFillLevel / TOTAL_DAYS, 1);
     const fillHeight = FILLING_HEIGHT * fillPercent;
     const fillY = fillingY + (FILLING_HEIGHT - fillHeight);
