@@ -1,4 +1,4 @@
-const __VERSION__ = "8.5";
+const __VERSION__ = "9";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -153,7 +153,7 @@ class GameEngine {
     this.assetKeys = Object.keys(ASSET_PATHS);
     this.orderProduct =
       this.assetKeys[Math.floor(this.randomGenerator.random() * this.assetKeys.length)];
-    this.initGrid();
+    this.initGridWithTurns();
 
     this.selectedCell = null;
     this.secondSelectedCell = null;
@@ -288,6 +288,76 @@ class GameEngine {
     }
   }
 
+  checkAvailableMoves() {
+    const trySwap = (r1, c1, r2, c2) => {
+      const cellA = this.grid[r1][c1];
+      const cellB = this.grid[r2][c2];
+
+      this.grid[r1][c1] = cellB;
+      this.grid[r2][c2] = cellA;
+
+      const matches = this.checkMatches();
+      const hasMatch = matches.some(row => row.some(match => match));
+
+      this.grid[r1][c1] = cellA;
+      this.grid[r2][c2] = cellB;
+
+      return hasMatch;
+    };
+
+    for (let r = 0; r < GRID_ROWS; r++) {
+      for (let c = 0; c < GRID_COLS; c++) {
+        if (!this.grid[r][c] || this.grid[r][c].type === 'disabled') continue;
+        if (c < GRID_COLS - 1 && this.grid[r][c + 1] && this.grid[r][c + 1].type !== 'disabled') {
+          if (trySwap(r, c, r, c + 1)) {
+            return true;
+          }
+        }
+        if (r < GRID_ROWS - 1 && this.grid[r + 1][c] && this.grid[r + 1][c].type !== 'disabled') {
+          if (trySwap(r, c, r + 1, c)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  // для тестирования
+  initGridNoTurns() {
+    const MAX_ATTEMPTS = 10000;
+    let attempts = 0;
+
+    do {
+      this.grid = [];
+      this.initGrid();
+      attempts++;
+    } while (this.checkAvailableMoves() && attempts < MAX_ATTEMPTS);
+
+    if (attempts >= MAX_ATTEMPTS) {
+      console.warn("Не удалось сгенерировать сетку без доступных ходов за максимальное число попыток.", attempts);
+    } else
+      console.log("Сделано!", attempts);
+  }
+
+  initGridWithTurns() {
+    const MAX_ATTEMPTS = 10000;
+    let attempts = 0;
+
+    do {
+      this.grid = [];
+      this.initGrid();
+      attempts++;
+    } while (!this.checkAvailableMoves() && attempts < MAX_ATTEMPTS);
+
+    if (attempts >= MAX_ATTEMPTS) {
+      console.warn("Не удалось сгенерировать сетку с доступными ходами за максимальное число попыток.", attempts);
+    } else
+      console.log("Сделано!", attempts);
+
+    return attempts;
+  }
+
   areAdjacent(cell1, cell2) {
     const dr = Math.abs(cell1.row - cell2.row);
     const dc = Math.abs(cell1.col - cell2.col);
@@ -370,6 +440,11 @@ class GameEngine {
         this.selectedCell.row !== this.secondSelectedCell.row)) {
         if (this.areAdjacent(this.selectedCell, this.secondSelectedCell)) {
           this.swapCells(this.selectedCell, this.secondSelectedCell);
+          if (!this.checkAvailableMoves()) {
+            // Нет доступных ходов – сбрасываем поле.
+            this.initGridWithTurns();
+          }
+
           this.selectedCell = null;
           this.secondSelectedCell = null;
           action = true;
