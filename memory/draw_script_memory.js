@@ -1,4 +1,4 @@
-const __VERSION__ = "1";
+const __VERSION__ = "2";
 
 // const PATH = "./assets/memory/";
 const PATH = "/media/assets/memory/";
@@ -31,8 +31,8 @@ const BODY_BG_TOP_COLOR = "#80D18F";
 const BODY_BG_MIDDLE_COLOR = "#9AD9A6";
 const BODY_BG_BOTTOM_COLOR = "#4EB96B";
 
-const STEPS_PADDING_TOP = 99;
 const STEPS_PADDING_LEFT = 90;
+const STEPS_PADDING_TOP = 99;
 
 const STEPS_BG_COLOR = "#CDF7D6";
 const STEPS_STROKE_COLOR = "#389150";
@@ -53,6 +53,7 @@ const GRID_PADDING_TOP = 217;
 const CELL_WIDTH = 72;
 const CELL_HEIGHT = 72;
 const CELL_PADDING = 4;
+const CELL_CARD_RADIUS = 10;
 
 const BUSHES_WIDTH = 428;
 const BUSHES_HEIGHT = 91;
@@ -291,13 +292,13 @@ class GameEngine {
 
     for (let i = 0; i < selectedCells.length; i++) {
       const { r, c } = selectedCells[i];
-      this.grid[r][c] = { type: shuffledPairValues[i], state: 'closed' };
+      this.grid[r][c] = { type: shuffledPairValues[i] };
     }
 
     for (let cell of activeCells) {
       const { r, c } = cell;
       if (this.grid[r][c] === null) {
-        this.grid[r][c] = { type: 'disabled', state: 'closed' };
+        this.grid[r][c] = { type: 'disabled' };
       }
     }
   }
@@ -338,30 +339,60 @@ class GameEngine {
     return { row, col };
   }
 
-  handlePointerDown(e) {
-    e.preventDefault && e.preventDefault();
-    const pos = this.getGridPosition(e);
-    if (pos && this.canDrag) {
-      if (this.selectedCell === null) { // нажатие первое
-        this.selectedCell = pos;
-        this.grid[pos.row][pos.col].state = 'opened';
-      } else if (this.selectedCell.col === pos.col && this.selectedCell.row === pos.row) {
-        this.selectedCell = null;
-      } else {                          // нажатие второе, так как первая выделенная клетка не null
-        this.secondSelectedCell = pos;
-        this.grid[pos.row][pos.col].state = 'opened';
-      }
+  handleMatches() {
+    const cell1 = this.grid[this.selectedCell.row][this.selectedCell.col];
+    const cell2 = this.grid[this.secondSelectedCell.row][this.secondSelectedCell.col];
 
-      if (this.selectedCell && this.secondSelectedCell && (
-        this.selectedCell.col !== this.secondSelectedCell.col ^
-        this.selectedCell.row !== this.secondSelectedCell.row)) {
+    if (!cell1 || !cell2) return;
+    this.currentStepsCount++;
 
-        // this.swapCells(this.selectedCell, this.secondSelectedCell);
+    if (cell1.type === cell2.type) {
+      cell1.state = 'opened';
+      cell2.state = 'opened';
+    } else {
+      this.canDrag = false;
+      const timer = setInterval(() => {
+        console.log("can drag", this.canDrag);
         this.selectedCell = null;
         this.secondSelectedCell = null;
+        this.drawScene();
+        if (timer) {
+          this.canDrag = true;
+          console.log("can drag", this.canDrag);
+
+          clearTimeout(timer);
+        }
+      }, 1000);
+    }
+  }
+
+  onCellClicked(cellPosition) {
+    console.log("first can drag", this.canDrag);
+
+    if (cellPosition && this.canDrag) {
+      const cell = this.grid[cellPosition.row][cellPosition.col];
+      if (!cell || cell.state === 'opened') return;
+
+      if (this.selectedCell === null) { // нажатие первое
+        this.selectedCell = cellPosition;
+      } else if (this.selectedCell.row === cellPosition.row && this.selectedCell.col === cellPosition.col) {
+        this.selectedCell = null;
+      } else {                          // нажатие второе, так как первая выделенная клетка не null
+        this.secondSelectedCell = cellPosition;
+      }
+
+      if (this.selectedCell && this.secondSelectedCell) {
+        // this.swapCells(this.selectedCell, this.secondSelectedCell);
+        this.handleMatches();
       }
       this.drawScene();
     }
+  }
+
+  handlePointerDown(e) {
+    e.preventDefault && e.preventDefault();
+    const pos = this.getGridPosition(e);
+    this.onCellClicked(pos);
   }
 
   roundRect(ctx, x, y, width, height, radius) {
@@ -428,6 +459,35 @@ class GameEngine {
     this.ctx.restore();
   }
 
+  drawBushes() {
+    if (!this.images.bushes) return;
+
+    const { width, height } = this.dimensions;
+
+    const bushDrawWidth = BUSHES_WIDTH * this.scale;
+    const bushDrawHeight = BUSHES_HEIGHT * this.scale;
+
+    // Расположение кустов по вертикали
+    const bushY = height - (BOTTOM_GROUND_HEIGHT * this.scale) - bushDrawHeight;
+
+    const totalBushes = Math.ceil(width / bushDrawWidth);
+
+    const midIndex = Math.floor(totalBushes / 2);
+    const centerX = width / 2 - bushDrawWidth / 2;
+
+    const startX = centerX - midIndex * bushDrawWidth;
+
+    // Рисуем кусты по горизонтали
+    for (let i = 0; i <= totalBushes; i++) {
+      let x = startX + i * bushDrawWidth;
+
+      // Положительное значение смещает куст вправо, отрицательное - влево
+      const sideShift = ((i - midIndex) * (-0.01)) * bushDrawWidth;
+
+      this.ctx.drawImage(this.images.bushes, x + sideShift, bushY, bushDrawWidth, bushDrawHeight);
+    }
+  }
+
   drawBody() {
     const { width, height } = this.dimensions;
 
@@ -443,19 +503,11 @@ class GameEngine {
     this.drawStepsCard();
 
     this.ctx.save();
-    // this.ctx.scale(this.scale, this.scale);
     this.ctx.fillStyle = BOTTOM_GROUND_BG_COLOR;
-    this.ctx.fillRect(0, height - BUSHES_HEIGHT - this.offset.y, width, height);
+    this.ctx.fillRect(0, height - BOTTOM_GROUND_HEIGHT, width, BOTTOM_GROUND_HEIGHT);
     this.ctx.restore();
 
-    this.ctx.save();
-    this.ctx.translate(this.offset.x, this.offset.y);
-    this.ctx.scale(this.scale, this.scale);
-
-    if (this.images.bushes) {
-      this.ctx.drawImage(this.images.bushes, 0, height - BOTTOM_GROUND_HEIGHT - BUSHES_HEIGHT, BUSHES_WIDTH, BUSHES_HEIGHT);
-    }
-    this.ctx.restore();
+    this.drawBushes();
   }
 
   drawGrid() {
@@ -468,15 +520,18 @@ class GameEngine {
 
         let posX = pos.x, posY = pos.y;
 
-        if (cell.state == 'closed') {
-          if (this.images.ground)
-            this.ctx.drawImage(this.images.ground, posX, posY);
-        } else {
+        if ((this.selectedCell && this.selectedCell.col === c && this.selectedCell.row === r) ||
+          (this.secondSelectedCell && this.secondSelectedCell.col === c && this.secondSelectedCell.row === r) ||
+          cell.state === 'opened'
+        ) {
           const image = this.images[cell.type];
-          this.drawCard(posX, posY, CELL_WIDTH, CELL_HEIGHT, 9, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
+          this.drawCard(posX, posY, CELL_WIDTH, CELL_HEIGHT, CELL_CARD_RADIUS, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
           if (image) {
             this.drawImageInCell(image, posX, posY, CELL_WIDTH, CELL_HEIGHT, CELL_PADDING);
           }
+        } else {
+          if (this.images.ground)
+            this.ctx.drawImage(this.images.ground, posX, posY);
         }
       }
     }
