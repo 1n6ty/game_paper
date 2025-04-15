@@ -1,4 +1,4 @@
-const __VERSION__ = "2";
+const __VERSION__ = "2.1";
 
 // const PATH = "./assets/memory/";
 const PATH = "/media/assets/memory/";
@@ -20,6 +20,8 @@ const CARD_PATHS = {
 
 const bushesUrl = `${PATH}bushes.svg`;
 const groundUrl = `${PATH}ground.svg`;
+
+const BACK_COOLDOWN = 100;
 
 const GRID_ROWS = 5;
 const GRID_COLS = 5;
@@ -340,29 +342,33 @@ class GameEngine {
   }
 
   handleMatches() {
-    const cell1 = this.grid[this.selectedCell.row][this.selectedCell.col];
-    const cell2 = this.grid[this.secondSelectedCell.row][this.secondSelectedCell.col];
+    if (this.selectedCell && this.secondSelectedCell) {
 
-    if (!cell1 || !cell2) return;
-    this.currentStepsCount++;
+      const cell1 = this.grid[this.selectedCell.row][this.selectedCell.col];
+      const cell2 = this.grid[this.secondSelectedCell.row][this.secondSelectedCell.col];
 
-    if (cell1.type === cell2.type) {
-      cell1.state = 'opened';
-      cell2.state = 'opened';
-    } else {
-      this.canDrag = false;
-      const timer = setInterval(() => {
-        console.log("can drag", this.canDrag);
+      if (!cell1 || !cell2) return;
+      this.currentStepsCount++;
+
+      if (cell1.type === cell2.type) {
+        cell1.state = 'opened';
+        cell2.state = 'opened';
         this.selectedCell = null;
         this.secondSelectedCell = null;
-        this.drawScene();
-        if (timer) {
+      } else {
+        this.canDrag = false;
+        console.log("can drag", this.canDrag);
+        const timer = setInterval(() => {
+          this.selectedCell = null;
+          this.secondSelectedCell = null;
+          this.drawScene();
           this.canDrag = true;
           console.log("can drag", this.canDrag);
-
-          clearTimeout(timer);
-        }
-      }, 1000);
+          if (timer) {
+            clearTimeout(timer);
+          }
+        }, BACK_COOLDOWN);
+      }
     }
   }
 
@@ -376,15 +382,14 @@ class GameEngine {
       if (this.selectedCell === null) { // нажатие первое
         this.selectedCell = cellPosition;
       } else if (this.selectedCell.row === cellPosition.row && this.selectedCell.col === cellPosition.col) {
-        this.selectedCell = null;
+        return;
       } else {                          // нажатие второе, так как первая выделенная клетка не null
         this.secondSelectedCell = cellPosition;
       }
 
-      if (this.selectedCell && this.secondSelectedCell) {
-        // this.swapCells(this.selectedCell, this.secondSelectedCell);
-        this.handleMatches();
-      }
+      // this.swapCells(this.selectedCell, this.secondSelectedCell);
+      this.handleMatches();
+
       this.drawScene();
     }
   }
@@ -392,7 +397,8 @@ class GameEngine {
   handlePointerDown(e) {
     e.preventDefault && e.preventDefault();
     const pos = this.getGridPosition(e);
-    this.onCellClicked(pos);
+    if (pos)
+      this.onCellClicked(pos);
   }
 
   roundRect(ctx, x, y, width, height, radius) {
