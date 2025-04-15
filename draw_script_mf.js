@@ -113,9 +113,9 @@ class GameEngine {
     this.tmp = tmp || {};
     this.tmp.engine = this;
 
-    this.seed = initGameData.seed || Date.now().toString(16);
-    console.log("Seed:", this.seed);
-    this.randomGenerator = new LCG(this.seed);
+    const seed = initGameData.seed || Date.now().toString(16);
+    console.log("Seed:", seed);
+    this.randomGenerator = new LCG(seed);
     this.bestScore = initGameData.best_score;
     console.log("Лучший счет:", this.bestScore);
 
