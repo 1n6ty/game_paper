@@ -122,10 +122,10 @@ class GameEngine {
     this.trainingCount = parseInt(initGameData.trainingCount || "0", 10);
     this.showTutorial = this.trainingCount < 3;
 
-    this.stepsCount = parseInt(initGameData.maxStepsCount || 40);
+    this.maxStepsCount = parseInt(initGameData.maxStepsCount || 40);
     this.currentStepsCount = 0;
 
-    this.targetItemsCount = parseInt(initGameData.targetItemsCount || 24);
+    this.targetItemsCount = parseInt(initGameData.targetItemsCount || 12);
     this.score = 0;
 
     this.isGameOver = false;
@@ -349,12 +349,19 @@ class GameEngine {
 
       if (!cell1 || !cell2) return;
       this.currentStepsCount++;
+      if (this.currentStepsCount == this.maxStepsCount) {
+        this.handleGameOver();
+      }
 
       if (cell1.type === cell2.type) {
         cell1.state = 'opened';
         cell2.state = 'opened';
         this.selectedCell = null;
         this.secondSelectedCell = null;
+        this.score++;
+        if (this.score == this.targetItemsCount) {
+          this.handleGameOver();
+        }
       } else {
         this.canDrag = false;
         console.log("can drag", this.canDrag);
@@ -387,7 +394,6 @@ class GameEngine {
         this.secondSelectedCell = cellPosition;
       }
 
-      // this.swapCells(this.selectedCell, this.secondSelectedCell);
       this.handleMatches();
 
       this.drawScene();
@@ -459,7 +465,7 @@ class GameEngine {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
 
-    this.ctx.fillText(`Шаги ${this.currentStepsCount}/${this.stepsCount}`,
+    this.ctx.fillText(`Шаги ${this.currentStepsCount}/${this.maxStepsCount}`,
       stepsCardX + STEPS_CARD_WIDTH / 2, stepsCardY + STEPS_CARD_HEIGHT / 2, STEPS_CARD_WIDTH - 13);
 
     this.ctx.restore();
