@@ -1,4 +1,4 @@
-const __VERSION__ = "10";
+const __VERSION__ = "11";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -91,6 +91,10 @@ const loadImage = (src) =>
     };
   });
 
+const newFallingCellsEaseIn = t => 1 - Math.pow(1 - t, 1.5);
+const fallingCellsEaseIn = t => 1 - Math.pow(1 - t, 1.5);
+const swapCellsEaseIn = t => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+
 const roundRect = (ctx, x, y, width, height, radius) => {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
@@ -163,6 +167,31 @@ const drawRoundedPlus = (ctx, x, y, width, height, armThickness, radius) => {
   ];
 
   drawRoundedPolygon(ctx, pts, radius);
+}
+
+const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor) => {
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = strokeColor;
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.stroke();
+  ctx.fill();
+}
+
+const drawImageInCell = (ctx, image, drawX, drawY, cellW, cellH, cellPadding) => {
+  const availableWidth = cellW - 2 * cellPadding;
+  const availableHeight = cellH - 2 * cellPadding;
+  const scale = Math.min(availableWidth / image.naturalWidth, availableHeight / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  const offsetX = (availableWidth - drawWidth) / 2;
+  const offsetY = (availableHeight - drawHeight) / 2;
+  ctx.drawImage(
+    image,
+    drawX + cellPadding + offsetX,
+    drawY + cellPadding + offsetY,
+    drawWidth,
+    drawHeight
+  );
 }
 
 class LCG {
@@ -509,127 +538,120 @@ class GameEngine {
         if (this.grid[r][c] === null) {
           const key = this.assetKeys[Math.floor(this.randomGenerator.random() * this.assetKeys.length)];
           const fallOffset = -(GRID_PADDING_TOP - GRID_ZONE_PADDING_TOP);
-          this.grid[r][c] = { type: key, fallOffset: fallOffset, currentFallOffset: fallOffset };
+          this.grid[r][c] = { type: key, fallOffset: fallOffset };
         }
       }
   }
 
+  clearGridCellsTempData() {
+    for (let r = 0; r < GRID_ROWS; r++) {
+      for (let c = 0; c < GRID_COLS; c++) {
+        const cell = this.grid[r][c];
+        if (cell) {
+          delete cell.tempPos;
+          delete cell.fallOffset;
+        }
+      }
+    }
+  }
+
   animateNewCells(duration = 250) {
-    const startTime = performance.now();
-    const easeOut = t => 1 - Math.pow(1 - t, 1.5);
-
-    const animate = () => {
-      const elapsed = performance.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOutProgress = easeOut(progress);
-
-      // Для каждой клетки, которая является новой (fallOffset < 0), рассчитываем позицию
+    const updateCellsPositions = newFallingCellsEaseInProgress => {
       for (let r = 0; r < GRID_ROWS; r++) {
         for (let c = 0; c < GRID_COLS; c++) {
           const cell = this.grid[r][c];
           if (cell && cell.fallOffset < 0) {
             const endPos = this.getCoordinatesByCellPosition({ row: r, col: c });
-            const startPos = {
-              x: endPos.x,
-              y: endPos.y + cell.fallOffset
-            };
-
+            const startPos = { x: endPos.x, y: endPos.y + cell.fallOffset };
             cell.tempPos = {
-              x: startPos.x + (endPos.x - startPos.x) * easeOutProgress,
-              y: startPos.y + (endPos.y - startPos.y) * easeOutProgress
+              x: startPos.x + (endPos.x - startPos.x) * newFallingCellsEaseInProgress,
+              y: startPos.y + (endPos.y - startPos.y) * newFallingCellsEaseInProgress
             };
           }
-        }
-      }
-
-      this.canDrag = false;
-      this.drawScene();
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        for (let r = 0; r < GRID_ROWS; r++) {
-          for (let c = 0; c < GRID_COLS; c++) {
-            const cell = this.grid[r][c];
-            if (cell && cell.fallOffset < 0) {
-              delete cell.tempPos;
-              delete cell.fallOffset;
-            }
-          }
-        }
-        this.canDrag = true;
-        this.handleMatches();
-      }
-    };
-
-    animate();
-  }
-
-  animateDropCells(duration = 250) {
-    for (let c = 0; c < GRID_COLS; c++) {
-      let emptyCount = 0;
-      for (let r = GRID_ROWS - 1; r >= 0; r--) {
-        const cell = this.grid[r][c];
-        if (cell === null) {
-          emptyCount++;
-        } else if (cell.type === 'disabled') {
-          // Не учитываем неактивные ячейки.
-          continue;
-        } else if (emptyCount > 0) {
-          cell.fallOffset = emptyCount * (CELL_HEIGHT + CELL_PADDING);
-        } else {
-          cell.fallOffset = 0;
         }
       }
     }
 
-    const easeOut = t => 1 - Math.pow(1 - t, 1.5);
-    const startTime = performance.now();
+    return new Promise(resolve => {
+      let start = null;
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOutProgress = newFallingCellsEaseIn(progress);
+        updateCellsPositions(easeOutProgress);
+        this.drawScene();
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          this.clearGridCellsTempData();
+          this.canDrag = true;
+          resolve();
+        }
+      };
 
-    const animate = () => {
-      const elapsed = performance.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeProgress = easeOut(progress);
+      this.canDrag = false;
+      requestAnimationFrame(animate);
+    });
+  }
 
+  animateDropCells(duration = 250) {
+    const updateCellsPositions = fallingCellsEaseInProgress => {
       for (let r = 0; r < GRID_ROWS; r++) {
         for (let c = 0; c < GRID_COLS; c++) {
           const cell = this.grid[r][c];
           if (cell && cell.type !== 'disabled' && cell.fallOffset) {
             const startPos = this.getCoordinatesByCellPosition({ row: r, col: c });
-            const endPos = {
-              x: startPos.x,
-              y: startPos.y + cell.fallOffset
-            };
+            const endPos = { x: startPos.x, y: startPos.y + cell.fallOffset };
             cell.tempPos = {
-              x: startPos.x + (endPos.x - startPos.x) * easeProgress,
-              y: startPos.y + (endPos.y - startPos.y) * easeProgress
+              x: startPos.x + (endPos.x - startPos.x) * fallingCellsEaseInProgress,
+              y: startPos.y + (endPos.y - startPos.y) * fallingCellsEaseInProgress
             };
           }
         }
       }
+    }
 
-      this.drawScene();
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        for (let r = 0; r < GRID_ROWS; r++) {
-          for (let c = 0; c < GRID_COLS; c++) {
-            const cell = this.grid[r][c];
-            if (cell && cell.type !== 'disabled' && cell.fallOffset) {
-              delete cell.tempPos;
-              delete cell.fallOffset;
-            }
+    const calculateFallOffsets = () => {
+      for (let c = 0; c < GRID_COLS; c++) {
+        let emptyCount = 0;
+        for (let r = GRID_ROWS - 1; r >= 0; r--) {
+          const cell = this.grid[r][c];
+          if (cell === null) {
+            emptyCount++;
+          } else if (cell.type === 'disabled') {
+            continue;
+          } else if (emptyCount > 0) {
+            cell.fallOffset = emptyCount * (CELL_HEIGHT + CELL_PADDING);
+          } else {
+            cell.fallOffset = 0;
           }
         }
-        this.dropCells();
-        this.fillEmptyCells();
-        this.animateNewCells();
       }
-    };
+    }
 
-    this.canDrag = false;
-    animate();
+    return new Promise((resolve) => {
+      calculateFallOffsets();
+      let start = null;
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = fallingCellsEaseIn(progress);
+        updateCellsPositions(easeProgress);
+        this.drawScene();
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          this.clearGridCellsTempData();
+          this.canDrag = false;
+          resolve();
+        }
+      };
+
+      this.canDrag = true;
+      requestAnimationFrame(animate);
+    });
   }
 
   removeMatches(matched) {
@@ -662,7 +684,13 @@ class GameEngine {
       if (removed > 0) {
         removedCount += removed;
         rightRemovedCount += rightRemoved;
-        this.animateDropCells();
+        this.animateDropCells().then(() => {
+          this.dropCells();
+          this.fillEmptyCells();
+          this.animateNewCells().then(() => {
+            this.handleMatches();
+          });
+        });
       }
     } while (removedCount > 0 && this.getMatchedCells().flat().includes(true));
 
@@ -708,49 +736,47 @@ class GameEngine {
     return { row, col };
   }
 
-  animateSwap(cellPos1, cellPos2, onComplete, duration = 400) {
-    const startTime = performance.now();
-    const startPosA = this.getCoordinatesByCellPosition(cellPos1);
-    const startPosB = this.getCoordinatesByCellPosition(cellPos2);
-
-    const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
-
-    const animate = () => {
-      const elapsed = performance.now() - startTime;
-      let progress = Math.min(elapsed / duration, 1);
-
-      const effectiveProgress = easeInOutQuad(progress);
-
-      const posA = {
-        x: startPosA.x + (startPosB.x - startPosA.x) * effectiveProgress,
-        y: startPosA.y + (startPosB.y - startPosA.y) * effectiveProgress,
-      };
-      const posB = {
-        x: startPosB.x + (startPosA.x - startPosB.x) * effectiveProgress,
-        y: startPosB.y + (startPosA.y - startPosB.y) * effectiveProgress,
-      };
-
-      const cell1 = this.grid[cellPos1.row][cellPos1.col];
-
-      cell1.tempPos = posA;
-      this.grid[cellPos2.row][cellPos2.col].tempPos = posB;
-
-      // this.isAnimatingCells = true;
-      // this.drawCell(cellPos1.row, cellPos1.col);
-      // this.drawCell(cellPos2.row, cellPos2.col);
-      this.drawScene();
-
-      if (elapsed < duration) {
-        requestAnimationFrame(animate);
-      } else {
-        delete cell1.tempPos;
-        delete this.grid[cellPos2.row][cellPos2.col].tempPos;
-        // this.isAnimatingCells = false;
-        onComplete();
+  animateSwap(cellPos1, cellPos2, duration = 400) {
+    const calcAnimationCoordinates = (startPosA, startPosB, progress) => {
+      return {
+        x: startPosA.x + (startPosB.x - startPosA.x) * progress,
+        y: startPosA.y + (startPosB.y - startPosA.y) * progress,
       }
-    };
+    }
 
-    animate();
+    return new Promise(resolve => {
+      const startCoordinateA = this.getCoordinatesByCellPosition(cellPos1);
+      const startCoordinateB = this.getCoordinatesByCellPosition(cellPos2);
+
+      let start = null;
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const swapCellsEaseInProgress = swapCellsEaseIn(progress);
+
+        const posA = calcAnimationCoordinates(startCoordinateA, startCoordinateB, swapCellsEaseInProgress);
+        const posB = calcAnimationCoordinates(startCoordinateB, startCoordinateA, swapCellsEaseInProgress);
+
+        const cell1 = this.grid[cellPos1.row][cellPos1.col];
+        const cell2 = this.grid[cellPos2.row][cellPos2.col];
+        cell1.tempPos = posA;
+        cell2.tempPos = posB;
+        this.drawScene();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          delete cell1.tempPos;
+          delete cell2.tempPos;
+          this.canDrag = true;
+          resolve();
+        }
+      };
+
+      this.canDrag = false;
+      requestAnimationFrame(animate);
+    });
   }
 
   swapCells(cellPos1, cellPos2) {
@@ -759,9 +785,7 @@ class GameEngine {
 
     if (cellA.type == 'disabled' || cellB.type === 'disabled') return;
 
-    this.canDrag = false;
-
-    this.animateSwap(cellPos1, cellPos2, () => {
+    this.animateSwap(cellPos1, cellPos2).then(() => {
       this.grid[cellPos1.row][cellPos1.col] = cellB;
       this.grid[cellPos2.row][cellPos2.col] = cellA;
 
@@ -769,7 +793,7 @@ class GameEngine {
       const anyMatch = matched.some(row => row.some(match => match));
 
       if (!anyMatch) {
-        this.animateSwap(cellPos1, cellPos2, () => {
+        this.animateSwap(cellPos1, cellPos2).then(() => {
           this.grid[cellPos1.row][cellPos1.col] = cellA;
           this.grid[cellPos2.row][cellPos2.col] = cellB;
         });
@@ -780,8 +804,6 @@ class GameEngine {
         }
         this.handleMatches();
       }
-
-      this.canDrag = true;
     });
   }
 
@@ -800,13 +822,11 @@ class GameEngine {
         this.secondSelectedCell = pos;
       }
 
-      if (this.selectedCell && this.secondSelectedCell && (
-        this.selectedCell.col !== this.secondSelectedCell.col ^
-        this.selectedCell.row !== this.secondSelectedCell.row)) {
+      if (this.selectedCell && this.secondSelectedCell) {
         if (this.areAdjacent(this.selectedCell, this.secondSelectedCell)) {
           this.swapCells(this.selectedCell, this.secondSelectedCell);
+          // Если нет доступных ходов, то обновляем поле
           if (!this.checkAvailableMoves()) {
-            // Нет доступных ходов – сбрасываем поле.
             this.initGridWithTurns();
           }
 
@@ -820,31 +840,6 @@ class GameEngine {
     }
   }
 
-  drawCard(ctx, x, y, width, height, radius, strokeColor, fillColor) {
-    ctx.fillStyle = fillColor;
-    ctx.strokeStyle = strokeColor;
-    roundRect(ctx, x, y, width, height, radius);
-    ctx.stroke();
-    ctx.fill();
-  }
-
-  drawImageInCell(ctx, image, drawX, drawY, cellW, cellH, cellPadding) {
-    const availableWidth = cellW - 2 * cellPadding;
-    const availableHeight = cellH - 2 * cellPadding;
-    const scale = Math.min(availableWidth / image.naturalWidth, availableHeight / image.naturalHeight);
-    const drawWidth = image.naturalWidth * scale;
-    const drawHeight = image.naturalHeight * scale;
-    const offsetX = (availableWidth - drawWidth) / 2;
-    const offsetY = (availableHeight - drawHeight) / 2;
-    ctx.drawImage(
-      image,
-      drawX + cellPadding + offsetX,
-      drawY + cellPadding + offsetY,
-      drawWidth,
-      drawHeight
-    );
-  }
-
   drawHighlightedTarget() {
     const highlightedTargetX = HEADER_TARGET_LEFT;
     const highlightedTargetY = HEADER_TARGET_TOP;
@@ -852,13 +847,13 @@ class GameEngine {
     const highlightedTargetCounterX = highlightedTargetX + 55 + HEADER_TARGET_COUNTER_RADIUS;
     const highlightedTargetCounterY = highlightedTargetY + 33 + HEADER_TARGET_COUNTER_RADIUS;
 
-    this.drawCard(this.ctx, highlightedTargetX, highlightedTargetY,
+    drawCard(this.ctx, highlightedTargetX, highlightedTargetY,
       HEADER_TARGET_CARD_WIDTH, HEADER_TARGET_CARD_HEIGHT, HEADER_TARGET_CARD_BORDER_RADIUS,
       STEPS_STROKE_COLOR, STEPS_BG_COLOR
     )
 
     if (this.images[this.orderProduct]) {
-      this.drawImageInCell(this.ctx, this.images[this.orderProduct],
+      drawImageInCell(this.ctx, this.images[this.orderProduct],
         highlightedTargetX, highlightedTargetY,
         HEADER_TARGET_CARD_IMAGE_WIDTH, HEADER_TARGET_CARD_IMAGE_HEIGHT, CELL_PADDING)
     }
@@ -920,19 +915,19 @@ class GameEngine {
     const stepsCardX = COUNTERS_PADDING_LEFT + TARGET_CARD_WIDTH + COUNTERS_GAP;
     const stepsCardY = HEADER_HEIGHT + COUNTERS_PADDING_TOP;
 
-    this.drawCard(this.ctx, stepsCardX, stepsCardY,
+    drawCard(this.ctx, stepsCardX, stepsCardY,
       STEPS_CARD_WIDTH, STEPS_CARD_HEIGHT, 12,
       STEPS_STROKE_COLOR, STEPS_BG_COLOR
     )
 
-    this.drawCard(this.ctx, targetCardX, targetCardY,
+    drawCard(this.ctx, targetCardX, targetCardY,
       TARGET_CARD_WIDTH, TARGET_CARD_HEIGHT, 12,
       TARGET_STROKE_COLOR, TARGET_BG_COLOR
     )
 
     const orderProductImg = this.images[this.orderProduct];
     if (orderProductImg) {
-      this.drawImageInCell(this.ctx, orderProductImg,
+      drawImageInCell(this.ctx, orderProductImg,
         targetCardX + 4, targetCardY + 7,
         CELL_WIDTH * 6 / 7, CELL_HEIGHT * 6 / 7, CELL_PADDING)
     }
@@ -984,9 +979,9 @@ class GameEngine {
     }
 
     const image = this.images[cell.type];
-    this.drawCard(this.ctx, posX, posY, cellW, cellH, 9, strokeColor, fillColor);
+    drawCard(this.ctx, posX, posY, cellW, cellH, 9, strokeColor, fillColor);
     if (image) {
-      this.drawImageInCell(this.ctx, image, posX, posY, cellW, cellH, CELL_PADDING);
+      drawImageInCell(this.ctx, image, posX, posY, cellW, cellH, CELL_PADDING);
     }
   }
 
@@ -1070,12 +1065,12 @@ class GameEngine {
   }
 }
 
-function init(canvas, initGameData, tmp, finishFunc = (gameData) => { }) {
+function init(canvas, initGameData, tmp, finishCallback = (gameData) => { }) {
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
   const engine = new GameEngine(canvas, initGameData, tmp);
-  engine.setFinishCallback(finishFunc);
+  engine.setFinishCallback(finishCallback);
   return tmp;
 }
 
