@@ -1,7 +1,7 @@
 const __VERSION__ = "11";
 
-// const PATH = "./assets/match3/";
-const PATH = "/media/assets/match3/";
+const PATH = "./assets/match3/";
+// const PATH = "/media/assets/match3/";
 
 const ASSET_PATHS = {
   smetanaGlass: `${PATH}smetana_glass.svg`,
@@ -80,12 +80,12 @@ const CELL_HEIGHT = 54.73;
 const CELL_PADDING = 5;
 
 
-const loadImage = (src) =>
-  new Promise((resolve) => {
+const loadImage = src =>
+  new Promise(resolve => {
     const img = new Image();
     img.src = src;
     img.onload = () => resolve(img);
-    img.onerror = (e) => {
+    img.onerror = e => {
       console.error("Failed to load image:", src, e);
       resolve(null);
     };
@@ -107,7 +107,7 @@ const roundRect = (ctx, x, y, width, height, radius) => {
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
-}
+};
 
 const drawRoundedPolygon = (ctx, points, radius) => {
   ctx.beginPath();
@@ -139,10 +139,12 @@ const drawRoundedPolygon = (ctx, points, radius) => {
     } else {
       ctx.lineTo(startX, startY);
     }
+
     ctx.arcTo(curr.x, curr.y, endX, endY, radius);
   }
+
   ctx.closePath();
-}
+};
 
 const drawRoundedPlus = (ctx, x, y, width, height, armThickness, radius) => {
   const cx = x + width / 2;
@@ -167,7 +169,7 @@ const drawRoundedPlus = (ctx, x, y, width, height, armThickness, radius) => {
   ];
 
   drawRoundedPolygon(ctx, pts, radius);
-}
+};
 
 const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor) => {
   ctx.fillStyle = fillColor;
@@ -175,7 +177,7 @@ const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor) => {
   roundRect(ctx, x, y, width, height, radius);
   ctx.stroke();
   ctx.fill();
-}
+};
 
 const drawImageInCell = (ctx, image, drawX, drawY, cellW, cellH, cellPadding) => {
   const availableWidth = cellW - 2 * cellPadding;
@@ -192,7 +194,7 @@ const drawImageInCell = (ctx, image, drawX, drawY, cellW, cellH, cellPadding) =>
     drawWidth,
     drawHeight
   );
-}
+};
 
 class LCG {
   constructor(seed) {
@@ -208,6 +210,7 @@ class LCG {
       hash = ((hash << 5) + hash) + str.charCodeAt(i);
       hash = hash & 0xffffffff;
     }
+
     return hash >>> 0;
   }
 
@@ -233,7 +236,7 @@ class GameEngine {
     this.offset = {
       x: (this.dimensions.width - MAX_CANVAS_WIDTH * this.scale) / 2,
       y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
-    }
+    };
 
     const seed = initGameData.seed || Date.now().toString(16);
     console.log("Seed:", seed);
@@ -272,7 +275,7 @@ class GameEngine {
     this.images = {};
     this.loadAssets();
 
-    this.boundHandlePointerDown = (e) => this.handlePointerDown(e);
+    this.boundHandlePointerDown = e => this.handlePointerDown(e);
 
     this.canvas.addEventListener("pointerdown", this.boundHandlePointerDown);
 
@@ -286,6 +289,7 @@ class GameEngine {
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout);
     }
+
     this.resizeTimeout = setTimeout(() => {
       this.isResizing = false;
       this.resizeTimeout = null;
@@ -311,7 +315,7 @@ class GameEngine {
     this.offset = {
       x: (this.dimensions.width - MAX_CANVAS_WIDTH * this.scale) / 2,
       y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
-    }
+    };
 
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = newWidth * dpr;
@@ -347,12 +351,13 @@ class GameEngine {
     if (this.isAnimatingCells || this.isResizing) {
       this.drawScene();
     }
+
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   stopGameLoop() {
     console.log("Stop GameLoop");
-    this.canvas.removeEventListener("pointerdown", (e) => this.boundHandlePointerDown(e));
+    this.canvas.removeEventListener("pointerdown", e => this.boundHandlePointerDown(e));
 
     if (this.gameLoopId) {
       console.log("gameLoopId cleared");
@@ -371,6 +376,7 @@ class GameEngine {
     if ((row === 0 || row === GRID_ROWS - 1) && (col === 0 || col === GRID_COLS - 1)) {
       return false;
     }
+
     return true;
   }
 
@@ -379,12 +385,13 @@ class GameEngine {
       const row = [];
       for (let c = 0; c < GRID_COLS; c++) {
         if (!this.isCellActive(r, c)) {
-          row.push({ type: 'disabled' });
+          row.push({ type: "disabled" });
         } else {
           const key = this.assetKeys[Math.floor(this.randomGenerator.random() * this.assetKeys.length)];
           row.push({ type: key });
         }
       }
+
       this.grid.push(row);
     }
   }
@@ -409,9 +416,11 @@ class GameEngine {
               matches[r][k] = true;
             }
           }
+
           count = 1;
         }
       }
+
       if (count >= 3) {
         for (let k = GRID_COLS - count; k < GRID_COLS; k++)
           matches[r][k] = true;
@@ -432,14 +441,17 @@ class GameEngine {
             for (let k = r - count; k < r; k++)
               matches[k][c] = true;
           }
+
           count = 1;
         }
       }
+
       if (count >= 3) {
         for (let k = GRID_ROWS - count; k < GRID_ROWS; k++)
           matches[k][c] = true;
       }
     }
+
     return matches;
   }
 
@@ -462,19 +474,21 @@ class GameEngine {
 
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (!this.grid[r][c] || this.grid[r][c].type === 'disabled') continue;
-        if (c < GRID_COLS - 1 && this.grid[r][c + 1] && this.grid[r][c + 1].type !== 'disabled') {
+        if (!this.grid[r][c] || this.grid[r][c].type === "disabled") continue;
+        if (c < GRID_COLS - 1 && this.grid[r][c + 1] && this.grid[r][c + 1].type !== "disabled") {
           if (trySwap(r, c, r, c + 1)) {
             return true;
           }
         }
-        if (r < GRID_ROWS - 1 && this.grid[r + 1][c] && this.grid[r + 1][c].type !== 'disabled') {
+
+        if (r < GRID_ROWS - 1 && this.grid[r + 1][c] && this.grid[r + 1][c].type !== "disabled") {
           if (trySwap(r, c, r + 1, c)) {
             return true;
           }
         }
       }
     }
+
     return false;
   }
 
@@ -524,7 +538,7 @@ class GameEngine {
       for (let r = GRID_ROWS - 1; r >= 0; r--)
         if (this.grid[r][c] === null)
           for (let k = r - 1; k >= 0; k--)
-            if (this.grid[k][c] !== null && this.grid[k][c].type !== 'disabled') {
+            if (this.grid[k][c] !== null && this.grid[k][c].type !== "disabled") {
               this.grid[r][c] = this.grid[k][c];
               this.grid[k][c] = null;
               break;
@@ -570,11 +584,11 @@ class GameEngine {
           }
         }
       }
-    }
+    };
 
     return new Promise(resolve => {
       let start = null;
-      const animate = (timestamp) => {
+      const animate = timestamp => {
         if (!start) start = timestamp;
         const elapsed = timestamp - start;
         const progress = Math.min(elapsed / duration, 1);
@@ -600,7 +614,7 @@ class GameEngine {
       for (let r = 0; r < GRID_ROWS; r++) {
         for (let c = 0; c < GRID_COLS; c++) {
           const cell = this.grid[r][c];
-          if (cell && cell.type !== 'disabled' && cell.fallOffset) {
+          if (cell && cell.type !== "disabled" && cell.fallOffset) {
             const startPos = this.getCoordinatesByCellPosition({ row: r, col: c });
             const endPos = { x: startPos.x, y: startPos.y + cell.fallOffset };
             cell.tempPos = {
@@ -610,7 +624,7 @@ class GameEngine {
           }
         }
       }
-    }
+    };
 
     const calculateFallOffsets = () => {
       for (let c = 0; c < GRID_COLS; c++) {
@@ -619,7 +633,7 @@ class GameEngine {
           const cell = this.grid[r][c];
           if (cell === null) {
             emptyCount++;
-          } else if (cell.type === 'disabled') {
+          } else if (cell.type === "disabled") {
             continue;
           } else if (emptyCount > 0) {
             cell.fallOffset = emptyCount * (CELL_HEIGHT + CELL_PADDING);
@@ -628,12 +642,12 @@ class GameEngine {
           }
         }
       }
-    }
+    };
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       calculateFallOffsets();
       let start = null;
-      const animate = (timestamp) => {
+      const animate = timestamp => {
         if (!start) start = timestamp;
         const elapsed = timestamp - start;
         const progress = Math.min(elapsed / duration, 1);
@@ -730,7 +744,7 @@ class GameEngine {
     const col = Math.floor(relX / ((CELL_WIDTH + CELL_PADDING) * this.scale));
     const row = Math.floor(relY / ((CELL_HEIGHT + CELL_PADDING) * this.scale));
 
-    if (!this.grid[row][col] || this.grid[row][col].type == 'disabled')
+    if (!this.grid[row][col] || this.grid[row][col].type == "disabled")
       return null;
 
     return { row, col };
@@ -741,15 +755,15 @@ class GameEngine {
       return {
         x: startPosA.x + (startPosB.x - startPosA.x) * progress,
         y: startPosA.y + (startPosB.y - startPosA.y) * progress,
-      }
-    }
+      };
+    };
 
     return new Promise(resolve => {
       const startCoordinateA = this.getCoordinatesByCellPosition(cellPos1);
       const startCoordinateB = this.getCoordinatesByCellPosition(cellPos2);
 
       let start = null;
-      const animate = (timestamp) => {
+      const animate = timestamp => {
         if (!start) start = timestamp;
         const elapsed = timestamp - start;
         const progress = Math.min(elapsed / duration, 1);
@@ -783,7 +797,7 @@ class GameEngine {
     const cellA = this.grid[cellPos1.row][cellPos1.col];
     const cellB = this.grid[cellPos2.row][cellPos2.col];
 
-    if (cellA.type == 'disabled' || cellB.type === 'disabled') return;
+    if (cellA.type == "disabled" || cellB.type === "disabled") return;
 
     this.animateSwap(cellPos1, cellPos2).then(() => {
       this.grid[cellPos1.row][cellPos1.col] = cellB;
@@ -802,6 +816,7 @@ class GameEngine {
         if (this.currentStepsCount >= this.stepsCount) {
           this.handleGameOver();
         }
+
         this.handleMatches();
       }
     });
@@ -835,6 +850,7 @@ class GameEngine {
           action = true;
         }
       }
+
       if (action)
         this.drawScene();
     }
@@ -850,12 +866,12 @@ class GameEngine {
     drawCard(this.ctx, highlightedTargetX, highlightedTargetY,
       HEADER_TARGET_CARD_WIDTH, HEADER_TARGET_CARD_HEIGHT, HEADER_TARGET_CARD_BORDER_RADIUS,
       STEPS_STROKE_COLOR, STEPS_BG_COLOR
-    )
+    );
 
     if (this.images[this.orderProduct]) {
       drawImageInCell(this.ctx, this.images[this.orderProduct],
         highlightedTargetX, highlightedTargetY,
-        HEADER_TARGET_CARD_IMAGE_WIDTH, HEADER_TARGET_CARD_IMAGE_HEIGHT, CELL_PADDING)
+        HEADER_TARGET_CARD_IMAGE_WIDTH, HEADER_TARGET_CARD_IMAGE_HEIGHT, CELL_PADDING);
     }
 
     this.ctx.fillStyle = HEADER_TARGET_COUNTER_BG_COLOR;
@@ -893,6 +909,7 @@ class GameEngine {
     if (this.images.lamBoy) {
       this.ctx.drawImage(this.images.lamBoy, LAMBOY_PADDING_LEFT, LAMBOY_PADDING_TOP, LAMBOY_WIDTH, LAMBOY_HEIGHT);
     }
+
     this.drawHighlightedTarget();
 
     this.ctx.restore();
@@ -918,18 +935,18 @@ class GameEngine {
     drawCard(this.ctx, stepsCardX, stepsCardY,
       STEPS_CARD_WIDTH, STEPS_CARD_HEIGHT, 12,
       STEPS_STROKE_COLOR, STEPS_BG_COLOR
-    )
+    );
 
     drawCard(this.ctx, targetCardX, targetCardY,
       TARGET_CARD_WIDTH, TARGET_CARD_HEIGHT, 12,
       TARGET_STROKE_COLOR, TARGET_BG_COLOR
-    )
+    );
 
     const orderProductImg = this.images[this.orderProduct];
     if (orderProductImg) {
       drawImageInCell(this.ctx, orderProductImg,
         targetCardX + 4, targetCardY + 7,
-        CELL_WIDTH * 6 / 7, CELL_HEIGHT * 6 / 7, CELL_PADDING)
+        CELL_WIDTH * 6 / 7, CELL_HEIGHT * 6 / 7, CELL_PADDING);
     }
 
     this.ctx.fillStyle = STEPS_TEXT_COLOR;
@@ -989,7 +1006,7 @@ class GameEngine {
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         const cell = this.grid[r][c];
-        if (!cell || !cell.type || cell.type === 'disabled') continue;
+        if (!cell || !cell.type || cell.type === "disabled") continue;
 
         this.drawCell(r, c);
       }
@@ -1065,7 +1082,7 @@ class GameEngine {
   }
 }
 
-function init(canvas, initGameData, tmp, finishCallback = (gameData) => { }) {
+function init(canvas, initGameData, tmp, finishCallback = gameData => { }) {
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
@@ -1079,4 +1096,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop && engine.stopGameLoop();
 }
 
-export { init, deinit };
+// export { init, deinit };
