@@ -1,4 +1,4 @@
-const __VERSION__ = "1.1C";
+const __VERSION__ = "2C";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -79,6 +79,8 @@ const CELL_WIDTH = 54.73;
 const CELL_HEIGHT = 54.73;
 const CELL_PADDING = 5;
 
+const NEW_CELL_START_Y = CELL_HEIGHT + CELL_PADDING;
+
 const loadImage = src =>
   new Promise(resolve => {
     const img = new Image();
@@ -90,20 +92,18 @@ const loadImage = src =>
     };
   });
 
-// const newFallingCellsEaseIn = t => 1 - Math.pow(1 - t, 1.5);
-// const fallingCellsEaseIn = t => 1 - Math.pow(1 - t, 1.5);
+const removingCellsEaseIn = t =>  1 - Math.cos((t * Math.PI) / 2);
 const fallingCellsEaseIn = t => {
-  const overshoot = 1.1; // Насколько ниже цель (1.0 — точно в цель, 1.1 — чуть ниже)
+  const overshoot = 1.1;
   if (t < 0.7) {
-    // 0..0.7 — падаем с ускорением до overshoot
     return (overshoot) * (t / 0.7);
   } else {
-    // 0.7..1.0 — возвращаемся обратно
     return overshoot - (overshoot - 1) * ((t - 0.7) / 0.3);
   }
 };
 
 const swapCellsEaseIn = t => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+// const swapCellsEaseIn = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
 const roundRect = (ctx, x, y, width, height, radius) => {
   ctx.beginPath();
@@ -223,24 +223,20 @@ class Cell {
     this.type = type;
     this.row = row;
     this.col = col;
+    this.isDeleted = false;
   }
 }
 
 // --- Grid: логика сетки ---
 class Grid {
-  constructor(rows, cols, assetKeys, randomFn) {
+  constructor(rows, cols, assetKeys, randomFn, cellActivityRule = (row, col, rows, cols) => true) {
     this.rows = rows;
     this.cols = cols;
     this.assetKeys = assetKeys;
     this.random = randomFn;
     this.cells = [];
+    this.isCellActive = (row, col) => cellActivityRule(row, col, rows, cols);
     this.initGridWithTurns();
-  }
-  
-  isCellActive(r, c) {
-    const border =
-      (r === 0 || r === this.rows - 1) && (c === 0 || c === this.cols - 1);
-    return !border;
   }
 
   #initGrid() {
@@ -248,10 +244,12 @@ class Grid {
     for (let r = 0; r < this.rows; r++) {
       const row = [];
       for (let c = 0; c < this.cols; c++) {
-        if (!this.isCellActive(r, c)) row.push(new Cell("disabled", r, c));
-        else {
-          const key =
-            this.assetKeys[Math.floor(this.random() * this.assetKeys.length)];
+        if (!this.isCellActive(r, c)) {
+          row.push(null);
+        } else {
+          const key = this.assetKeys[
+            Math.floor(this.random() * this.assetKeys.length)
+          ];
           row.push(new Cell(key, r, c));
         }
       }
@@ -261,78 +259,90 @@ class Grid {
   }
 
   getMatchedCells() {
-    const M = Array(this.rows)
-      .fill()
-      .map(() => Array(this.cols).fill(false));
+    const M = Array(this.rows).fill().map(() => Array(this.cols).fill(false));
+  
+    // горизонтали
     for (let r = 0; r < this.rows; r++) {
       let count = 1;
       for (let c = 1; c < this.cols; c++) {
-        const cur = this.cells[r][c],
-          prev = this.cells[r][c - 1];
-        if (cur && prev && cur.type === prev.type && cur.type !== "disabled")
+        const cur  = this.cells[r][c];
+        const prev = this.cells[r][c - 1];
+        if ( cur && prev
+          && !cur.isDeleted && !prev.isDeleted
+          && cur.type === prev.type
+        ) {
           count++;
-        else {
-          if (count >= 3) for (let k = c - count; k < c; k++) M[r][k] = true;
+        } else {
+          if (count >= 3) {
+            for (let k = c - count; k < c; k++) M[r][k] = true;
+          }
+
           count = 1;
         }
       }
 
-      if (count >= 3)
+      if (count >= 3) {
         for (let k = this.cols - count; k < this.cols; k++) M[r][k] = true;
+      }
     }
-
+  
+    // вертикали (по той же схеме)
     for (let c = 0; c < this.cols; c++) {
       let count = 1;
       for (let r = 1; r < this.rows; r++) {
-        const cur = this.cells[r][c],
-          prev = this.cells[r - 1][c];
-        if (cur && prev && cur.type === prev.type && cur.type !== "disabled")
+        const cur  = this.cells[r][c];
+        const prev = this.cells[r - 1][c];
+        if ( cur && prev
+          && !cur.isDeleted && !prev.isDeleted
+          && cur.type === prev.type
+        ) {
           count++;
-        else {
-          if (count >= 3) for (let k = r - count; k < r; k++) M[k][c] = true;
+        } else {
+          if (count >= 3) {
+            for (let k = r - count; k < r; k++) M[k][c] = true;
+          }
+
           count = 1;
         }
       }
 
-      if (count >= 3)
+      if (count >= 3) {
         for (let k = this.rows - count; k < this.rows; k++) M[k][c] = true;
+      }
     }
-
+  
     return M;
-  }
+  }  
 
   checkAvailableMoves() {
     const sw = (r1, c1, r2, c2) => {
-      const a = this.cells[r1][c1],
-        b = this.cells[r2][c2];
-      this.cells[r1][c1] = b;
-      this.cells[r2][c2] = a;
-      const has = this.getMatchedCells().some(r => r.some(x => x));
-      this.cells[r1][c1] = a;
-      this.cells[r2][c2] = b;
+      const a = this.cells[r1][c1], b = this.cells[r2][c2];
+      this.cells[r1][c1] = b; this.cells[r2][c2] = a;
+      const has = this.getMatchedCells().some(row => row.some(x => x));
+      this.cells[r1][c1] = a; this.cells[r2][c2] = b;
       return has;
     };
-
-    for (let r = 0; r < this.rows; r++)
+  
+    for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const cell = this.cells[r][c];
-        if (!cell || cell.type === "disabled") continue;
-        if (
-          c < this.cols - 1 &&
-          this.cells[r][c + 1] &&
-          this.cells[r][c + 1].type !== "disabled"
-        )
-          if (sw(r, c, r, c + 1)) return true;
-        if (
-          r < this.rows - 1 &&
-          this.cells[r + 1][c] &&
-          this.cells[r + 1][c].type !== "disabled"
-        )
-          if (sw(r, c, r + 1, c)) return true;
+        if (!cell || cell.isDeleted) continue;
+        // вправо
+        if (c < this.cols - 1) {
+          const n = this.cells[r][c+1];
+          if (n && !n.isDeleted && sw(r, c, r, c+1)) return true;
+        }
+
+        // вниз
+        if (r < this.rows - 1) {
+          const n = this.cells[r+1][c];
+          if (n && !n.isDeleted && sw(r, c, r+1, c)) return true;
+        }
       }
+    }
 
     return false;
-  }
+  }  
 
   // для тестирования
   initGridNoTurns() {
@@ -370,41 +380,56 @@ class Grid {
   }
 
   removeMatches(M) {
-    const rem = [];
-    for (let r = 0; r < this.rows; r++)
-      for (let c = 0; c < this.cols; c++)
-        if (M[r][c] && this.cells[r][c]) {
-          rem.push({ row: r, col: c, cell: this.cells[r][c] });
-          this.cells[r][c] = null;
+    const removed = [];
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        const cell = this.cells[r][c];
+        if (M[r][c] && cell && !cell.isDeleted) {
+          cell.isDeleted = true;
+          removed.push({ row: r, col: c, cell });
         }
+      }
+    }
 
-    return rem;
-  }
+    return removed;
+  }  
 
   dropCells() {
-    for (let c = 0; c < this.cols; c++)
-      for (let r = this.rows - 1; r >= 0; r--)
-        if (this.cells[r][c] === null) {
-          for (let k = r - 1; k >= 0; k--) {
-            const s = this.cells[k][c];
-            if (s && s.type !== "disabled") {
-              this.cells[r][c] = s;
-              this.cells[r][c].row = r;
-              this.cells[k][c] = null;
-              break;
-            }
-          }
+    for (let c = 0; c < this.cols; c++) {
+      let emptyCount = 0;
+      for (let r = this.rows - 1; r >= 0; r--) {
+        // если ячейка никогда не существует, сбрасываем счётчик
+        if (!this.isCellActive(r, c)) {
+          emptyCount = 0;
+          continue;
         }
+
+        const curr = this.cells[r][c];
+        if (!curr || curr.isDeleted) {
+        // пустая или удалённая - увеличиваем пустой счётчик
+          emptyCount++;
+        } else if (emptyCount > 0) {
+        // переносим cell вниз на emptyCount строк
+          this.cells[r + emptyCount][c] = curr;
+          curr.row = r + emptyCount;
+          this.cells[r][c] = null;
+        }
+      }
+    }
   }
 
   fillEmptyCells() {
-    for (let r = 0; r < this.rows; r++)
-      for (let c = 0; c < this.cols; c++)
-        if (this.cells[r][c] === null && this.isCellActive(r, c)) {
-          const key =
-            this.assetKeys[Math.floor(this.random() * this.assetKeys.length)];
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        const cell = this.cells[r][c];
+        if ((!cell || cell.isDeleted) && this.isCellActive(r, c)) {
+          const key = this.assetKeys[
+            Math.floor(this.random() * this.assetKeys.length)
+          ];
           this.cells[r][c] = new Cell(key, r, c);
         }
+      }
+    }
   }
 
   areAdjacent(a, b) {
@@ -417,7 +442,7 @@ class Grid {
       const key = this.assetKeys[Math.floor(this.random() * this.assetKeys.length)];
       const row = [];
       for (let c = 0; c < this.cols; c++) {
-        if (!this.isCellActive(r, c)) row.push(new Cell("disabled", r, c));
+        if (!this.isCellActive(r, c)) row.push(null);
         else {
           row.push(new Cell(key, r, c));
         }
@@ -433,7 +458,7 @@ class Grid {
       const key = this.assetKeys[Math.floor(this.random() * this.assetKeys.length)];
       const col = [];
       for (let r = 0; r < this.rows; r++) {
-        if (!this.isCellActive(r, c)) col.push(new Cell("disabled", r, c));
+        if (!this.isCellActive(r, c)) col.push(null);
         else {
           col.push(new Cell(key, r, c));
         }
@@ -776,17 +801,16 @@ class Renderer {
   }  
 
   drawGrid(grid, selectedPos) {
-    for (const row of grid.cells)
+    for (const row of grid.cells) {
       for (const cell of row) {
-        if (!cell || cell.type === "disabled") continue;
-        const sel =
-          selectedPos &&
-          cell.row === selectedPos.row &&
-          cell.col === selectedPos.col;
-
+        if (!cell || cell.isDeleted) continue;  // ← вместо проверки type==="disabled"
+        const sel = selectedPos
+          && cell.row === selectedPos.row
+          && cell.col === selectedPos.col;
         this.drawCell(cell, sel);
       }
-  }
+    }
+  }  
 
   drawScene(grid, state) {
     console.log("Scene is drawn");
@@ -835,14 +859,14 @@ class LCG {
 
 // --- GameEngine ---
 class GameEngine {
-  constructor(canvas, initData, tmp = {}) {
+  constructor(canvas, initGameData, tmp = {}) {
     tmp.engine = this;
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.tmp = tmp;
     this.assetKeys = Object.keys(ASSET_PATHS);
     
-    const seed = initData.seed || Date.now().toString(16);
+    const seed = initGameData.seed || Date.now().toString(16);
     this.randomGen = new LCG(seed);
     
     this.dimensions = { width: MAX_CANVAS_WIDTH, height: MAX_CANVAS_HEIGHT };
@@ -852,11 +876,11 @@ class GameEngine {
       y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
     };
 
-    this.trainingCount = +initData.trainingCount || 0;
+    this.trainingCount = +initGameData.trainingCount || 0;
     this.showTutorial = this.trainingCount < 3;
-    this.stepsCount = +initData.maxStepsCount || 20;
+    this.stepsCount = +initGameData.maxStepsCount || 1;
     this.currentStep = 0;
-    this.targetItemsCount = +initData.targetItemsCount || 20;
+    this.targetItemsCount = +initGameData.targetItemsCount || 20;
     this.score = 0;
     
     this.isGameOver = false;
@@ -867,6 +891,11 @@ class GameEngine {
       GRID_COLS,
       this.assetKeys,
       () => this.randomGen.random(),
+      (r, c, rows, cols) => {
+        const border =
+      (r === 0 || r === rows - 1) && (c === 0 || c === cols - 1);
+        return !border;
+      }
     );
     this.animMgr = new AnimationManager();
     this.renderer = new Renderer(this.ctx, {
@@ -884,14 +913,14 @@ class GameEngine {
     this.lastTime = performance.now();
     this.gameLoopId = null;
 
-    this.boundHandlePointerDown = e => {
-      this.handlePointerDown(e);
-    };
-
-    window.addEventListener("resize", () => {
+    this.boundResize = () => {
       this.resizeCanvas();
       this.requestRender();
-    });
+    };
+
+    this.boundHandlePointerDown = e => this.handlePointerDown(e);
+
+    window.addEventListener("resize", this.boundResize);
     canvas.addEventListener("pointerdown", this.boundHandlePointerDown);
     this.loadAssets();
     this.resizeCanvas();
@@ -922,7 +951,7 @@ class GameEngine {
       });
       this.needsRender = false;
       this.gameLoopId = requestAnimationFrame(this.gameLoop.bind(this));
-    } else{ 
+    } else { 
       console.log("Stop gameloop");
       this.gameLoopId = null;
     }
@@ -978,6 +1007,7 @@ class GameEngine {
         { cell: fromCell, from: a, to: b },
         { cell: toCell, from: b, to: a }
       ].forEach(({ cell, from, to }) => {
+        if (!cell || cell.isDeleted) return;
         const p0 = this.renderer.getCoords(from);
         const p1 = this.renderer.getCoords(to);
         cell._animX = p0.x + (p1.x - p0.x) * e;
@@ -987,13 +1017,18 @@ class GameEngine {
       // commit swap in model
       this.grid.cells[a.row][a.col] = toCell;
       this.grid.cells[b.row][b.col] = fromCell;
-      fromCell.row = b.row; fromCell.col = b.col;
-      toCell.row = a.row; toCell.col = a.col;
+      fromCell.row = b.row; 
+      fromCell.col = b.col;
+      toCell.row = a.row; 
+      toCell.col = a.col;
       // check for matches
       const hasMatch = this.grid.getMatchedCells().some(row => row.some(x => x));
       if (hasMatch) {
         // finalize
         this.currentStep++;
+        if (this.currentStep >= this.stepsCount)
+          this.handleGameOver();
+
         delete fromCell._animX; delete fromCell._animY;
         delete toCell._animX; delete toCell._animY;
         this.requestRender();
@@ -1006,6 +1041,7 @@ class GameEngine {
             { cell: fromCell, from: b, to: a },
             { cell: toCell, from: a, to: b }
           ].forEach(({ cell, from, to }) => {
+            if (!cell || cell.isDeleted) return;
             const p0 = this.renderer.getCoords(from);
             const p1 = this.renderer.getCoords(to);
             cell._animX = p0.x + (p1.x - p0.x) * e2;
@@ -1026,19 +1062,15 @@ class GameEngine {
     this.requestRender();
   }
 
-  handlePointerDown(e) {
-    const pos = this.getCellGridPosition(e);
-
-    if (!pos || this.animMgr.isAnimating()) return;
-
+  onCellClicked(cellPosition) {
     if (!this.selectedCell){
-      this.selectedCell = pos;
+      this.selectedCell = cellPosition;
     } else if (
-      this.selectedCell.row === pos.row &&
-      this.selectedCell.col === pos.col
+      this.selectedCell.row === cellPosition.row &&
+      this.selectedCell.col === cellPosition.col
     )
       this.selectedCell = null;
-    else this.secondCell = pos;
+    else this.secondCell = cellPosition;
     if (
       this.selectedCell &&
       this.secondCell &&
@@ -1052,30 +1084,38 @@ class GameEngine {
     this.requestRender();
   }
 
-  animRemoveMatches(matchedPositions, duration = 300) {
-    const items = matchedPositions.map(pos => {
-      const cell = this.grid.cells[pos.row][pos.col];
-      return cell;
-    });
+  handlePointerDown(e) {
+    const pos = this.getCellGridPosition(e);
+
+    if (!pos || this.animMgr.isAnimating()) return;
+
+    this.onCellClicked(pos);
+  }
+
+  animRemoveMatches(matchedPositions, duration = 250) {
+    const items = matchedPositions
+      .map(({ row, col }) => this.grid.cells[row][col])
+      .filter(cell => cell && !cell.isDeleted);
     
     this.animMgr.add(new MyAnimation(
       performance.now(),
       duration,
       t => {
       // можно использовать любую easing‑функцию, здесь линейно:
-        const p = t;
+        const p = removingCellsEaseIn(t);
         items.forEach(cell => {
           cell._removalProgress = p;
         });
         this.requestRender();
       },
       () => {
+        // По завершении флагуем удаление в модели и убираем анимационные поля
         items.forEach(cell => {
-          this.grid.cells[cell.row][cell.col] = null;
+          cell.isDeleted = true;
           delete cell._removalProgress;
         });
         this.requestRender();
-
+        // И сразу запускаем падение/появление новых
         this.animDrop();
       }
     ));
@@ -1083,11 +1123,12 @@ class GameEngine {
     this.requestRender();
   }
 
+  // TODO добавить обновление сетки, если нет возможных ходов
   handleMatches() {
     const matched = this.grid.getMatchedCells();
     const positions = [];
-    for (let r = 0; r < GRID_ROWS; r++) {
-      for (let c = 0; c < GRID_COLS; c++) {
+    for (let r = 0; r < this.grid.rows; r++) {
+      for (let c = 0; c < this.grid.cols; c++) {
         if (matched[r][c]) 
           positions.push({ row: r, col: c });
       }
@@ -1102,74 +1143,83 @@ class GameEngine {
     }).length;
     this.score += correctCount;
 
-    this.animRemoveMatches(positions);
+    // this.animRemoveMatches(positions);
   }
 
-  animDrop(oldDuration = 300, newDuration = 300) {
-    // собираем старые падающие и считаем число удалённых клеток в каждом столбце
-    const oldItems = [];
-    const deletedCounts = Array(GRID_COLS).fill(0);
-  
-    for (let c = 0; c < GRID_COLS; c++) {
+  animDrop(oldDuration = 250, newDuration = 250) {
+    const dropItems = [];
+    for (let c = 0; c < this.grid.cols; c++) {
       let emptyCount = 0;
-      for (let r = GRID_ROWS - 1; r >= 0; r--) {
+      for (let r = this.grid.rows - 1; r >= 0; r--) {
+        if (!this.grid.isCellActive(r, c)) {
+          emptyCount = 0;
+          continue;
+        }
+
         const cell = this.grid.cells[r][c];
-        if (!cell) {
+        if (!cell || cell.isDeleted) {
           emptyCount++;
         } else if (emptyCount > 0) {
-          oldItems.push({ cell, from: { row: r, col: c }, to: { row: r + emptyCount, col: c } });
+          dropItems.push({
+            cell,
+            from: { row: r,       col: c },
+            to:   { row: r + emptyCount, col: c }
+          });
         }
       }
-
-      deletedCounts[c] = emptyCount;
     }
-  
-    // анимация падения старых клеток
+
     this.animMgr.add(new MyAnimation(
       performance.now(),
       oldDuration,
       t => {
         const e = fallingCellsEaseIn(t);
-        oldItems.forEach(({ cell, from, to }) => {
+        dropItems.forEach(({ cell, from, to }) => {
+          if (cell.isDeleted) return;
           const p0 = this.renderer.getCoords(from);
           const p1 = this.renderer.getCoords(to);
           cell._animX = p0.x + (p1.x - p0.x) * e;
           cell._animY = p0.y + (p1.y - p0.y) * e;
         });
+        this.requestRender();
       },
       () => {
         this.grid.dropCells();
-        this.grid.fillEmptyCells();
-  
-        // готовим анимацию для новых клеток, используя deletedCounts
-        const newItems = [];
-        for (let c = 0; c < GRID_COLS; c++) {
-          const del = deletedCounts[c];
-          if (del > 0) {
-            for (let r = 0; r < del; r++) {
-              const cell = this.grid.cells[r][c];
-              if (cell){
-                const to = this.renderer.getCoords({ row: r, col: c });
-                // старт сверху на del строк выше
-                const from = { x: to.x, y: to.y - del * (CELL_HEIGHT + CELL_PADDING) };
-                cell._animX = from.x;
-                cell._animY = from.y;
-                newItems.push({ cell, from, to });
-              }
+
+        const emptyPos = [];
+        for (let r = 0; r < this.grid.rows; r++) {
+          for (let c = 0; c < this.grid.cols; c++) {
+            if ( this.grid.isCellActive(r, c)
+            && (!this.grid.cells[r][c] || this.grid.cells[r][c].isDeleted)
+            ) {
+              emptyPos.push({ row: r, col: c });
             }
           }
         }
-  
-        // анимация падения новых клеток
+
+        this.grid.fillEmptyCells();
+
+        const newItems = emptyPos.map(pos => {
+          const cell = this.grid.cells[pos.row][pos.col];
+          const to   = this.renderer.getCoords(pos);
+          const from = { x: to.x, y: to.y - NEW_CELL_START_Y };
+          // сразу рисовать их сверху
+          cell._animX = from.x;
+          cell._animY = from.y;
+          return { cell, from, to };
+        });
+
         this.animMgr.add(new MyAnimation(
           performance.now(),
           newDuration,
           t2 => {
             const e2 = fallingCellsEaseIn(t2);
             newItems.forEach(({ cell, from, to }) => {
+              if (cell.isDeleted) return;
               cell._animX = from.x + (to.x - from.x) * e2;
               cell._animY = from.y + (to.y - from.y) * e2;
             });
+            this.requestRender();
           },
           () => {
             newItems.forEach(({ cell }) => {
@@ -1182,7 +1232,7 @@ class GameEngine {
         ));
       }
     ));
-  
+
     this.requestRender();
   }
 
@@ -1196,9 +1246,9 @@ class GameEngine {
     const cellHeight = (CELL_HEIGHT + CELL_PADDING) * this.scale;
     const col = Math.floor((x - gridStartX) / cellWidth);
     const row = Math.floor((y - gridStartY) / cellHeight);
-    if (row < 0 || col < 0 || row >= GRID_ROWS || col >= GRID_COLS) return null;
+    if (row < 0 || col < 0 || row >= this.grid.rows || col >= this.grid.cols) return null;
     const cell = this.grid.cells[row][col];
-    if (!cell || cell.type === "disabled") return null;
+    if (!cell || cell.isDeleted) return null;
 
     return { row, col };
   }
@@ -1208,16 +1258,13 @@ class GameEngine {
   }
 
   handleGameOver() {
+    console.log("GameOver!");
     this.isGameOver = true;
     if (this.finishCb)
-      this.finishCb({ score: this.score, steps: this.currentStep });
+      this.finishCb({ score: this.score, currentStep: this.currentStep });
 
-    window.removeEventListener("resize", () => {
-      this.resizeCanvas();
-      this.requestRender();
-    });
-
-    this.canvas.addEventListener("pointerdown", this.boundHandlePointerDown);
+    window.removeEventListener("resize", this.boundResize);
+    this.canvas.removeEventListener("pointerdown", this.boundHandlePointerDown);
   }
 }
 
