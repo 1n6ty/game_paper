@@ -1,7 +1,7 @@
 const __VERSION__ = "1.1C";
 
-const PATH = "./assets/match3/";
-// const PATH = "/media/assets/match3/";
+// const PATH = "./assets/match3/";
+const PATH = "/media/assets/match3/";
 
 const ASSET_PATHS = {
   smetanaGlass: `${PATH}smetana_glass.svg`,
@@ -1235,4 +1235,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop && engine.stopGameLoop();
 }
 
-// export { init, deinit };
+export { init, deinit };
