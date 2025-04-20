@@ -1,4 +1,4 @@
-const __VERSION__ = "2.1";
+const __VERSION__ = "2.2";
 
 // const PATH = "./assets/memory/";
 const PATH = "/media/assets/memory/";
@@ -16,12 +16,14 @@ const CARD_PATHS = {
   milkGlass: `${PATH}cards/milkGlass.svg`,
   yogurtChocolate: `${PATH}cards/yogurtChocolate.svg`,
   yogurtPink: `${PATH}cards/yogurtPink.svg`
-}
+};
 
 const bushesUrl = `${PATH}bushes.svg`;
 const groundUrl = `${PATH}ground.svg`;
 
-const BACK_COOLDOWN = 900;
+const START_DELAY = 5000;  // милисекунды
+
+const BACK_COOLDOWN = 900;  // милисекунды
 
 const GRID_ROWS = 5;
 const GRID_COLS = 5;
@@ -63,12 +65,12 @@ const BOTTOM_GROUND_BG_COLOR = "#996A4D";
 const BOTTOM_GROUND_HEIGHT = 67;
 
 
-const loadImage = (src) =>
-  new Promise((resolve) => {
+const loadImage = src =>
+  new Promise(resolve => {
     const img = new Image();
     img.src = src;
     img.onload = () => resolve(img);
-    img.onerror = (e) => {
+    img.onerror = e => {
       console.error("Failed to load image:", src, e);
       resolve(null);
     };
@@ -88,6 +90,7 @@ class LCG {
       hash = ((hash << 5) + hash) + str.charCodeAt(i);
       hash = hash & 0xffffffff;
     }
+
     return hash >>> 0;
   }
 
@@ -113,7 +116,7 @@ class GameEngine {
     this.offset = {
       x: (this.dimensions.width - MAX_CANVAS_WIDTH * this.scale) / 2,
       y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
-    }
+    };
 
     const seed = initGameData.seed || Date.now().toString(16);
     console.log("Seed:", seed);
@@ -150,7 +153,7 @@ class GameEngine {
     this.images = {};
     this.loadAssets();
 
-    this.boundHandlePointerDown = (e) => this.handlePointerDown(e);
+    this.boundHandlePointerDown = e => this.handlePointerDown(e);
 
     this.canvas.addEventListener("pointerdown", this.boundHandlePointerDown);
   }
@@ -162,6 +165,7 @@ class GameEngine {
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout);
     }
+
     this.resizeTimeout = setTimeout(() => {
       this.isResizing = false;
       this.resizeTimeout = null;
@@ -169,6 +173,13 @@ class GameEngine {
   }
 
   onAssetsLoaded() {
+    this.showGridCells(true).then(() => {
+      const timer = setInterval(() => {
+        this.showGridCells(false);
+        this.drawScene();
+        clearInterval(timer);
+      }, START_DELAY);
+    });
     this.drawScene();
     this.startGameLoop();
   }
@@ -187,7 +198,7 @@ class GameEngine {
     this.offset = {
       x: (this.dimensions.width - MAX_CANVAS_WIDTH * this.scale) / 2,
       y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
-    }
+    };
 
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = newWidth * dpr;
@@ -224,12 +235,13 @@ class GameEngine {
     if (this.isAnimatingCells || this.isResizing) {
       this.drawScene();
     }
+
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
 
   stopGameLoop() {
     console.log("Stop GameLoop");
-    this.canvas.removeEventListener("pointerdown", (e) => this.boundHandlePointerDown(e));
+    this.canvas.removeEventListener("pointerdown", e => this.boundHandlePointerDown(e));
 
     if (this.gameLoopId) {
       console.log("gameLoopId cleared");
@@ -248,6 +260,7 @@ class GameEngine {
       console.log(row, col);
       return false;
     }
+
     return true;
   }
 
@@ -263,44 +276,40 @@ class GameEngine {
           activeCells.push({ r, c });
         }
       }
+
       this.grid.push(row);
     }
 
-    let numActive = activeCells.length;
-    let cellsForPairs = Math.min(numActive, 24);
-    if (cellsForPairs % 2 !== 0) {
-      cellsForPairs--;
-    }
+    const numActive = activeCells.length;
+    const maxPairsByCells = Math.floor(numActive / 2);
+    const maxPairsByKeys = this.assetKeys.length;
+    const numPairs = Math.min(12, maxPairsByCells, maxPairsByKeys);
+    const cellsForPairs = numPairs * 2;
 
-    const shuffleArray = (array) => {
-      for (let i = array.length - 1; i > 0; i--) {
+    const shuffle = arr => {
+      for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(this.randomGenerator.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        [arr[i], arr[j]] = [arr[j], arr[i]];
       }
-      return array;
+
+      return arr;
     };
 
-    const shuffledCells = shuffleArray(activeCells.slice());
-    const selectedCells = shuffledCells.slice(0, cellsForPairs);
-    const numPairs = cellsForPairs / 2;
+    const selectedCells = shuffle(activeCells.slice()).slice(0, cellsForPairs);
 
-    const pairValues = [];
-    for (let i = 0; i < numPairs; i++) {
-      const key = this.assetKeys[Math.floor(this.randomGenerator.random() * this.assetKeys.length)];
-      pairValues.push(key, key);
-    }
+    const uniqueKeys = shuffle(this.assetKeys.slice()).slice(0, numPairs);
 
-    const shuffledPairValues = shuffleArray(pairValues);
+    const pairValues = uniqueKeys.flatMap(key => [key, key]);
+    const shuffledPairValues = shuffle(pairValues);
 
     for (let i = 0; i < selectedCells.length; i++) {
       const { r, c } = selectedCells[i];
-      this.grid[r][c] = { type: shuffledPairValues[i] };
+      this.grid[r][c] = { type: shuffledPairValues[i], state: "closed" };
     }
 
-    for (let cell of activeCells) {
-      const { r, c } = cell;
+    for (let { r, c } of activeCells) {
       if (this.grid[r][c] === null) {
-        this.grid[r][c] = { type: 'disabled' };
+        this.grid[r][c] = { type: "disabled", state: "closed" };
       }
     }
   }
@@ -310,6 +319,20 @@ class GameEngine {
       x: GRID_PADDING_LEFT + pos.col * (CELL_WIDTH + CELL_PADDING),
       y: GRID_PADDING_TOP + pos.row * (CELL_HEIGHT + CELL_PADDING)
     };
+  }
+
+  showGridCells(isShown) {
+    return new Promise(resolve => {
+      for (let r = 0; r < GRID_ROWS; r++) {
+        for (let c = 0; c < GRID_COLS; c++) {
+          const cell = this.grid[r][c];
+          if (cell)
+            cell.state = isShown ? "opened" : "closed";
+        }
+      }
+
+      resolve();
+    });
   }
 
   getGridPosition(e) {
@@ -335,7 +358,7 @@ class GameEngine {
     const col = Math.floor(relX / ((CELL_WIDTH + CELL_PADDING) * this.scale));
     const row = Math.floor(relY / ((CELL_HEIGHT + CELL_PADDING) * this.scale));
 
-    if (this.grid[row][col].type == 'disabled')
+    if (this.grid[row][col] && this.grid[row][col].type === "disabled")
       return null;
 
     return { row, col };
@@ -349,13 +372,13 @@ class GameEngine {
 
       if (!cell1 || !cell2) return;
       this.currentStepsCount++;
-      if (this.currentStepsCount == this.maxStepsCount) {
+      if (this.currentStepsCount === this.maxStepsCount) {
         this.handleGameOver();
       }
 
       if (cell1.type === cell2.type) {
-        cell1.state = 'opened';
-        cell2.state = 'opened';
+        cell1.state = "opened";
+        cell2.state = "opened";
         this.selectedCell = null;
         this.secondSelectedCell = null;
         this.score++;
@@ -384,7 +407,7 @@ class GameEngine {
 
     if (cellPosition && this.canDrag) {
       const cell = this.grid[cellPosition.row][cellPosition.col];
-      if (!cell || cell.state === 'opened') return;
+      if (!cell || cell.state === "opened") return;
 
       if (this.selectedCell === null) { // нажатие первое
         this.selectedCell = cellPosition;
@@ -458,7 +481,7 @@ class GameEngine {
     this.drawCard(stepsCardX, stepsCardY,
       STEPS_CARD_WIDTH, STEPS_CARD_HEIGHT, 12,
       STEPS_STROKE_COLOR, STEPS_BG_COLOR
-    )
+    );
 
     this.ctx.fillStyle = STEPS_TEXT_COLOR;
     this.ctx.font = "500 24px/0.15px Roboto Mono";
@@ -526,7 +549,7 @@ class GameEngine {
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         const cell = this.grid[r][c];
-        if (!cell || !cell.type || cell.type === 'disabled') continue;
+        if (!cell || !cell.type || cell.type === "disabled") continue;
 
         const pos = this.getCellCoordinates({ col: c, row: r });
 
@@ -534,7 +557,7 @@ class GameEngine {
 
         if ((this.selectedCell && this.selectedCell.col === c && this.selectedCell.row === r) ||
           (this.secondSelectedCell && this.secondSelectedCell.col === c && this.secondSelectedCell.row === r) ||
-          cell.state === 'opened'
+          cell.state === "opened"
         ) {
           const image = this.images[cell.type];
           this.drawCard(posX, posY, CELL_WIDTH, CELL_HEIGHT, CELL_CARD_RADIUS, STEPS_STROKE_COLOR, STEPS_BG_COLOR);
@@ -610,7 +633,7 @@ class GameEngine {
   }
 }
 
-function init(canvas, initGameData, tmp, finishFunc = (gameData) => { }) {
+function init(canvas, initGameData, tmp, finishFunc = gameData => { }) {
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
