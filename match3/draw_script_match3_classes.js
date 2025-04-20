@@ -1,7 +1,7 @@
-const __VERSION__ = "1C";
+const __VERSION__ = "1.1C";
 
-// const PATH = "./assets/match3/";
-const PATH = "/media/assets/match3/";
+const PATH = "./assets/match3/";
+// const PATH = "/media/assets/match3/";
 
 const ASSET_PATHS = {
   smetanaGlass: `${PATH}smetana_glass.svg`,
@@ -409,6 +409,38 @@ class Grid {
 
   areAdjacent(a, b) {
     return Math.abs(a.row - b.row) + Math.abs(a.col - b.col) === 1;
+  }
+
+  fillUniformRows() {
+    this.cells = [];
+    for (let r = 0; r < this.rows; r++) {
+      const key = this.assetKeys[Math.floor(this.random() * this.assetKeys.length)];
+      const row = [];
+      for (let c = 0; c < this.cols; c++) {
+        if (!this.isCellActive(r, c)) row.push(new Cell("disabled", r, c));
+        else {
+          row.push(new Cell(key, r, c));
+        }
+      }
+
+      this.cells.push(row);
+    }
+  }
+
+  fillUniformCols() {
+    this.cells = [];
+    for (let c = 0; c < this.cols; c++) {
+      const key = this.assetKeys[Math.floor(this.random() * this.assetKeys.length)];
+      const col = [];
+      for (let r = 0; r < this.rows; r++) {
+        if (!this.isCellActive(r, c)) col.push(new Cell("disabled", r, c));
+        else {
+          col.push(new Cell(key, r, c));
+        }
+      }
+
+      this.cells.push(col);
+    }
   }
 }
 
@@ -1020,9 +1052,6 @@ class GameEngine {
     this.requestRender();
   }
 
-  /**
- * Убирает ячейки matchedPositions = [{row, col}, ...] с анимацией shrink+fade.
- */
   animRemoveMatches(matchedPositions, duration = 300) {
     const items = matchedPositions.map(pos => {
       const cell = this.grid.cells[pos.row][pos.col];
@@ -1076,8 +1105,11 @@ class GameEngine {
     this.animRemoveMatches(positions);
   }
 
-  animDrop(oldDuration = 250, newDuration = 200) {
+  animDrop(oldDuration = 300, newDuration = 300) {
+    // собираем старые падающие и считаем число удалённых клеток в каждом столбце
     const oldItems = [];
+    const deletedCounts = Array(GRID_COLS).fill(0);
+  
     for (let c = 0; c < GRID_COLS; c++) {
       let emptyCount = 0;
       for (let r = GRID_ROWS - 1; r >= 0; r--) {
@@ -1085,15 +1117,14 @@ class GameEngine {
         if (!cell) {
           emptyCount++;
         } else if (emptyCount > 0) {
-          oldItems.push({
-            cell,
-            from: { row: r,       col: c },
-            to:   { row: r + emptyCount, col: c }
-          });
+          oldItems.push({ cell, from: { row: r, col: c }, to: { row: r + emptyCount, col: c } });
         }
       }
+
+      deletedCounts[c] = emptyCount;
     }
   
+    // анимация падения старых клеток
     this.animMgr.add(new MyAnimation(
       performance.now(),
       oldDuration,
@@ -1108,30 +1139,28 @@ class GameEngine {
       },
       () => {
         this.grid.dropCells();
+        this.grid.fillEmptyCells();
   
-        const emptyPositions = [];
-        for (let r = 0; r < GRID_ROWS; r++) {
-          for (let c = 0; c < GRID_COLS; c++) {
-            if (!this.grid.cells[r][c]) {
-              emptyPositions.push({ row: r, col: c });
+        // готовим анимацию для новых клеток, используя deletedCounts
+        const newItems = [];
+        for (let c = 0; c < GRID_COLS; c++) {
+          const del = deletedCounts[c];
+          if (del > 0) {
+            for (let r = 0; r < del; r++) {
+              const cell = this.grid.cells[r][c];
+              if (cell){
+                const to = this.renderer.getCoords({ row: r, col: c });
+                // старт сверху на del строк выше
+                const from = { x: to.x, y: to.y - del * (CELL_HEIGHT + CELL_PADDING) };
+                cell._animX = from.x;
+                cell._animY = from.y;
+                newItems.push({ cell, from, to });
+              }
             }
           }
         }
   
-        this.grid.fillEmptyCells();
-  
-        const newItems = emptyPositions.map(pos => {
-          const to = this.renderer.getCoords(pos);
-          const from = { x: to.x, y: to.y - (GRID_PADDING_TOP - GRID_ZONE_PADDING_TOP) };
-          const cell = this.grid.cells[pos.row][pos.col];
-          return { cell, from, to };
-        });
-  
-        newItems.forEach(({ cell, from }) => {
-          cell._animX = from.x;
-          cell._animY = from.y;
-        });
-  
+        // анимация падения новых клеток
         this.animMgr.add(new MyAnimation(
           performance.now(),
           newDuration,
@@ -1206,4 +1235,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop && engine.stopGameLoop();
 }
 
-export { init, deinit };
+// export { init, deinit };
