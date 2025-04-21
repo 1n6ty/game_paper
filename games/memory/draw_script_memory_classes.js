@@ -1,4 +1,4 @@
-const __VERSION__ = "1.1C";
+const __VERSION__ = "2C";
 
 // const PATH = "./assets/memory/";
 const PATH = "/media/assets/memory/";
@@ -23,13 +23,25 @@ const groundUrl = `${PATH}ground.svg`;
 
 const START_DELAY = 5000;  // милисекунды
 
-const BACK_COOLDOWN = 800;  // милисекунды
+const BACK_COOLDOWN = 700;  // милисекунды
 
-const animDuration = {
-  open: 400,
-  close: 400,
+// милисекунды
+const animDurations = {
+  open: 300,
+  close: 300,
   mismatch: 400,
-  match: 500
+  match: 400
+};
+
+const animMatchFeedbackConsts = {
+  shrink: 0.9
+};
+
+const animMismatchFeedbackConsts = {
+  shrink: 0.95, 
+  shakeDur: 300,  // милисекунды
+  shakeCount: 2, 
+  amplitute: 3
 };
 
 const GRID_ROWS = 5;
@@ -329,30 +341,33 @@ class Renderer {
   drawCell(cell) {
     const { x, y } = this.getCoords(cell);
     this.ctx.save();
-    this.ctx.translate(x, y);
+  
+    const shake = cell._shake || 0;
+    const fbScale = cell._scale || 1;
+    this.ctx.translate(x + shake, y);
+
+    // масштабируем вокруг центра
+    this.ctx.translate(CELL_WIDTH/2, CELL_HEIGHT/2);
+    this.ctx.scale(fbScale, fbScale);
+    this.ctx.translate(-CELL_WIDTH/2, -CELL_HEIGHT/2);
   
     const flip = cell._flipProgress;
     if (flip != null) {
       const scaleX = flip <= 0.5
         ? (1 - flip * 2)
         : ((flip - 0.5) * 2);
-  
-      this.ctx.translate(CELL_WIDTH / 2, CELL_HEIGHT / 2);
+      this.ctx.translate(CELL_WIDTH/2, CELL_HEIGHT/2);
       this.ctx.scale(scaleX, 1);
-      this.ctx.translate(-CELL_WIDTH / 2, -CELL_HEIGHT / 2);
+      this.ctx.translate(-CELL_WIDTH/2, -CELL_HEIGHT/2);
     }
   
     if (cell._removalProgress != null) {
       this.ctx.globalAlpha = 1 - cell._removalProgress;
     }
-
-    let showFace;
-    if (flip != null) {
-      showFace = flip > 0.5;
-    } else {
-      showFace = cell.isOpened;
-    }
   
+    const showFace = flip != null
+      ? (flip > 0.5)
+      : cell.isOpened;
     if (showFace) {
       drawCard(this.ctx, 0, 0,
         CELL_WIDTH, CELL_HEIGHT,
@@ -360,26 +375,18 @@ class Renderer {
         STEPS_STROKE_COLOR, STEPS_BG_COLOR);
       const img = this.images[cell.type];
       if (img) {
-        drawImageInCell(
-          this.ctx, img,
-          0, 0,
-          CELL_WIDTH, CELL_HEIGHT,
-          CELL_PADDING
-        );
+        drawImageInCell(this.ctx, img,
+          0, 0, CELL_WIDTH, CELL_HEIGHT, CELL_PADDING);
       }
     } else {
       if (this.images.ground) {
-        this.ctx.drawImage(
-          this.images.ground,
-          0, 0,
-          CELL_WIDTH, CELL_HEIGHT
-        );
+        this.ctx.drawImage(this.images.ground,
+          0, 0, CELL_WIDTH, CELL_HEIGHT);
       }
     }
   
     this.ctx.restore();
   }
-  
 
   drawGrid(grid) {
     for (const row of grid.cells) {
@@ -579,7 +586,7 @@ class GameEngine {
     this.grid.cells.flat().forEach(cell => { if (cell) cell.isOpened = true; });
     this.requestRender();
     setTimeout(() => {
-      this.grid.cells.flat().forEach(cell => { if (cell) this.animClose(cell, animDuration.close); });
+      this.grid.cells.flat().forEach(cell => { if (cell) this.animClose(cell, animDurations.close); });
       this.canDrag = true;
       this.requestRender();
     }, START_DELAY);
@@ -680,6 +687,43 @@ class GameEngine {
     });
   }
 
+  animMatchFeedback(positions, duration, shrink) {
+    this.canDrag = false;
+    return new Promise(resolve => {
+      const cells = positions.map(p => this.grid.cells[p.row][p.col]);
+
+      // shrink
+      this.animMgr.add(new MyAnimation(
+        performance.now(), duration,
+        t => {
+          const s = 1 - (1 - shrink) * t;
+          cells.forEach(c => c._scale = s);
+          this.requestRender();
+        },
+        () => {
+          // restore
+          this.animMgr.add(new MyAnimation(
+            performance.now(), duration,
+            t => {
+              const s = shrink + (1 - shrink) * t;
+              cells.forEach(c => c._scale = s);
+              this.requestRender();
+            },
+            () => {
+              cells.forEach(c => { 
+                delete c._scale; 
+                c.isOpened = true;
+              });
+              this.canDrag = true;
+              this.requestRender();
+              resolve();
+            }
+          ));
+        }
+      ));
+    });
+  }
+
   animMismatch(positions, duration, delay) {
     this.canDrag = false;
     return new Promise(resolve => {
@@ -699,18 +743,62 @@ class GameEngine {
     });
   }
 
+  animMismatchFeedback(positions, duration, delay, shrink, shakeDur, shakeCount, amplitute) {
+    this.canDrag = false;
+    const cells = positions.map(p => this.grid.cells[p.row][p.col]);
+
+    // shrink
+    this.animMgr.add(new MyAnimation(
+      performance.now(), duration,
+      t => {
+        const s = 1 - (1 - shrink) * t;
+        cells.forEach(c => c._scale = s);
+        this.requestRender();
+      },
+      () => {
+        // shake
+        this.animMgr.add(new MyAnimation(
+          performance.now(), shakeDur,
+          t => {
+            const off = Math.sin(t * shakeCount * Math.PI) * amplitute;
+            cells.forEach(c => c._shake = off);
+            this.requestRender();
+          },
+          () => {
+            // restore
+            this.animMgr.add(new MyAnimation(
+              performance.now(), duration,
+              t => {
+                const s = shrink + (1 - shrink) * t;
+                cells.forEach(c => {
+                  c._scale = s;
+                  c._shake = 0;
+                });
+                this.requestRender();
+              },
+              () => {
+                // close
+                this.animMismatch(positions, duration, delay);
+              }
+            ));
+          }
+        ));
+      }
+    ));
+  }
+
   async onCellClicked(cellPosition) {
     if (!cellPosition) return;
 
     if (!this.selectedCell) {
       this.selectedCell = cellPosition;
-      await this.animOpen(cellPosition, animDuration.open);
+      await this.animOpen(cellPosition, animDurations.open);
       this.canDrag = true;
     } else if (this.selectedCell.row === cellPosition.row && this.selectedCell.col === cellPosition.col) {
       // pass
     } else if (!this.secondCell) {
       this.secondCell = cellPosition;
-      await this.animOpen(cellPosition, animDuration.open);
+      await this.animOpen(cellPosition, animDurations.open);
       await this.handleMatches();
     }
   }
@@ -729,9 +817,18 @@ class GameEngine {
     
     if (c1.type === c2.type) {
       this.score++;
-      animPromise = this.animMatchRemove([p1, p2], animDuration.match);
+      animPromise = this.animMatchFeedback([p1, p2], 
+        animDurations.match,
+        animMatchFeedbackConsts.shrink
+      );
     } else {
-      animPromise = this.animMismatch([p1, p2], animDuration.mismatch, BACK_COOLDOWN);
+      animPromise = this.animMismatchFeedback([p1, p2], 
+        animDurations.mismatch, 
+        BACK_COOLDOWN,
+        animMismatchFeedbackConsts.shrink,
+        animMismatchFeedbackConsts.shakeDur, 
+        animMismatchFeedbackConsts.shakeCount, 
+        animMismatchFeedbackConsts.amplitute);
     }
     
     this.selectedCell = null;
