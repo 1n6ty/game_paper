@@ -1,4 +1,4 @@
-const __VERSION__ = "2C";
+const __VERSION__ = "2.2C";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -878,9 +878,9 @@ class GameEngine {
 
     this.trainingCount = +initGameData.trainingCount || 0;
     this.showTutorial = this.trainingCount < 3;
-    this.stepsCount = +initGameData.maxStepsCount || 1;
+    this.stepsCount = +initGameData.maxStepsCount || 20;
     this.currentStep = 0;
-    this.targetItemsCount = +initGameData.targetItemsCount || 20;
+    this.targetItemsCount = +initGameData.targetItemsCount || 1;
     this.score = 0;
     
     this.isGameOver = false;
@@ -1101,7 +1101,6 @@ class GameEngine {
       performance.now(),
       duration,
       t => {
-      // можно использовать любую easing‑функцию, здесь линейно:
         const p = removingCellsEaseIn(t);
         items.forEach(cell => {
           cell._removalProgress = p;
@@ -1109,13 +1108,11 @@ class GameEngine {
         this.requestRender();
       },
       () => {
-        // По завершении флагуем удаление в модели и убираем анимационные поля
         items.forEach(cell => {
           cell.isDeleted = true;
           delete cell._removalProgress;
         });
         this.requestRender();
-        // И сразу запускаем падение/появление новых
         this.animDrop();
       }
     ));
@@ -1123,7 +1120,6 @@ class GameEngine {
     this.requestRender();
   }
 
-  // TODO добавить обновление сетки, если нет возможных ходов
   handleMatches() {
     const matched = this.grid.getMatchedCells();
     const positions = [];
@@ -1133,18 +1129,27 @@ class GameEngine {
           positions.push({ row: r, col: c });
       }
     }
-
-    if (positions.length === 0) return;
   
-    // учитываем правильные собранные клетки
+    if (positions.length === 0) {
+      if (!this.grid.checkAvailableMoves()) {
+        this.grid.initGridWithTurns();
+        this.requestRender();
+      }
+
+      return;
+    }
+  
     const correctCount = positions.filter(pos => {
       const cell = this.grid.cells[pos.row][pos.col];
       return cell && cell.type === this.orderProduct;
     }).length;
     this.score += correctCount;
-
-    // this.animRemoveMatches(positions);
-  }
+    if (this.score >= this.targetItemsCount){
+      this.handleGameOver();
+    }
+  
+    this.animRemoveMatches(positions);
+  }  
 
   animDrop(oldDuration = 250, newDuration = 250) {
     const dropItems = [];
@@ -1162,8 +1167,8 @@ class GameEngine {
         } else if (emptyCount > 0) {
           dropItems.push({
             cell,
-            from: { row: r,       col: c },
-            to:   { row: r + emptyCount, col: c }
+            from: { row: r, col: c },
+            to: { row: r + emptyCount, col: c }
           });
         }
       }
@@ -1189,8 +1194,8 @@ class GameEngine {
         const emptyPos = [];
         for (let r = 0; r < this.grid.rows; r++) {
           for (let c = 0; c < this.grid.cols; c++) {
-            if ( this.grid.isCellActive(r, c)
-            && (!this.grid.cells[r][c] || this.grid.cells[r][c].isDeleted)
+            if (this.grid.isCellActive(r, c) &&
+              (!this.grid.cells[r][c] || this.grid.cells[r][c].isDeleted)
             ) {
               emptyPos.push({ row: r, col: c });
             }
@@ -1203,7 +1208,6 @@ class GameEngine {
           const cell = this.grid.cells[pos.row][pos.col];
           const to   = this.renderer.getCoords(pos);
           const from = { x: to.x, y: to.y - NEW_CELL_START_Y };
-          // сразу рисовать их сверху
           cell._animX = from.x;
           cell._animY = from.y;
           return { cell, from, to };
@@ -1258,13 +1262,23 @@ class GameEngine {
   }
 
   handleGameOver() {
-    console.log("GameOver!");
+    console.log("GameOver!", this.score, this.currentStep);
     this.isGameOver = true;
-    if (this.finishCb)
-      this.finishCb({ score: this.score, currentStep: this.currentStep });
+    if (this.finishCb) {
+      const gameData = { 
+        score: this.score, 
+        currentStep: this.currentStep 
+      };
+      console.log(gameData);
+      this.finishCb(gameData);
+    }
 
     window.removeEventListener("resize", this.boundResize);
     this.canvas.removeEventListener("pointerdown", this.boundHandlePointerDown);
+  }
+
+  static getInstance(tmp) {
+    return tmp.engine;
   }
 }
 
