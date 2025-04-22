@@ -1,4 +1,4 @@
-const __VERSION__ = "2C";
+const __VERSION__ = "2.2C";
 
 // const PATH = "./assets/memory/";
 const PATH = "/media/assets/memory/";
@@ -478,12 +478,13 @@ class GameEngine {
 
     this.trainingCount = +initGameData.trainingCount || 0;
     this.showTutorial = this.trainingCount < 3;
-    this.stepsCount = +initGameData.maxStepsCount || 20;
+    this.stepsCount = +initGameData.maxStepsCount || 1;
     this.currentStep = 0;
     this.targetItemsCount = +initGameData.targetItemsCount || 20;
     this.score = 0;
 
     this.canDrag = false;
+    this.finishCb = null;
 
     this.isGameOver = false;
     this.images = {};
@@ -515,14 +516,16 @@ class GameEngine {
     this.lastTime = performance.now();
     this.gameLoopId = null;
 
+    this.boundResize = () => {
+      this.resizeCanvas();
+      this.requestRender();
+    };
+
     this.boundHandlePointerDown = e => {
       this.handlePointerDown(e);
     };
 
-    window.addEventListener("resize", () => {
-      this.resizeCanvas();
-      this.requestRender();
-    });
+    window.addEventListener("resize", this.boundResize);
     canvas.addEventListener("pointerdown", this.boundHandlePointerDown);
     this.loadAssets();
     this.resizeCanvas();
@@ -745,46 +748,49 @@ class GameEngine {
 
   animMismatchFeedback(positions, duration, delay, shrink, shakeDur, shakeCount, amplitute) {
     this.canDrag = false;
-    const cells = positions.map(p => this.grid.cells[p.row][p.col]);
+    return new Promise(resolve => {
+      const cells = positions.map(p => this.grid.cells[p.row][p.col]);
 
-    // shrink
-    this.animMgr.add(new MyAnimation(
-      performance.now(), duration,
-      t => {
-        const s = 1 - (1 - shrink) * t;
-        cells.forEach(c => c._scale = s);
-        this.requestRender();
-      },
-      () => {
-        // shake
-        this.animMgr.add(new MyAnimation(
-          performance.now(), shakeDur,
-          t => {
-            const off = Math.sin(t * shakeCount * Math.PI) * amplitute;
-            cells.forEach(c => c._shake = off);
-            this.requestRender();
-          },
-          () => {
-            // restore
-            this.animMgr.add(new MyAnimation(
-              performance.now(), duration,
-              t => {
-                const s = shrink + (1 - shrink) * t;
-                cells.forEach(c => {
-                  c._scale = s;
-                  c._shake = 0;
-                });
-                this.requestRender();
-              },
-              () => {
-                // close
-                this.animMismatch(positions, duration, delay);
-              }
-            ));
-          }
-        ));
-      }
-    ));
+      // shrink
+      this.animMgr.add(new MyAnimation(
+        performance.now(), duration,
+        t => {
+          const s = 1 - (1 - shrink) * t;
+          cells.forEach(c => c._scale = s);
+          this.requestRender();
+        },
+        () => {
+          // shake
+          this.animMgr.add(new MyAnimation(
+            performance.now(), shakeDur,
+            t => {
+              const off = Math.sin(t * shakeCount * Math.PI) * amplitute;
+              cells.forEach(c => c._shake = off);
+              this.requestRender();
+            },
+            () => {
+              // restore
+              this.animMgr.add(new MyAnimation(
+                performance.now(), duration,
+                t => {
+                  const s = shrink + (1 - shrink) * t;
+                  cells.forEach(c => {
+                    c._scale = s;
+                    c._shake = 0;
+                  });
+                  this.requestRender();
+                },
+                () => {
+                  // close
+                  this.animMismatch(positions, duration, delay);
+                  resolve();
+                }
+              ));
+            }
+          ));
+        }
+      ));
+    });
   }
 
   async onCellClicked(cellPosition) {
@@ -873,15 +879,24 @@ class GameEngine {
   handleGameOver() {
     console.log("GameOver!");
     this.isGameOver = true;
-    if (this.finishCb)
-      this.finishCb({ score: this.score, currentStep: this.currentStep });
+    if (this.finishCb) {
+      const gameData = { 
+        score: this.score, 
+        currentStep: this.currentStep 
+      };
+      this.finishCb(gameData);
+    }
 
-    window.removeEventListener("resize", () => {
-      this.resizeCanvas();
-      this.requestRender();
-    });
-
+    window.removeEventListener("resize", this.boundResize);
     this.canvas.removeEventListener("pointerdown", this.boundHandlePointerDown);
+
+    if (this.gameLoopId) {
+      cancelAnimationFrame(this.gameLoopId);
+    }
+  }
+
+  static getInstance(tmp) {
+    return tmp.engine;
   }
 }
 
