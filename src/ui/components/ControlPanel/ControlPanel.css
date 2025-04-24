@@ -1,0 +1,38 @@
+@import "../../styles/variables.css";
+
+.control-panel {
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  box-shadow: var(--card-shadow) var(--color-light-blue);
+  border-radius: var(--top-panel-border-radius);
+  /* padding: 14.5px 24px; */
+  margin: 0 0 20px 0;
+}
+
+.control-panel-logo {
+  max-width: 57px;
+  max-height: 61px;
+  background: var(--color-white);
+  box-shadow: var(--card-shadow) var(--color-light-blue);
+  border-radius: var(--card-border-radius);
+  display: flex;
+  margin-right: 30px;
+  padding: 5.01px 17px;
+}
+
+.control-panel-logo img {
+  /* width: auto; */
+  /* height: 61px; */
+}
+
+.control-panel-title {
+  margin: 0;
+  font-family: 'Roboto';
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 32px;
+  letter-spacing: 0px;
+  color: var(--color-dark-blue);
+  margin: 14.5px 0;
+}

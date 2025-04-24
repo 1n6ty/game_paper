@@ -1,0 +1,14 @@
+@import "styles/variables.css";
+
+body {
+  user-select: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+
+  margin: 0;
+  background: var(--color-bg);
+
+  padding: 24px 27px 0 27px;
+
+  font-family: 'Roboto', sans-serif;
+}

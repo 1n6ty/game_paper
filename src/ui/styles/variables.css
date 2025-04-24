@@ -1,0 +1,18 @@
+:root {
+  --color-bg: #F8FBFF;
+
+  --color-dark-blue: #325374;
+  --color-blue: #4E82B5;
+  --color-deep-blue: #67AAEB;
+  --color-light-blue: #D1E8FF;
+  --color-light-gray: #DAE5F2;
+  --color-white: #FFFFFF;
+
+  --top-panel-border-radius: 10px;
+  --tabbar-border-radius: 9px;
+  --card-border-radius: 9px;
+  /* скругление углов по умолчанию для карточек */
+
+  --card-shadow: 0px 0px 4px 0px;
+  /* тень для всех карточек в том числе и для верхней панели, и таббара */
+}

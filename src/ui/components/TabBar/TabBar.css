@@ -1,0 +1,21 @@
+@import "../../styles/variables.css";
+
+.tab-bar {
+  display: flex;
+  background: var(--color-white);
+  box-shadow: var(--card-shadow) var(--color-light-blue);
+  border-radius: var(--tabbar-border-radius);
+  overflow: hidden;
+}
+
+.tab-bar-item {
+  padding: 12px 24px;
+  text-decoration: none;
+  color: var(--color-blue);
+  font-weight: 500;
+}
+
+.tab-bar-item--active {
+  background: var(--color-deep-blue);
+  color: var(--color-white);
+}
