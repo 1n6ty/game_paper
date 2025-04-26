@@ -1,5 +1,4 @@
 @import "../../styles/variables.css";
-@import "../../styles/common.css";
 
 :root {
   --home-scale: 1;
@@ -12,7 +11,7 @@
 @media (max-width: 386px) {
   :root {
     --total-score-scale: 0.98;
-    --home-scale: 0.95;
+    --home-scale: 0.92;
   }
 }
 
@@ -23,14 +22,13 @@
   }
 }
 
-@media (min-width: 418px) {
+@media (min-width: 400px) {
   .ticket-img {
     transform: translateX(6px);
   }
 }
 
 .home-card-text {
-  font-family: 'Roboto';
   font-weight: 400;
   font-size: 15px;
   line-height: 20px;
@@ -46,7 +44,6 @@
 }
 
 .total-score-text {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: calc(24px * var(--total-score-scale));
   line-height: 32px;
@@ -71,7 +68,6 @@
 }
 
 .contacts-card-text {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 19px;
   line-height: 28px;
@@ -84,7 +80,6 @@
 }
 
 .legal-info {
-  font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 15px;
   line-height: 20px;

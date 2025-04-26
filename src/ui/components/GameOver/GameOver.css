@@ -1,23 +1,19 @@
-/* Фон-оверлей, затемняющий весь экран */
+@import "../../styles/variables.css";
+
 .gameover-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* Полупрозрачный темный фон */
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Чтобы окно было поверх всего */
   z-index: 999;
 }
 
-/* Основной блок окна */
 .gameover-container {
-  /* width: 337px;
-  height: 229px; */
   background-color: #EFF7FE;
   padding: 36px 31px;
   border-radius: 16px;
@@ -26,7 +22,6 @@
 }
 
 .gameover-title {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 24px;
   line-height: 32px;
@@ -34,7 +29,7 @@
   text-align: center;
   vertical-align: middle;
 
-  color: #325374;
+  color: var(--color-primary-deep-dark-blue);
   margin: 0 0 25px;
 }
 
@@ -42,18 +37,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* width: 100%; */
 }
 
 .gameover-score-label {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 20px;
   line-height: 24px;
   letter-spacing: 0.15px;
   text-align: left;
 
-  color: #325374;
+  color: var(--color-primary-deep-dark-blue);
   margin: 0;
 }
 
@@ -65,7 +58,7 @@
   letter-spacing: 0.15px;
   text-align: center;
 
-  color: #325374;
+  color: var(--color-primary-deep-dark-blue);
   margin: 0;
 }
 
@@ -90,18 +83,17 @@
   font-size: 17px;
   line-height: 26px;
   letter-spacing: 0.1px;
-
   margin: 0;
 }
 
 .exit-btn {
   width: 100px;
-  background-color: #F7CDCE;
-  color: #DB6971;
+  background-color: var(--color-light-red);
+  color: var(--color-red);
 }
 
 .restart-btn {
   width: 165px;
-  background-color: #9AD9A6;
-  color: #2F7A2E;
+  background-color: var(--color-light-green);
+  color: var(--color-green);
 }

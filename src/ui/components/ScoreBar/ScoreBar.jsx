@@ -1,11 +1,10 @@
-import React, { useContext } from 'react';
-import { UserContext } from '../../contexts/UserContext';
+import { useContext } from "react";
+import { UserContext } from "../../contexts/UserContext";
 
-import { GL_URL } from '../../../global';
-import './ScoreBar.css';
+import { GL_URL } from "../../../global";
+import "./ScoreBar.css";
 
-
-const ScoreBar = () => {
+export default function ScoreBar() {
   const { score, totalScore } = useContext(UserContext);
 
   const percentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
@@ -35,6 +34,6 @@ const ScoreBar = () => {
       </div>
     </div>
   );
-};
+}
 
-export default ScoreBar;
+;

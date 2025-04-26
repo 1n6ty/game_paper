@@ -1,23 +1,23 @@
-import { useState, useEffect } from 'react';
-import { loadUserScore } from '../../domain/userUseCases';
+import { useState, useEffect, useCallback } from "react";
+import { loadUserScore } from "../../domain/userUseCases";
 
 const ERROR_SCORE = -1;
 
-export const useUserScore = (authRawData) => {
+export default function useUserScore(authRawData) {
   const [score, setScore] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
   const [tickets, setTickets] = useState(0);
 
-  const loadScore = () => {
+  const loadScore = useCallback(() => {
     if (authRawData) {
       console.log("Raw user data in loadScore:", authRawData);
       loadUserScore(authRawData)
-        .then((data) => {
+        .then(data => {
           setScore(data.score);
           setTotalScore(data.totalScore);
           setTickets(data.tickets);
         })
-        .catch((error) => {
+        .catch(error => {
           console.error("Ошибка загрузки очков:", error);
           console.log("Установка тестовых очков.");
           setScore(ERROR_SCORE);
@@ -25,11 +25,11 @@ export const useUserScore = (authRawData) => {
           setTickets(0);
         });
     }
-  };
+  }, [authRawData]);
 
   useEffect(() => {
     loadScore();
-  }, [authRawData]);
+  }, [loadScore]);
 
   return { score, totalScore, tickets, loadScore };
-};
+}

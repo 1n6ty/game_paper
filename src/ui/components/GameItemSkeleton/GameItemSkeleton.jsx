@@ -1,7 +1,6 @@
-import React from 'react';
-import './GameItemSkeleton.css';
+import "./GameItemSkeleton.css";
 
-const GameItemSkeleton = () => {
+export default function GameItemSkeleton() {
   return (
     <div className="game-item skeleton">
       <div className="game-item-top">
@@ -12,6 +11,4 @@ const GameItemSkeleton = () => {
       </div>
     </div>
   );
-};
-
-export default GameItemSkeleton;
+}

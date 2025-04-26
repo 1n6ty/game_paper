@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { TEST } from '../../global';
+import { useEffect, useState } from "react";
+import { TEST } from "../../global";
 
-export const useTelegramAuth = () => {
+export default function useTelegramAuth() {
   const [user, setUser] = useState(null);
-  const [authRawData, setAuthRawData] = useState('');
+  const [authRawData, setAuthRawData] = useState("");
 
   useEffect(() => {
     const tg = window.Telegram && window.Telegram.WebApp;
@@ -15,17 +15,17 @@ export const useTelegramAuth = () => {
         lastName: tg.initDataUnsafe.user.last_name,
       });
     } else {
-      console.warn('Данные пользователя из Telegram недоступны. Возможно, вы тестируете вне Telegram.');
+      console.warn("Данные пользователя из Telegram недоступны. Возможно, вы тестируете вне Telegram.");
       if (TEST) {
         console.log("Установка тестового пользователя.");
         setUser({
-          userName: 'test_user',
-          firstName: 'Test',
-          lastName: 'User',
+          userName: "test_user",
+          firstName: "Test",
+          lastName: "User",
         });
       }
     }
   }, []);
 
   return { user, authRawData };
-};
+}

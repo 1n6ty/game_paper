@@ -50,7 +50,6 @@
 }
 
 .top-cards-user-info .top-cards-username {
-  font-family: 'Roboto Semibold', sans-serif;
   font-weight: 600;
   font-size: 16px;
   line-height: 24px;
@@ -61,7 +60,6 @@
 }
 
 .top-cards-user-info .top-cards-tickets {
-  font-family: 'Roboto Light', sans-serif;
   font-weight: 400;
   font-size: 20px;
   line-height: 24px;

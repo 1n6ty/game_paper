@@ -1,35 +1,36 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import ScannerIcon from '../../../assets/icons/Qr.svg?react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import ScannerIcon from "../../../assets/icons/Qr.svg?react";
 
-import './Card.css';
+import "./Card.css";
 
-const Card = ({
-  variant = 'default',
+export default function Card({
+  variant = "default",
   title,
   text,
-  textSize = 'default',
+  textSize = "default",
   image,
   imagePosition,
   enableQr,
   enableQrGap = true,
   children
-}) => {
+}) {
   const hasRightImage =
-    image && (imagePosition === 'top-right' || imagePosition === 'bottom-right');
+    image && (imagePosition === "top-right" || imagePosition === "bottom-right");
   var cardBodyExtraClass;
   if ((enableQr === true) && (enableQrGap === true))
-    cardBodyExtraClass = 'card-body-with-qr';
+    cardBodyExtraClass = "card-body-with-qr";
   else if (hasRightImage)
-    cardBodyExtraClass = 'card-body-with-right-image';
+    cardBodyExtraClass = "card-body-with-right-image";
   else
-    cardBodyExtraClass = '';
+    cardBodyExtraClass = "";
 
   const navigate = useNavigate();
 
   const handleQrClick = () => {
-    navigate('/scanner');
+    navigate("/scanner");
   };
+
   return (
     <div className={`card card--${variant}`}>
       <div className="card-header">
@@ -49,17 +50,15 @@ const Card = ({
         {children}
       </div>
       {
-        image && imagePosition === 'bottom-right' && (
+        image && imagePosition === "bottom-right" && (
           <img src={image} alt="Card visual" className="card-image-bottom-right" />
         )
       }
       {
-        image && imagePosition === 'top-right' && (
+        image && imagePosition === "top-right" && (
           <img src={image} alt="Card visual" className="card-image-top-right" />
         )
       }
     </div >
   );
-};
-
-export default Card;
+}

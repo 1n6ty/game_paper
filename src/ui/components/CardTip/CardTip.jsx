@@ -1,7 +1,10 @@
-import React from 'react';
-import './CardTip.css';
+import "./CardTip.css";
 
-const CardTip = ({ title, text, image }) => {
+export default function CardTip({ 
+  title,
+  text,
+  image 
+}) {
   return (
     <div className="card-tip">
       {title && <h2 className="card-tip-title">{title}</h2>}
@@ -15,6 +18,4 @@ const CardTip = ({ title, text, image }) => {
       )}
     </div>
   );
-};
-
-export default CardTip;
+}

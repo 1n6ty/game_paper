@@ -1,14 +1,13 @@
-import React, { useContext } from 'react';
-import Profile from '../../components/Profile/Profile';
-import Card from '../../components/Card/Card';
-import CardTip from '../../components/CardTip/CardTip';
-import { UserContext } from '../../contexts/UserContext';
+import { useContext } from "react";
+import Profile from "../../components/Profile/Profile";
+import Card from "../../components/Card/Card";
+import CardTip from "../../components/CardTip/CardTip";
+import { UserContext } from "../../contexts/UserContext";
 
-import { GL_URL } from '../../../global';
-import './Home.css';
+import { GL_URL } from "../../../global";
+import "./Home.css";
 
-
-const Home = () => {
+export default function Home() {
   const { totalScore, tickets } = useContext(UserContext);
 
   return (
@@ -84,7 +83,7 @@ const Home = () => {
         variant="light-blue"
         title="Контакты"
         image={`${GL_URL}icons/logo.svg`}
-        imagePosition='top-right'
+        imagePosition="top-right"
       >
         <div className="card-text">
           <p className="contacts-card-text">+7 (831) 423-06-47</p>
@@ -96,6 +95,6 @@ const Home = () => {
       <p className="legal-info">Разработано ПАО «Ламбумиз»</p>
     </div >
   );
-};
+}
 
-export default Home;
+;

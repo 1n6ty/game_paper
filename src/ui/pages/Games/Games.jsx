@@ -1,12 +1,10 @@
-import React from 'react';
-import Profile from '../../components/Profile/Profile';
-import Card from '../../components/Card/Card';
-import GamesList from '../../components/GamesList/GamesList';
+import Profile from "../../components/Profile/Profile";
+import Card from "../../components/Card/Card";
+import GamesList from "../../components/GamesList/GamesList";
 
-import './Games.css';
+import "./Games.css";
 
-
-const Games = () => {
+export default function Games() {
   return (
     <div className="container">
       <Profile />
@@ -24,6 +22,6 @@ const Games = () => {
       <GamesList />
     </div>
   );
-};
+}
 
-export default Games;
+;

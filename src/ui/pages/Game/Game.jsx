@@ -1,13 +1,12 @@
-import React, { useEffect, useRef, useState, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { UserContext } from '../../contexts/UserContext';
-import GameOver from '../../components/GameOver/GameOver';
-import { loadGameData, GameAPI } from '../../../domain/gameUseCases';
+import { useEffect, useRef, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { UserContext } from "../../contexts/UserContext";
+import GameOver from "../../components/GameOver/GameOver";
+import { loadGameData, GameAPI } from "../../../domain/gameUseCases";
 
-import './Game.css';
+import "./Game.css";
 
-
-function Game() {
+export default function Game() {
   const { gameName } = useParams();
   const canvasRef = useRef(null);
   const gameInstanceRef = useRef(null);
@@ -18,7 +17,7 @@ function Game() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    return () => gameInstanceRef?.current.finish({});
+    return () => gameInstanceRef?.current?.finish({});
   }, []);
 
   useEffect(() => {
@@ -52,8 +51,6 @@ function Game() {
       );
       gameInstanceRef.current = gameInstance;
     }
-
-    // return 
   }, [gameConfig, authRawData]);
 
   const handleRestart = () => {
@@ -80,5 +77,3 @@ function Game() {
     </div>
   );
 }
-
-export default Game;

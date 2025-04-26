@@ -1,5 +1,4 @@
 @import "../../styles/variables.css";
-@import "../../styles/common.css";
 
 :root {
   --color-unloaded-bg: #E6E6FA;
@@ -46,7 +45,6 @@
 }
 
 .game-item-title {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 19px;
   line-height: 28px;

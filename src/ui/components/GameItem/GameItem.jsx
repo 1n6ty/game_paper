@@ -1,8 +1,10 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import './GameItem.css';
+import { useNavigate } from "react-router-dom";
+import "./GameItem.css";
 
-const GameItem = ({ title, image }) => {
+export default function GameItem({ 
+  title,
+  image
+}) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -23,6 +25,4 @@ const GameItem = ({ title, image }) => {
       </div>
     </div>
   );
-};
-
-export default GameItem;
+}

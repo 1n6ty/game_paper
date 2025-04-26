@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import GameItem from '../GameItem/GameItem';
-import GameItemSkeleton from '../GameItemSkeleton/GameItemSkeleton';
-import { GL_URL } from '../../../global';
-import { loadGames } from '../../../domain/gameUseCases';
-import './GamesList.css';
+import { useState, useEffect } from "react";
+import GameItem from "../GameItem/GameItem";
+import GameItemSkeleton from "../GameItemSkeleton/GameItemSkeleton";
+import { GL_URL } from "../../../global";
+import { loadGames } from "../../../domain/gameUseCases";
+import "./GamesList.css";
 import { TEST } from "../../../global";
 
-const GamesList = () => {
+export default function GamesList() {
   const [gamesData, setGamesData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +30,7 @@ const GamesList = () => {
             { id: "2", title: "Трекер здоровья", image: `${GL_URL}games/healthTracker_cover.svg` },
           ]);
         }
+
         setLoading(false);
       });
   }, []);
@@ -38,13 +39,11 @@ const GamesList = () => {
     <div className="games-list-container">
       {
         loading
-          ? [1, 2, 3, 4].map((i) => <GameItemSkeleton key={`skeleton-${i}`} />)
+          ? [1, 2, 3, 4].map(i => <GameItemSkeleton key={`skeleton-${i}`} />)
           : gamesData.map(game => (
             <GameItem key={game.id} title={game.title} image={game.image} />
           ))
       }
     </div>
   );
-};
-
-export default GamesList;
+}

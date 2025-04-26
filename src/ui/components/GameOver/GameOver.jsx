@@ -1,7 +1,10 @@
-import React from 'react';
-import './GameOver.css';
+import "./GameOver.css";
 
-const GameOver = ({ score = 0, onExit, onRestart }) => {
+export default function GameOver({ 
+  score = 0,
+  onExit,
+  onRestart
+}) {
   return (
     <div className="gameover-overlay">
       <div className="gameover-container">
@@ -25,6 +28,6 @@ const GameOver = ({ score = 0, onExit, onRestart }) => {
       </div>
     </div>
   );
-};
+}
 
-export default GameOver;
+;

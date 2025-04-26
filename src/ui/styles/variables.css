@@ -1,10 +1,17 @@
 :root {
   --color-bg: #F8FBFF;
 
+  --color-primary-deep-dark-blue: #325374;
   --color-primary-dark-blue: #3E6891;
   --color-primary-blue: #4E82B5;
   --color-primary-deep-blue: #67AAEB;
   --color-primary-light-blue: #D1E8FF;
+
+  --color-green: #2F7A2E;
+  --color-light-green: #9AD9A6;
+
+  --color-red: #DB6971;
+  --color-light-red: #F7CDCE;
 
   --card-border-radius: 16px;
   --card-shadow: 0px 0px 3.4px 0px #97C2EC36;

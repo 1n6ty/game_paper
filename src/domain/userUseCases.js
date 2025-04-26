@@ -1,4 +1,4 @@
-import { fetchScore } from '../infrastructure/index';
+import { fetchScore } from "../infrastructure/index";
 
 async function loadUserScore(authRawData) {
   try {
