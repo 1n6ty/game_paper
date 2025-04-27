@@ -9,6 +9,8 @@ import "./Home.css";
 
 export default function Home() {
   const { totalScore, tickets } = useContext(UserContext);
+  const factText = "Молоко очень полезное! Оно богато витаминами А, В6, В12, С, Е и др.";
+  const startLambsCount = 30;
 
   return (
     <div className="container">
@@ -19,9 +21,9 @@ export default function Home() {
         title="Правила игры"
       >
         <div className="home-card-text">
-          <b>Сканируй код «Честный знак» на упаковках Городецкого молока и получай ламбиксы!</b>
+          <b>Сканируй код «Честный знак» на упаковках Ламбумизовского молока и получай ламбиксы!</b>
           <br />
-          При старте ты получишь приветственные 30 ламбиксов
+          При старте ты получишь приветственные {startLambsCount} ламбиксов
           <br /><br />
           Далее играй в мини-игры, зарабатывай ламбиксы и меняй их на возможность выиграть ценные призы:
           <b> каждые {totalScore} ламбиксов автоматически превращаются в билет на участие в розыгрыше</b>
@@ -61,7 +63,7 @@ export default function Home() {
 
       <CardTip
         title="Полезный факт о молоке"
-        text="Молоко очень полезное! Оно богато витаминами А, В6, В12, С, Е и др."
+        text={factText}
         image={`${GL_URL}cow.svg`}
       />
 
@@ -70,12 +72,11 @@ export default function Home() {
         title="История завода"
       >
         <div className="card-text">
-          <p>Городец — город мастеров с 1152 года</p>
-          <p>Каждое трудовое начинание становилось народным промыслом, знаменитым на весь мир: Городецкая роспись, городецкая резьба, городецкий пряник</p>
-          <div className="milk-box">
-            <span>А с 1961 года Городецкое молоко! Ничего лишнего, мы всего лишь бережно передаем Вам то, что дарит нам природа</span>
-            <img src={`${GL_URL}milk_box.svg`} alt="Коробка с молоком" />
-          </div>
+          <p>ПАО «Ламбумиз» — надёжная упаковка
+          с 1972 года! Более 50 лет мы создаём упаковку, которая помогает сохранять лучшее в каждом продукте.</p>
+          <p>Мы работаем для тех, кто ценит качество, безопасность и свежесть. 
+          Каждая упаковка — это результат современных технологий и любви к своему делу. </p>
+          <span>Ламбумиз — когда важно сохранить главное</span>
         </div>
       </Card>
 
@@ -86,9 +87,9 @@ export default function Home() {
         imagePosition="top-right"
       >
         <div className="card-text">
-          <p className="contacts-card-text">+7 (831) 423-06-47</p>
-          <p className="contacts-card-text">moloko-gorodec.ru</p>
-          <p className="contacts-card-text">ул. Республиканская, 91, г. Городец</p>
+          <p className="contacts-card-text">+7(495) 636-27-36</p>
+          <a className="contacts-card-text" href="https://lambumiz.ru/">lambumiz.ru</a>
+          <p className="contacts-card-text">ул. Рябиновая, 51А, г. Москва</p>
         </div>
       </Card>
 

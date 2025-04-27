@@ -75,6 +75,10 @@
   margin: 0;
 }
 
+.contacts-card-text:visited {
+  color: inherit;
+}
+
 .milk-box {
   display: flex;
 }
