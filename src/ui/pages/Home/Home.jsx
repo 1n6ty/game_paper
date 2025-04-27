@@ -13,7 +13,7 @@ export default function Home() {
   const startLambsCount = 30;
 
   return (
-    <div className="container">
+    <div className="home-container">
       <Profile />
 
       <Card

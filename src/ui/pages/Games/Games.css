@@ -1,5 +1,12 @@
 @import "../../styles/variables.css";
 
+.games-container {
+  display: flex;
+  flex-direction: column;
+  padding: 13px 15px 0 15px;
+  gap: 15px;
+}
+
 .games-card-text {
   font-weight: 500;
   font-size: 17px;

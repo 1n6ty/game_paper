@@ -1,7 +1,8 @@
+import PropTypes from "prop-types";
 import "./GameOver.css";
 
 export default function GameOver({ 
-  score = 0,
+  score,
   onExit,
   onRestart
 }) {
@@ -30,4 +31,8 @@ export default function GameOver({
   );
 }
 
-;
+GameOver.propTypes = {
+  score: PropTypes.number.isRequired,
+  onExit: PropTypes.func.isRequired,
+  onRestart: PropTypes.func.isRequired
+};

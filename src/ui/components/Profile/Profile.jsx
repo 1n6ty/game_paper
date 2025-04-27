@@ -3,6 +3,8 @@ import TopCards from "../../components/TopCards/TopCards";
 import ScoreBar from "../../components/ScoreBar/ScoreBar";
 import { UserContext } from "../../contexts/UserContext";
 
+import "./Profile.css";
+
 export default function Profile() {
   const { loadScore } = useContext(UserContext);
   useEffect(() => {
@@ -10,7 +12,7 @@ export default function Profile() {
   }, [loadScore]);
 
   return (
-    <div>
+    <div className="profile-container">
       <TopCards />
       <ScoreBar />
     </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import ScannerIcon from "../../../assets/icons/Qr.svg?react";
 
@@ -62,3 +62,15 @@ export default function Card({
     </div >
   );
 }
+
+Card.propTypes = {
+  variant: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+  textSize: PropTypes.string.isRequired,
+  image: PropTypes.string.isRequired,
+  imagePosition: PropTypes.string.isRequired,
+  enableQr: PropTypes.bool.isRequired,
+  enableQrGap: PropTypes.bool.isRequired,
+  children: PropTypes.node.isRequired
+};

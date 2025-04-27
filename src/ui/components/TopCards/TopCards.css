@@ -1,27 +1,41 @@
 @import "../../styles/variables.css";
 
 :root {
-  --top-card-border-radius: 9px;
+  --top-cards-emblem-scale: 1;
+  --top-cards-border-radius: 9px;
+}
+
+@media (max-width: 386px) {
+  :root {
+    --top-cards-emblem-scale: 0.94;
+  }
+}
+
+@media (max-width: 370px) {
+  :root {
+    --top-cards-emblem-scale: 0.91;
+  }
 }
 
 .top-cards {
   display: flex;
-  margin-bottom: 15px;
-  gap: 17px;
+  gap: 14.5px;
 }
 
 .top-cards-emblem-card {
   position: relative;
+  flex: 1;
+  min-width: 0;
   text-align: center;
   background: white;
-  width: 100%;
 
-  padding: 0px 8px;
-  border-radius: var(--top-card-border-radius);
+  padding: 0px 16px;
+  border-radius: var(--top-cards-border-radius);
   box-shadow: var(--card-shadow);
 }
 
-.top-cards-emblem-card .top-cards-emblem-img {
+.top-cards-emblem-img {
+  width: calc(142.01px * var(--top-cards-emblem-scale));
   position: absolute;
   left: 50%;
   top: 50%;
@@ -30,17 +44,19 @@
 
 .top-cards-user-card {
   display: flex;
+  flex: 1;
+  min-width: 0;
   align-items: center;
   background: var(--color-primary-light-blue);
-  width: 100%;
 
   position: relative;
   padding: 6px 16px 7px 10px;
-  border-radius: var(--top-card-border-radius);
+  border-radius: var(--top-cards-border-radius);
   box-shadow: var(--card-shadow);
 }
 
-.top-cards-user-card .top-cards-milk-img {
+.top-cards-milk-img {
+  min-width: 23px;
   margin-right: 16px;
 }
 
@@ -49,7 +65,7 @@
   padding: 0;
 }
 
-.top-cards-user-info .top-cards-username {
+.top-cards-username {
   font-weight: 600;
   font-size: 16px;
   line-height: 24px;
@@ -59,7 +75,13 @@
   padding: 0;
 }
 
-.top-cards-user-info .top-cards-tickets {
+@media (max-width: 386px) {
+  .top-cards-username {
+    line-height: 19px;
+  }
+}
+
+.top-cards-tickets {
   font-weight: 400;
   font-size: 20px;
   line-height: 24px;

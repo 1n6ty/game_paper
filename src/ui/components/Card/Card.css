@@ -2,7 +2,6 @@
 
 .card {
   position: relative;
-  margin-bottom: 15px;
   padding: 13px 16px;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
@@ -24,7 +23,6 @@
 }
 
 .card-title {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 24px;
   line-height: 32px;
@@ -32,7 +30,6 @@
 }
 
 .card-title--small {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 16px;
   line-height: 20px;
@@ -40,7 +37,6 @@
 }
 
 .card-text {
-  font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 15px;
   line-height: 20px;

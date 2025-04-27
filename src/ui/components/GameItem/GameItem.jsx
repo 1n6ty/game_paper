@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import "./GameItem.css";
 
@@ -26,3 +27,8 @@ export default function GameItem({
     </div>
   );
 }
+
+GameItem.propTypes = {
+  title: PropTypes.string.isRequired,
+  image: PropTypes.string.isRequired
+};

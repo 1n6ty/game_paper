@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import "./CardTip.css";
 
 export default function CardTip({ 
@@ -19,3 +20,9 @@ export default function CardTip({
     </div>
   );
 }
+
+CardTip.propTypes = {
+  title: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+  image: PropTypes.string.isRequired
+};

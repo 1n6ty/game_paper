@@ -15,7 +15,6 @@
 
 .card-tip {
   position: relative;
-  margin-bottom: 15px;
   padding: 13px 16px;
   border-radius: var(--card-border-radius);
   box-shadow: var(--card-shadow);
@@ -25,7 +24,6 @@
 }
 
 .card-tip-title {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 24px;
   line-height: 32px;
@@ -40,7 +38,6 @@
 }
 
 .card-tip-text {
-  font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 15px;
   line-height: 22px;

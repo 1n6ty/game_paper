@@ -22,10 +22,11 @@
   }
 }
 
-@media (min-width: 400px) {
-  .ticket-img {
-    transform: translateX(6px);
-  }
+.home-container {
+  display: flex;
+  flex-direction: column;
+  padding: 13px 15px 8px 15px;
+  gap: 15px;
 }
 
 .home-card-text {
@@ -67,12 +68,22 @@
   height: var(--ticket-img-height);
 }
 
+@media (min-width: 400px) {
+  .ticket-img {
+    transform: translateX(6px);
+  }
+}
+
 .contacts-card-text {
   font-weight: 600;
   font-size: 19px;
   line-height: 28px;
   letter-spacing: 0.15px;
   margin: 0;
+}
+
+.contacts-card-text:link {
+  color: inherit;
 }
 
 .contacts-card-text:visited {

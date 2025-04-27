@@ -6,7 +6,7 @@ import "./Games.css";
 
 export default function Games() {
   return (
-    <div className="container">
+    <div className="games-container">
       <Profile />
 
       <Card
