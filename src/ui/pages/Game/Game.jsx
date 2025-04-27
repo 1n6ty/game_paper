@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
 import GameOver from "../../components/GameOver/GameOver";
+import GameLoading from "../../components/GameLoading/GameLoading";
 import { loadGameData, GameAPI } from "../../../domain/gameUseCases";
 
 import "./Game.css";
@@ -11,7 +12,11 @@ export default function Game() {
   const canvasRef = useRef(null);
   const gameInstanceRef = useRef(null);
   const { authRawData } = useContext(UserContext);
+  
   const [gameConfig, setGameConfig] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [showLoading, setShowLoading] = useState(true);
+
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const navigate = useNavigate();
@@ -21,11 +26,26 @@ export default function Game() {
   }, []);
 
   useEffect(() => {
+    
+    // эмулируем прогресс пока ждём ответа
+    const tick = setInterval(() => {
+      setLoadingProgress(p => Math.min(p + 10, 100));
+      console.log("Загрузка игры...");
+    }, 200);
+ 
     loadGameData(gameName)
       .then(config => {
+        clearInterval(tick);
+        setLoadingProgress(100);
+        // после финиша небольшая пауза, чтобы пользователь увидел 100%
+        setTimeout(() => setShowLoading(false), 500);
+    
         setGameConfig(config);
       })
       .catch(error => {
+        clearInterval(tick);
+        setTimeout(() => setShowLoading(false), 500);
+
         console.error("Ошибка загрузки данных игры:", error);
       });
   }, [gameName]);
@@ -66,6 +86,7 @@ export default function Game() {
 
   return (
     <div className="game-container">
+      {showLoading && <GameLoading progress={loadingProgress} />}
       <canvas ref={canvasRef} className="game-canvas"></canvas>
       {gameOver && (
         <GameOver
