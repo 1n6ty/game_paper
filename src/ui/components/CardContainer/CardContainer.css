@@ -1,0 +1,36 @@
+@import "../../styles/variables.css";
+
+.card-container {
+  background: var(--color-white);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow) var(--color-shadow);
+  padding: 20px;
+}
+
+.card-container-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-container-header h2 {
+  flex-grow: 1;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 20px;
+  letter-spacing: 0;
+  margin: 0;
+  color: var(--color-dark-blue);
+}
+
+.card-container-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
