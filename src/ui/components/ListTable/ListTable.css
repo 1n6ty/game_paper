@@ -1,0 +1,47 @@
+@import "../../styles/variables.css";
+
+.list-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.list-table-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.list-table-title {
+  flex-grow: 1;
+  margin: 0;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 20px;
+  align-items: center;
+  color: var(--color-dark-blue);
+}
+
+.lock-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.list-table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-table-row {
+  display: flex;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 20px;
+  margin-bottom: 10px;
+  color: var(--color-dark-blue);
+}
+
+.list-table-cell {
+  flex: 1;
+}

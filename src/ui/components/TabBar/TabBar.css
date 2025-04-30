@@ -2,20 +2,35 @@
 
 .tab-bar {
   display: flex;
-  background: var(--color-white);
-  box-shadow: var(--card-shadow) var(--color-light-blue);
+  width: 504px;
+  height: 36px;
+  background: transparent;
+  box-shadow: var(--card-shadow) var(--color-shadow);
   border-radius: var(--tabbar-border-radius);
   overflow: hidden;
 }
 
 .tab-bar-item {
-  padding: 12px 24px;
+  flex: 1;
+  text-align: center;
   text-decoration: none;
+  /* #4E82B5 */
   color: var(--color-blue);
+  font-size: 16px;
   font-weight: 500;
+  /* чтобы неактивный таб ровно 36px */
+  line-height: 36px;
 }
 
 .tab-bar-item--active {
-  background: var(--color-deep-blue);
-  color: var(--color-white);
+  background: var(--color-white);
+  /* #325374 */
+  color: var(--color-dark-blue);
+  /* уменьшаем до 32px */
+  height: 32px;
+  line-height: 32px;
+  /* центрируем по вертикали в 36px контейнера */
+  margin: 2px 0;
+  border-radius: 7px;
+  box-shadow: var(--card-shadow) var(--color-shadow);
 }

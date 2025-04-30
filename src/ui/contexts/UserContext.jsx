@@ -1,19 +1,16 @@
-import React, { createContext } from 'react';
+import { createContext } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 const UserContext = createContext({
   canEdit: true
 });
 
 const UserProvider = ({ children }) => {
-  // const { user } = useAuth();
+  const { canEditSettings } = useAuth();
   // const { } = useAnalytics()
 
-  const canEdit = true;
-
-  // const { score, totalScore, tickets, loadScore } = useUserScore(authRawData);
-
   return (
-    <UserContext.Provider value={canEdit}>
+    <UserContext.Provider value={{ canEditSettings }}>
       {children}
     </UserContext.Provider>
   );

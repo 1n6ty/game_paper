@@ -1,0 +1,42 @@
+@import "../../styles/variables.css";
+
+:root {
+  --list-item-font-weight: 400px;
+  --list-item-font-size: 20px;
+  --list-item-line-height: 20px;
+}
+
+.list-item-card {
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  border-radius: var(--card-item-border-radius);
+  box-shadow: var(--card-shadow) var(--color-shadow);
+  padding: 10px;
+}
+
+.list-item-card-cell {
+  font-weight: var(--list-item-font-weight);
+  font-size: var(--list-item-font-size);
+  line-height: var(--list-item-line-height);
+  color: var(--color-dark-blue);
+  flex: 1;
+}
+
+.list-item-card-cell.align-left {
+  text-align: left;
+}
+
+.list-item-card-cell.align-center {
+  text-align: center;
+}
+
+.list-item-card-cell.align-right {
+  text-align: right;
+}
+
+.list-item-card-cell.action-cell {
+  flex: 0 0 32px;
+  /* width: 16.52px; */
+  text-align: right;
+}

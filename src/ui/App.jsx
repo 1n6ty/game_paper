@@ -1,18 +1,17 @@
-import React from 'react';
-import { useRoutes } from 'react-router-dom';
-import TabBar from './components/TabBar/TabBar';
-// import Analytics from './pages/Analytics/Analytics';
-import Settings from './pages/Settings/Settings';
-// import Profile from './pages/Profile/Profile';
-import { UserProvider } from './contexts/UserContext';
+import { useRoutes } from "react-router-dom";
+import TabBar from "./components/TabBar/TabBar";
+import DashboardHeader from "./components/DashboardHeader/DashboardHeader";
+import Analytics from "./pages/Analytics/Analytics";
+import Settings from "./pages/Settings/Settings";
+import Profile from "./pages/Profile/Profile";
+import { UserProvider } from "./contexts/UserContext";
 
-import './App.css';
+import "./App.css";
 
-// Конфигурация маршрутов и табов в одном объекте
 const routeConfig = [
-  // { path: '/', element: <Analytics />, label: 'Аналитика' },
-  { path: '/', element: <Settings />, label: 'Настройки' },
-  // { path: '/profile', element: <Profile />, label: 'Профиль' },
+  { path: "/", element: <Analytics />, label: "Аналитика" },
+  { path: "/settings", element: <Settings />, label: "Настройки" },
+  { path: "/profile", element: <Profile />, label: "Профиль" }
 ];
 
 function App() {
@@ -27,8 +26,13 @@ function App() {
 
   return (
     <UserProvider>
-      {element}
-      <TabBar tabs={tabs} />
+      <div className="app-container">
+        <DashboardHeader logoSrc="/icons/logo.svg" title="Панель управления" />
+        <TabBar tabs={tabs} />
+        <div className="page-content">
+          {element}
+        </div>
+      </div>
     </UserProvider>
   );
 }

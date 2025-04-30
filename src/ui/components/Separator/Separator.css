@@ -2,7 +2,7 @@
 
 .separator {
   width: 1px;
-  background-color: var(--color-light-gray);
+  background-color: var(--color-separator);
   align-self: stretch;
-  margin: 0 20px;
+  /* margin: 0 20px; */
 }
