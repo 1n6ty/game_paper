@@ -18,7 +18,7 @@
   padding: 36px 31px;
   border-radius: 16px;
   text-align: center;
-  margin: 0;
+  margin: 0 45px;
 }
 
 .gameover-title {
@@ -73,11 +73,11 @@
 .gameover-btn {
   border: none;
   border-radius: 8px;
-  font-size: 16px;
   cursor: pointer;
 }
 
 .gameover-btn-text {
+  font-family: 'Roboto', sans-serif;
   font-weight: 500;
   font-size: 17px;
   line-height: 26px;

@@ -10,36 +10,46 @@
     rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-  <script id="myscript" src="./memory/draw_script_memory.js"></script>
+  <script id="myscript" src="./memory/draw_script_memory_classes.js"></script>
 </head>
 
 <body style="body {
   width: 100%; 
-  height: 100%;
   user-select: none;
   outline: none;
-  overflow: hidden;
-  position: fixed;
 
   margin: 0;
 }
 ">
-  <div style="  
-  width: 100vw;
-  height: 100vh;
-  background-color: #eac49c;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  touch-action: none;
+  <div style="
+    display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100vh;  
   ">
-    <canvas id="main_canvas" width="1280" height="720" style="  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 0 0 0;"></canvas> <!-- margin: 0 0 79px 0 -->
+    <div style="
+      overflow-y: auto;
+      min-height: 0;
+      ">
+      <div style="  
+      width: 100vw;
+      height: 100%;
+      background-color: #eac49c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+      ">
+          <canvas id="main_canvas" width="1280" height="720" style="  
+          display: block;
+        max-width: 100%;
+        height: auto;
+        "></canvas>
+      </div>
+    </div>
   </div>
 
   <script>
+    const tmp = {};
     const canvas = document.getElementById("main_canvas");
     const script = document.getElementById("myscript");
     console.log(script);
@@ -47,12 +57,12 @@
     const finishFunc = (gameData) => {
       console.log("FINISH");
       if (script.deinit) {
-        deinit(canvas, {});
+        deinit(canvas, tmp);
       }
     };
     if (init) {
       console.log("LAUNCH!");
-      init(canvas, {}, {}, finishFunc);
+      init(canvas, {}, tmp, finishFunc);
     }
   </script>
 
