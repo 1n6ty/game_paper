@@ -1,4 +1,4 @@
-const __VERSION__ = "2.2C";
+const __VERSION__ = "2.3C";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -967,7 +967,7 @@ class GameEngine {
     const p = this.canvas.parentElement;
     if (!p) return;
     const w = p.clientWidth;
-    const h = p.clientHeight - 60;
+    const h = p.clientHeight;
     this.dimensions = { width: w, height: h };
     this.scale = Math.min(w / MAX_CANVAS_WIDTH, h / MAX_CANVAS_HEIGHT);
     this.offset = {
@@ -985,6 +985,9 @@ class GameEngine {
   }
 
   onAssetsLoaded() {
+    if (this.assetsLoadedCb)
+      this.assetsLoadedCb();
+
     this.handleMatches();
     this.requestRender();
   }
@@ -1261,6 +1264,10 @@ class GameEngine {
     this.finishCb = cb;
   }
 
+  setAssetsLoadedCallback(cb) {
+    this.assetsLoadedCb = cb;
+  }
+
   handleGameOver() {
     console.log("GameOver!", this.score, this.currentStep);
     this.isGameOver = true;
@@ -1282,12 +1289,15 @@ class GameEngine {
   }
 }
 
-function init(canvas, initGameData, tmp, finishCallback = gameData => {}) {
+function init(canvas, initGameData, tmp, finishCallback = gameData => {}, assetsLoadedCallback = () => {}) {
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
+  if (!canvas) console.log("Canvas does not exist!");
+
   const engine = new GameEngine(canvas, initGameData, tmp);
   engine.setFinishCallback(finishCallback);
+  engine.setAssetsLoadedCallback(assetsLoadedCallback);
   return tmp;
 }
 

@@ -1,11 +1,11 @@
-const __VERSION__ = "19.3";
+const __VERSION__ = "19.4";
 
 const ASSETS = {
-  ceilEvening: 'ceilEvening',
-  ceilSunset: 'ceilSunset',
-  ceilSunrise: 'ceilSunrise',
-  ceilDay: 'ceilDay',
-  ceilMorning: 'ceilMorning',
+  ceilEvening: "ceilEvening",
+  ceilSunset: "ceilSunset",
+  ceilSunrise: "ceilSunrise",
+  ceilDay: "ceilDay",
+  ceilMorning: "ceilMorning",
 };
 
 const PATH = "/media/assets/milkyFly/";  // /media/assets/milkyFly/
@@ -70,12 +70,12 @@ const BACKGROUNDS = [
   [ASSETS.ceilMorning, ["#AED7FF", "#D9ECFF", "#FEEEEF"]],
 ];
 
-const loadImage = (src) =>
+const loadImage = src =>
   new Promise((resolve, reject) => {
     const img = new Image();
     img.src = src;
     img.onload = () => resolve(img);
-    img.onerror = (e) => {
+    img.onerror = e => {
       console.error("Failed to load image:", src, e);
       resolve(null); // возвращаем null, чтобы использовать fallback
     };
@@ -96,6 +96,7 @@ class LCG {
       hash = ((hash << 5) + hash) + str.charCodeAt(i);
       hash = hash & 0xffffffff;
     }
+
     return hash >>> 0;
   }
 
@@ -108,7 +109,7 @@ class LCG {
 class GameEngine {
   constructor(canvas, initGameData, tmp) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+    this.ctx = canvas.getContext("2d");
 
     this.tmp = tmp || {};
     this.tmp.engine = this;
@@ -166,7 +167,8 @@ class GameEngine {
     };
 
     this.gameLoopId = null;
-    this.finishCallback = () => { };
+    this.finishCb = () => { };
+
     this.images = {};
     this.loadAssets();
 
@@ -174,12 +176,12 @@ class GameEngine {
     this.isResizing = false;
     this.resizeTimer = null;
 
-    this.boundHandleJump = (e) => this.handleJump(e);
-    window.addEventListener('keydown', this.boundHandleJump);
-    this.canvas.addEventListener('touchstart', this.boundHandleJump);
+    this.boundHandleJump = e => this.handleJump(e);
+    window.addEventListener("keydown", this.boundHandleJump);
+    this.canvas.addEventListener("touchstart", this.boundHandleJump);
 
     this.boundResizeCanvas = () => this.resizeCanvas();
-    window.addEventListener('resize', this.boundResizeCanvas);
+    window.addEventListener("resize", this.boundResizeCanvas);
     this.resizeCanvas();
   }
 
@@ -190,7 +192,7 @@ class GameEngine {
     console.log("Resize START");
 
     if (this.resizeTimer)
-      clearTimeout(this.resizeTimer)
+      clearTimeout(this.resizeTimer);
 
     this.isResizing = true;
 
@@ -218,11 +220,11 @@ class GameEngine {
     this.isResizing = false;
 
     if (this.resizeTimer)
-      clearTimeout(this.resizeTimer)
+      clearTimeout(this.resizeTimer);
   }
 
   handleJump(e) {
-    if (e.type === 'keydown' && e.code !== 'Space') return;
+    if (e.type === "keydown" && e.code !== "Space") return;
     if (!this.inTime)
       this.inTime = Date.now();
     const st = this.state;
@@ -231,10 +233,18 @@ class GameEngine {
       st.player.velocity = JUMP_FORCE;
       return;
     }
+
     if (!st.isGameOver) {
       st.player.velocity = JUMP_FORCE;
       st.player.frameCounter = 0;
     }
+  }
+
+  onAssetsLoaded() {
+    if (this.assetsLoadedCb)
+      this.assetsLoadedCb();
+
+    this.startGameLoop();
   }
 
   async loadAssets() {
@@ -258,6 +268,8 @@ class GameEngine {
     keys.forEach((key, idx) => {
       this.images[key] = loaded[idx] || null;
     });
+
+    this.onAssetsLoaded();
   }
 
   startGameLoop() {
@@ -275,11 +287,11 @@ class GameEngine {
 
   stopGameLoop() {
     console.log("Stop GameLoop");
-    window.removeEventListener('keydown', this.boundHandleJump);
-    this.canvas.removeEventListener('touchstart', this.boundHandleJump);
-    window.removeEventListener('resize', this.boundResizeCanvas);
+    window.removeEventListener("keydown", this.boundHandleJump);
+    this.canvas.removeEventListener("touchstart", this.boundHandleJump);
+    window.removeEventListener("resize", this.boundResizeCanvas);
     if (this.resizeTimer)
-      clearTimeout(this.resizeTimer)
+      clearTimeout(this.resizeTimer);
     if (this.gameLoopId) {
       console.log("gameLoopId cleared");
       cancelAnimationFrame(this.gameLoopId);
@@ -380,6 +392,7 @@ class GameEngine {
         }
       }
     }
+
     st.pipes = st.pipes.filter(pipe => pipe.x + pipe.width > 0);
   }
 
@@ -433,8 +446,8 @@ class GameEngine {
 
     this.moveTubes();
 
-    this.detectTubeCollision()
-    this.detectGroundCollision()
+    this.detectTubeCollision();
+    this.detectGroundCollision();
   }
 
   drawScene() {
@@ -457,10 +470,12 @@ class GameEngine {
       this.ctx.drawImage(this.images.clouds, this.state.cloudsX, height - FLOOR_HEIGHT - 237, CLOUDS_WIDTH, 387);
       this.ctx.drawImage(this.images.clouds, this.state.cloudsX + CLOUDS_WIDTH - 1, height - FLOOR_HEIGHT - 237, CLOUDS_WIDTH, 387);
     }
+
     if (this.images.bushesDark) {
       this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX, height - FLOOR_HEIGHT - 78, BUSHES_WIDTH, 228);
       this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX + BUSHES_WIDTH - 1, height - FLOOR_HEIGHT - 78, BUSHES_WIDTH, 228);
     }
+
     if (this.images.bushesLight) {
       this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX, height - FLOOR_HEIGHT - 52, BUSHES_WIDTH, 202);
       this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX + BUSHES_WIDTH - 1, height - FLOOR_HEIGHT - 52, BUSHES_WIDTH, 202);
@@ -518,6 +533,7 @@ class GameEngine {
         PLAYER_HEIGHT
       );
     }
+
     this.ctx.restore();
 
     // Туториал
@@ -532,20 +548,20 @@ class GameEngine {
       this.ctx.translate(textX, textY);
       this.ctx.rotate(swingAngle);
       this.ctx.textAlign = "center";
-      this.ctx.font = '500 30px Roboto Mono';
-      this.ctx.fillStyle = '#4b4949';
+      this.ctx.font = "500 30px Roboto Mono";
+      this.ctx.fillStyle = "#4b4949";
       this.ctx.fillText("Тап👆", 0, 0);
       this.ctx.restore();
     }
 
     // Текст счета
     this.ctx.textBaseline = "middle";
-    this.ctx.fillStyle = 'white';
-    this.ctx.font = '500 15px/24px Roboto Mono';
+    this.ctx.fillStyle = "white";
+    this.ctx.font = "500 15px/24px Roboto Mono";
     this.ctx.fillText(`лучший результат: ${this.bestScore}`, 21, 60);
 
     this.ctx.textAlign = "center";
-    this.ctx.font = '500 48px/24px Roboto Mono';
+    this.ctx.font = "500 48px/24px Roboto Mono";
     this.ctx.fillText(`${this.state.passedPipes}`, width / 2, 120);
 
     this.ctx.restore();
@@ -555,23 +571,28 @@ class GameEngine {
     console.log("GameOver");
 
     this.state.isGameOver = true;
-    if (this.finishCallback) {
+    if (this.finishCb) {
       const spentTime = (this.inTime ? Date.now() - this.inTime : 0) / 1000;  // in seconds
       console.log("spentTime", spentTime);
       const gameData = {
         score: this.state.passedPipes,
         spentTime: spentTime
       };
-      this.finishCallback(gameData);
+      this.finishCb(gameData);
     }
+
     if (this.gameLoopId) {
       console.log("gameLoopId cleared");
       cancelAnimationFrame(this.gameLoopId);
     }
   }
 
-  setFinishCallback(callback) {
-    this.finishCallback = callback;
+  setFinishCallback(cb) {
+    this.finishCb = cb;
+  }
+
+  setAssetsLoadedCallback(cb) {
+    this.assetsLoadedCb = cb;
   }
 
   static getInstance(tmp) {
@@ -579,15 +600,15 @@ class GameEngine {
   }
 }
 
-function init(canvas, initGameData, tmp, finish_func = (gameData) => { }) {
+function init(canvas, initGameData, tmp, finishCallback = gameData => { }, assetsLoadedCallback = () => { }) {
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
   if (!canvas) console.log("Canvas does not exist!");
 
   const engine = new GameEngine(canvas, initGameData, tmp);
-  engine.startGameLoop();
-  engine.setFinishCallback(finish_func);
+  engine.setFinishCallback(finishCallback);
+  engine.setAssetsLoadedCallback(assetsLoadedCallback);
   return tmp;
 }
 

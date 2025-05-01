@@ -1,4 +1,4 @@
-const __VERSION__ = "9.1";
+const __VERSION__ = "9.2";
 
 const PATH = "/media/assets/healthTracker/";  // /media/assets/healthTracker/
 
@@ -34,12 +34,12 @@ const DAY_TEXT_EMPTY = "#9FBACF";
 const DAY_TEXT_FILLED = "#FFFFFF";
 
 
-const loadImage = (src) =>
+const loadImage = src =>
   new Promise((resolve, reject) => {
     const img = new Image();
     img.src = src;
     img.onload = () => resolve(img);
-    img.onerror = (e) => {
+    img.onerror = e => {
       console.error("Failed to load image:", src, e);
       resolve(null); // fallback – вернуть null
     };
@@ -57,6 +57,7 @@ class GameEngine {
     if (this.consecutiveDays == TOTAL_DAYS) {
       this.handleGameOver();
     }
+
     this.currentFillLevel = 0;
     this.targetFillLevel = this.consecutiveDays;
 
@@ -74,10 +75,10 @@ class GameEngine {
     // Флаг игры - используется для остановки анимации, если игра завершена
     this.isGameOver = false;
     this.gameLoopId = null;
-    this.finishCallback = () => { };
+    this.finishCb = () => { };
 
     // Привязываем обработчики событий
-    this.boundHandleClick = (e) => this.handleClick(e);
+    this.boundHandleClick = e => this.handleClick(e);
     this.canvas.addEventListener("click", this.boundHandleClick);
 
     this.boundResizeCanvas = () => this.resizeCanvas();
@@ -85,7 +86,6 @@ class GameEngine {
     this.resizeCanvas();
 
     this.lastFrameTime = performance.now();
-    this.startGameLoop();
 
     this.images = {};
     this.loadAssets();
@@ -98,7 +98,7 @@ class GameEngine {
     const parentWidth = parent.clientWidth;
     const parentHeight = parent.clientHeight;
     const newWidth = parentWidth;
-    const newHeight = parentHeight - 60;
+    const newHeight = parentHeight;
 
     this.dimensions.width = newWidth;
     this.dimensions.height = newHeight;
@@ -125,9 +125,9 @@ class GameEngine {
   /* Обработчик клика по стакану */
   handleClick(e) {
     const pos = this.getCanvasCoordinates(e);
-    console.log('Координаты на canvas: ', pos);
+    console.log("Координаты на canvas: ", pos);
 
-    this.ctx.fillStyle = 'red';
+    this.ctx.fillStyle = "red";
     this.ctx.beginPath();
     this.ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
     this.ctx.closePath();
@@ -163,6 +163,13 @@ class GameEngine {
     // }
   }
 
+  onAssetsLoaded() {
+    if (this.assetsLoadedCb)
+      this.assetsLoadedCb();
+
+    this.startGameLoop();
+  }
+
   async loadAssets() {
     const assets = {
       glass: loadImage(glassUrl),
@@ -174,6 +181,8 @@ class GameEngine {
     keys.forEach((key, idx) => {
       this.images[key] = loaded[idx] || null;
     });
+
+    this.onAssetsLoaded();
   }
 
   startGameLoop() {
@@ -195,6 +204,7 @@ class GameEngine {
         this.currentFillLevel = this.targetFillLevel;
       }
     }
+
     this.drawScene();
     this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
   }
@@ -280,6 +290,7 @@ class GameEngine {
           currentLine = word;
         }
       }
+
       lines.push(currentLine);
       return lines;
     };
@@ -408,20 +419,25 @@ class GameEngine {
   handleGameOver() {
     console.log("Игра завершена!");
     this.isGameOver = true;
-    if (this.finishCallback) {
+    if (this.finishCb) {
       const gameData = {
         days: this.consecutiveDays,
       };
-      this.finishCallback(gameData);
+      this.finishCb(gameData);
     }
+
     if (this.gameLoopId) {
       console.log("gameLoopId cleared");
       cancelAnimationFrame(this.gameLoopId);
     }
   }
 
-  setFinishCallback(callback) {
-    this.finishCallback = callback;
+  setFinishCallback(cb) {
+    this.finishCb = cb;
+  }
+
+  setAssetsLoadedCallback(cb) {
+    this.assetsLoadedCb = cb;
   }
 
   static getInstance(tmp) {
@@ -433,13 +449,15 @@ class GameEngine {
   }
 }
 
-function init(canvas, initGameData, tmp, finish_func = (gameData) => { }) {
+function init(canvas, initGameData, tmp, finishCallback = gameData => { }, assetsLoadedCallback = () => { }) {
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
-  const engine = new GameEngine(canvas, initGameData, tmp);
-  engine.setFinishCallback(finish_func);
+  if (!canvas) console.log("Canvas does not exist!");
 
+  const engine = new GameEngine(canvas, initGameData, tmp);
+  engine.setFinishCallback(finishCallback);
+  engine.setAssetsLoadedCallback(assetsLoadedCallback);
   return tmp;
 }
 
