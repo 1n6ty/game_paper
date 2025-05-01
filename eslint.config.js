@@ -31,6 +31,8 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs["jsx-runtime"].rules,
       ...reactHooks.configs.recommended.rules,
+      "react-hooks/rules-of-hooks": "error", // проверка правильного использования React Hooks
+      "react-hooks/exhaustive-deps": "warn",   // проверка зависимостей эффекта
       
       "no-unused-vars": ["warn", { 
         vars: "all",          // Проверять все переменные

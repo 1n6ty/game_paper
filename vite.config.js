@@ -1,18 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import svgr from 'vite-plugin-svgr'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import svgr from "vite-plugin-svgr";
 
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    host: '0.0.0.0',
+    host: "0.0.0.0",
   },
-  base: '/',
+  base: "/",
   build: {
     // Вывод сборки будет в папку "static"
     // outDir: 'static',
     // Убираем вложенную папку для ассетов, чтобы все файлы (js, css, изображения) оказались прямо в "static"
-    assetsDir: 'static'
+    assetsDir: "static"
   },
   plugins: [react(), svgr({
     svgrOptions: {
@@ -30,4 +30,4 @@ export default defineConfig({
     // A minimatch pattern, or array of patterns, which specifies the files in the build the plugin should ignore. By default no files are ignored.
     exclude: "",
   })]
-})
+});
