@@ -11,14 +11,14 @@
 @media (max-width: 386px) {
   :root {
     --total-score-scale: 0.98;
-    --home-scale: 0.92;
+    --home-scale: 0.96;
   }
 }
 
 @media (max-width: 372px) {
   :root {
     --total-score-scale: 0.93;
-    --home-scale: 0.9;
+    --home-scale: 0.94;
   }
 }
 
@@ -44,7 +44,7 @@
   height: var(--total-score-height);
 }
 
-.total-score-text {
+.total-score__text {
   font-weight: 600;
   font-size: calc(24px * var(--total-score-scale));
   line-height: 32px;
@@ -52,6 +52,13 @@
 
   margin-top: 23.8px;
   margin-right: 1px;
+}
+
+.scanner-content {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  justify-content: center;
 }
 
 .img-center {

@@ -24,6 +24,7 @@ class GameAPI {
   #tmp = {};
   #module = Object();
   #onFinish = () => { };
+  #onAssetsLoaded = () => { };
 
   /**
    * @param {HTMLElement} canvas
@@ -31,11 +32,12 @@ class GameAPI {
    * @param {string} game_name
    * @param {string} draw_script_url  
   */
-  constructor(canvas, auth_raw_data, game_name, draw_script_url, onModuleLoad = () => { }) {
+  constructor(canvas, auth_raw_data, game_name, draw_script_url, onModuleLoad = () => { }, onAssetsLoaded = () => { }) {
     this.canvas = canvas;
     this.auth_raw_data = auth_raw_data;
     this.game_name = game_name;
     this.draw_script_url = draw_script_url;
+    this.#onAssetsLoaded = onAssetsLoaded;
 
     import(/* webpackIgnore: true */ draw_script_url).then(
       obj => {
@@ -53,7 +55,7 @@ class GameAPI {
     this.#onFinish = method;
   }
 
-  finish(game_data) {
+  finish = game_data => {
     fetch("/gamefinish/", {
       method: "POST",
       headers: {
@@ -89,7 +91,7 @@ class GameAPI {
       response => {
         response.json().then(
           init_game_data => {
-            this.#tmp = this.#module.init(this.canvas, init_game_data.init, this.#tmp, this.finish);
+            this.#tmp = this.#module.init(this.canvas, init_game_data.init, this.#tmp, this.finish, this.#onAssetsLoaded);
           }
         ).catch(reason => {
           console.error("Game init parsing error with" + reason);

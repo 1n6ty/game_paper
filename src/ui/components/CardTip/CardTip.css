@@ -23,21 +23,21 @@
   color: var(--color-primary-blue);
 }
 
-.card-tip-title {
+.card-tip__title {
   font-weight: 600;
   font-size: 24px;
   line-height: 32px;
   margin: 0 0 8px 0;
 }
 
-.card-tip-text-container {
+.card-tip__text-container {
   background: var(--color-text-container);
   padding: 8.5px 12px;
   margin-right: 120px;
   border-radius: 8px;
 }
 
-.card-tip-text {
+.card-tip__text {
   font-weight: 600;
   font-size: 15px;
   line-height: 22px;
@@ -45,7 +45,7 @@
   margin: 0;
 }
 
-.card-tip-cow-img {
+.card-tip__svg-right {
   position: absolute;
   bottom: -15px;
   right: -4px;

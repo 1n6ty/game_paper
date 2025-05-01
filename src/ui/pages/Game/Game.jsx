@@ -7,6 +7,8 @@ import { loadGameData, GameAPI } from "../../../domain/gameUseCases";
 
 import "./Game.css";
 
+const LOADING_DELAY = 600;  // миллисекунды
+
 export default function Game() {
   const { gameName } = useParams();
   const canvasRef = useRef(null);
@@ -37,14 +39,13 @@ export default function Game() {
       .then(config => {
         clearInterval(tick);
         setLoadingProgress(100);
-        // после финиша небольшая пауза, чтобы пользователь увидел 100%
-        setTimeout(() => setShowLoading(false), 500);
-    
         setGameConfig(config);
       })
       .catch(error => {
         clearInterval(tick);
-        setTimeout(() => setShowLoading(false), 500);
+
+        // после завершения загрузки небольшая пауза, чтобы пользователь увидел 100%
+        setTimeout(() => setShowLoading(false), LOADING_DELAY);
 
         console.error("Ошибка загрузки данных игры:", error);
       });
@@ -67,6 +68,10 @@ export default function Game() {
             setScore(parseInt(score));
             setGameOver(true);
           };
+        },
+        () => {
+          // после загрузки всех ассетов скрываем экран загрузки
+          setShowLoading(false);
         }
       );
       gameInstanceRef.current = gameInstance;

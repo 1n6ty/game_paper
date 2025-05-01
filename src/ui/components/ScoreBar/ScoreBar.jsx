@@ -1,7 +1,8 @@
 import { useContext } from "react";
 import { UserContext } from "../../contexts/UserContext";
 
-import { GL_URL } from "../../../global";
+import MilkGlassSvg from "../../../assets/MilkGlass.svg?react";
+
 import "./ScoreBar.css";
 
 export default function ScoreBar() {
@@ -11,23 +12,19 @@ export default function ScoreBar() {
 
   return (
     <div className="score-bar">
-      <img
-        src={`${GL_URL}milk_glass.svg`}
-        alt="Стакан молока"
-        className="score-icon"
-      />
+      <MilkGlassSvg className="score-bar__icon" />
 
-      <div className="score-info">
-        <div className="score-row">
-          <span className="score-title">Ламбиксы</span>
-          <span className="score-value">
-            {score} / {totalScore}
+      <div className="score-bar__info">
+        <div className="score-bar__row">
+          <span className="score-bar__title">Ламбиксы</span>
+          <span className="score-bar__value">
+            {score}/{totalScore}
           </span>
         </div>
 
-        <div className="score-progress-bg">
+        <div className="score-bar__progress--bg">
           <div
-            className="score-progress-fill"
+            className="score-bar__progress--fill"
             style={{ width: `${percentage}%` }}
           />
         </div>

@@ -3,7 +3,7 @@
 .games-container {
   display: flex;
   flex-direction: column;
-  padding: 13px 15px 0 15px;
+  padding: 13px 15px;
   gap: 15px;
 }
 
