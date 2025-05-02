@@ -1,6 +1,16 @@
+@import "../../styles/variables.css";
+
+:root {
+  --profile-container-gap: 20px;
+}
+
 .profile-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  /* width: 100%; */
+  gap: var(--profile-container-gap);
+}
+
+.profile-container__info-card,
+.profile-container__edit-pass-card {
+  max-width: var(--tabbar-width);
 }
