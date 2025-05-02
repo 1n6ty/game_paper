@@ -1,5 +1,9 @@
+:root {
+  --settings-container-gap: 20px;
+}
+
 .settings-container {
   display: flex;
-  gap: 20px;
+  gap: var(--settings-container-gap);
   width: 100%;
 }

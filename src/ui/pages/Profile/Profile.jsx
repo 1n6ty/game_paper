@@ -28,25 +28,26 @@ export default function Profile() {
   return (
     <div className="profile-container">
       <CardContainer
+        className="profile-container__info-card"
         title="Ваши данные"
         mode={userMode}
         onToggleEdit={() => setUserMode(prev => (prev === "view" ? "edit" : "view"))}
         onSave={() => setUserMode("view")}
       >
         <EditableField
-          label="Имя Фамилия Отчество"
+          placeHolder="Имя Фамилия Отчество"
           value={userData.name}
           onChange={val => setUserData(d => ({ ...d, name: val }))}
           mode={userMode}
         />
         <EditableField
-          label="Должность"
+          placeHolder="Должность"
           value={userData.title}
           onChange={val => setUserData(d => ({ ...d, title: val }))}
           mode={userMode}
         />
         <EditableField
-          label="Почта"
+          placeHolder="Почта"
           value={userData.email}
           onChange={val => setUserData(d => ({ ...d, email: val }))}
           mode={userMode}
@@ -54,10 +55,17 @@ export default function Profile() {
       </CardContainer>
 
       <CardContainer
+        className="profile-container__edit-pass-card"
         title="Редактировать пароль"
         mode={passMode}
         onToggleEdit={() => setPassMode(prev => (prev === "view" ? "edit" : "view"))}
-        onSave={() => setPassMode("view")}
+        onSave={() => {
+          if (passwords.pass === passwords.confirm) {
+            setPassMode("view");
+          } else {
+            console.log("Пароли не совпадают!");
+          }
+        }}
       >
         {passMode === "edit" && <PasswordSection
           mode={passMode}
