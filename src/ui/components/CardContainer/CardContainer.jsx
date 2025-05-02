@@ -1,4 +1,4 @@
-import EditButton from "../EditButton/EditButton";
+import EditIcon from "../../../assets/icons/Edit.svg?react";
 import CheckIcon from "../../../assets/icons/Check.svg?react";
 import PlusIcon from "../../../assets/icons/Plus.svg?react";
 import "./CardContainer.css";
@@ -10,21 +10,37 @@ export default function CardContainer({
   onSave,
   showAddButton = false,
   onAdd,
+  className,
   children
 }) {
   const isEdit = mode === "edit";
+
+  const headerMarginBottom = !isEdit && !children ? 0 : 20;
+
   return (
-    <div className="card-container">
-      <div className="card-container-header">
-        <h2>{title}</h2>
-        <div className="card-container-actions">
-          {showAddButton && !isEdit && <button className="icon-btn" onClick={onAdd}><PlusIcon /></button>}
-          {!showAddButton && <button className="icon-btn" onClick={isEdit ? onSave : onToggleEdit}>
-            {isEdit ? <CheckIcon /> : <EditButton className="" disabled={false} />}
-          </button>}
+    <div className={`card-container ${className}`}>
+      <div className="card-container__header" style={{ marginBottom: headerMarginBottom }}>
+        <h2 className="card-container__title">
+          {title}
+        </h2>
+        <div className="card-container__actions">
+          {showAddButton && !isEdit && (
+            <button className="card-container__icon-btn" onClick={onAdd}>
+              <PlusIcon className="card-container__plus-icon" />
+            </button>
+          )}
+          {!showAddButton && (
+            <button className="card-container__icon-btn" onClick={isEdit ? onSave : onToggleEdit}>
+              {isEdit 
+                ? <CheckIcon className="card-container__check-icon" /> 
+                : <EditIcon className="card-container__edit-icon" />}
+            </button>
+          )}
         </div>
       </div>
-      <div className="card-content">{children}</div>
+      <div className="card-container__content">
+        {children}
+      </div>
     </div>
   );
 }
