@@ -1,22 +1,94 @@
 @import "../../styles/variables.css";
 
+:root {
+  --role-select__control-bg: var(--color-light-gray);
+  --role-select__control-border-radius: var(--roles-list-radius);
+  --role-select__control--open-border-color: var(--color-blue);
+
+  --role-select__value-color: var(--color-dark-blue);
+  --role-select__arrow-color: var(--color-dark-blue);
+  
+  --role-select__list-bg: var(--color-light-gray);
+  --role-select__list-border-color: var(--color-blue);
+  --role-select__list-shadow-color: var(--color-light-blue);
+  
+  --role-select__item-hover-bg: var(--color-light-blue);
+  --role-select__item-selected-bg: rgba(78, 130, 181, 0.11);
+  --role-select__item-selected-color: var(--color-dark-blue);
+}
+
 .role-select {
-  list-style: none;
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.role-select__control {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  width: 147px; /* или auto, по макету */
+  padding: 3px 14px;
+  background: var(--role-select__control-bg);
+  border: none;
+  border-radius: var(--role-select__control-border-radius);
+  cursor: pointer;
+  z-index: 11;
+}
+
+.role-select__control--open {
+  outline: 1px solid var(--role-select__control--open-border-color);
+}
+
+.role-select__value {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  color: var(--role-select__value-color);
+}
+
+.role-select__arrow {
+  margin-left: 8px;
+  color: var(--role-select__arrow-color);
+}
+
+.role-select__list {
+  position: absolute;
+  top: 100%;  
+  left: 0;
+  width: 100%;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-light-gray);
-  border: none;
-  border-radius: var(--card-border-radius);
+  background: var(--role-select__list-bg);
+  border-radius: 0 0 var(--roles-list-radius) var(--roles-list-radius);
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
-.role-select li {
-  padding: 8px 12px;
+.role-select__item {
+  padding: 3px 5px;
   cursor: pointer;
-  text-align: start;
+  text-align: left;
 }
 
-.role-select li.selected {
-  background: var(--color-role-selected);
+.role-select__item:hover {
+  background: var(--role-select__item-hover-bg);
+}
+
+.role-select__item--selected {
+  background: var(--role-select__item-selected-bg);
+  color: var(--role-select__item-selected-color);
+}
+
+.dropdown-icon {
+  width: 12px;
+  height: 6px;
+  color: var(--role-select__arrow-color);
+}
+
+.dropdown-icon.open {
+  transform: rotate(180deg);
 }
