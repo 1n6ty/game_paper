@@ -1,4 +1,4 @@
-import EditButton from "../EditButton/EditButton";
+import EditIcon from "../../../assets/icons/Edit.svg?react";
 import "./ListItemCard.css";
 
 export default function ListItemCard({
@@ -12,7 +12,7 @@ export default function ListItemCard({
       {columns.map((col, index) => (
         <div
           key={col.key}
-          className={`list-item-card-cell ${index === 0
+          className={`list-item-card__cell ${index === 0
             ? "align-left"
             : index === columns.length - 1
               ? "align-right"
@@ -22,9 +22,12 @@ export default function ListItemCard({
           {col.render ? col.render(item) : item[col.key]}
         </div>
       ))}
-      <div className="list-item-card-cell action-cell">
-        <EditButton onClick={() => onEditClick(item)} disabled={!canEdit} />
-      </div>
+      {canEdit && <button 
+        className="list-item-card__edit-btn" 
+        onClick={() => onEditClick(item)}
+      >
+        <EditIcon className="list-item-card__edit-icon" />
+      </button>}
     </div>
   );
 }

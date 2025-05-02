@@ -9,19 +9,19 @@ export default function ListTable({
   canEdit,
   onEditClick = () => { }
 }) {
-  console.log(columns);
-  console.log(items);
+  const headerMarginBottom = title.length ? 20 : 0;
+
   return (
     <div className="list-table">
-      <div className="list-table-header">
-        <h2 className="list-table-title">{title}</h2>
-        {!canEdit && <LockIcon className="lock-icon" />}
+      <div className="list-table__header" style={{ marginBottom: headerMarginBottom }}>
+        <h2 className="list-table__title">{title}</h2>
+        {!canEdit && <LockIcon className="list-table__lock-icon" />}
       </div>
-      <div className="list-table-body">
+      <div className="list-table__body">
         {columns && columns.length > 0 ?
-          <div className="list-table-row">
+          <div className="list-table__row">
             {columns.map(col => (
-              <div key={col.key} className="list-table-cell">
+              <div key={col.key} className="list-table__cell">
                 {col.header}
               </div>
             ))}

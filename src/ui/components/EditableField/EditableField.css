@@ -1,41 +1,95 @@
 @import "../../styles/variables.css";
 
+:root {
+  --editable-field__value-font-size: 20px;
+  --editable-field__value-font-weight: 400;
+  --editable-field__value-line-height: 20px;
+  --editable-field__value-letter-spacing: 0;
+  --editable-field__value-color: var(--color-dark-blue);
+
+  --editable-field__label-font-size: 16px;
+  --editable-field__label-font-weight: 400;
+  --editable-field__label-line-height: 20px;
+  --editable-field__label-letter-spacing: 0;
+  --editable-field__label-margin-bottom: 4px;
+  --editable-field__label-color: var(--color-dark-blue);
+  
+  --editable-field__input-font-size: 20px;
+  --editable-field__input-font-weight: 400;
+  --editable-field__input-line-height: 20px;
+  --editable-field__input-letter-spacing: 0;
+  --editable-field__input-border-radius: 5px;
+  --editable-field__input-padding-y: 4px;
+  --editable-field__input-padding-x: 8px;
+  --editable-field__input-color: var(--color-dark-blue);
+  --editable-field__input-bg: var(--color-light-gray);
+  
+  --editable-field__input--focus-outline: 1px solid var(--color-dark-blue);
+  --editable-field__input--placeholder-color: var(--color-light-blue);
+  
+  --editable-field__error-font-size: 16px;
+  --editable-field__error-font-weight: 400;
+  --editable-field__error-line-height: 20px;
+  --editable-field__error-letter-spacing: 0;
+  --editable-field__error-margin-top: 4px;
+  --editable-field__error-color: var(--color-light-red);
+}
+
 .editable-field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 12px;
 }
 
-.editable-field-value {
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: 0;
-  color: var(--color-dark-blue);
+.editable-field__value {
+  font-size: var(--editable-field__value-font-size);
+  font-weight: var(--editable-field__value-font-weight);
+  line-height: var(--editable-field__value-line-height);
+  letter-spacing: var(--editable-field__value-letter-spacing);
+  color: var(--editable-field__value-color);
 }
 
-.editable-field-edit-zone {
+.editable-field__edit-zone {
   display: flex;
   flex-direction: column;
 }
 
-.editable-field-label {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: 0;
-  color: var(--color-dark-blue);
-  margin-bottom: 4px;
+.editable-field__label {
+  font-size: var(--editable-field__label-font-size);
+  font-weight: var(--editable-field__label-font-weight);
+  line-height: var(--editable-field__label-line-height);
+  letter-spacing: var(--editable-field__label-letter-spacing);
+  margin-bottom: var(--editable-field__label-margin-bottom);
+  color: var(--editable-field__label-color);
 }
 
-.editable-field-input {
-  padding: 4px 8px;
+.editable-field__input {
+  font-size: var(--editable-field__input-font-size);
+  font-weight: var(--editable-field__input-font-weight);
+  line-height: var(--editable-field__input-line-height);
+  letter-spacing: var(--editable-field__input-letter-spacing);
+  border-radius: var(--editable-field__input-border-radius);
+  padding: 
+    var(--editable-field__input-padding-y) 
+    var(--editable-field__input-padding-x);
+  
   border: none;
-  border-radius: 5px;
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: 0;
-  color: var(--color-dark-blue);
-  background-color: var(--color-light-gray);
+  color: var(--editable-field__input-color);
+  background-color: var(--editable-field__input-bg);
+}
+
+.editable-field__input:focus {
+  outline: var(--editable-field__input--focus-outline);
+}
+
+.editable-field__input::placeholder {
+  color: var(--editable-field__input--placeholder-color);
+}
+
+.editable-field__error {
+  font-size: var(--editable-field__error-font-size);
+  font-weight: var(--editable-field__error-font-weight);
+  line-height: var(--editable-field__error-line-height);
+  letter-spacing: var(--editable-field__error-letter-spacing);
+  margin-top: var(--editable-field__error-margin-top);
+  color: var(--editable-field__error-color);
 }

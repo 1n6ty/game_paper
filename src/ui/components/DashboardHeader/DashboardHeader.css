@@ -1,35 +1,48 @@
 @import "../../styles/variables.css";
 
+:root {
+  --dashboard-header-background: var(--color-white);
+  --dashboard-header-shadow-color: var(--color-shadow);
+
+  --dashboard-header__title-font-size: 32px;
+  --dashboard-header__title-line-height: 32px;
+  --dashboard-header__title-color: var(--color-dark-blue);
+  
+  --dashboard-header__logo-background: var(--color-white);
+  --dashboard-header__logo-shadow-color: var(--color-shadow);
+  --dashboard-header__logo-max-width: 57px;
+  --dashboard-header__logo-max-height: 61px;
+  --dashboard-header__logo-padding-x: 17px;
+  --dashboard-header__logo-padding-y: 5.01px;
+  --dashboard-header__logo-margin-right: 30px;
+}
+
 .dashboard-header {
   display: flex;
   align-items: center;
-  background: var(--color-white);
-  box-shadow: var(--card-shadow) var(--color-shadow);
+  background: var(--dashboard-header-background);
+  box-shadow: var(--card-shadow) var(--dashboard-header-shadow-color);
   border-radius: var(--top-panel-border-radius);
-  /* padding: 14.5px 24px; */
 }
 
-.dashboard-header-logo {
-  max-width: 57px;
-  max-height: 61px;
-  background: var(--color-white);
-  box-shadow: var(--card-shadow) var(--color-shadow);
+.dashboard-header__logo {
+  max-width: var(--dashboard-header__logo-max-width);
+  max-height: var(--dashboard-header__logo-max-height);
+  background: var(--dashboard-header__logo-background);
+  box-shadow: var(--card-shadow) var(--dashboard-header__logo-shadow-color);
   border-radius: var(--card-border-radius);
   display: flex;
-  margin-right: 30px;
-  padding: 5.01px 17px;
+  margin-right: var(--dashboard-header__logo-margin-right);
+  padding: 
+    var(--dashboard-header__logo-padding-y) 
+    var(--dashboard-header__logo-padding-x);
 }
 
-.dashboard-header-logo img {
-  /* width: auto; */
-  /* height: 61px; */
-}
-
-.dashboard-header-title {
+.dashboard-header__title {
   font-weight: 700;
-  font-size: 32px;
-  line-height: 32px;
+  font-size: var(--dashboard-header__title-font-size);
+  line-height: var(--dashboard-header__title-line-height);
   letter-spacing: 0px;
-  color: var(--color-dark-blue);
+  color: var(--dashboard-header__title-color);
   margin: 14.5px 0;
 }

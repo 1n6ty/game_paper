@@ -1,47 +1,69 @@
 @import "../../styles/variables.css";
 
+:root {
+  --list-table__header-margin-bottom: 20px;
+
+  --list-table__title-font-weight: 600;
+  --list-table__title-font-size: 24px;
+  --list-table__title-line-height: 20px;
+  --list-table__title-color: var(--color-dark-blue);
+  
+  --list-table__body-gap: 10px;
+
+  --list-table__row-font-weight: 500;
+  --list-table__row-font-size: 20px;
+  --list-table__row-line-height: 20px;
+  --list-table__row-margin-bottom: 10px;
+  --list-table__row-color: var(--color-dark-blue);
+  
+  --list-table__lock-icon-size: 20px;
+  --list-table__lock-icon-color: var(--color-dark-blue);
+}
+
 .list-table {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
 
-.list-table-header {
+.list-table__header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--list-table__header-margin-bottom);
 }
 
-.list-table-title {
+.list-table__title {
+  display: flex;
+  align-items: center;
   flex-grow: 1;
   margin: 0;
-  font-weight: 600;
-  font-size: 24px;
-  line-height: 20px;
-  align-items: center;
-  color: var(--color-dark-blue);
+  font-weight: var(--list-table__title-font-weight);
+  font-size: var(--list-table__title-font-size);
+  line-height: var(--list-table__title-line-height);
+  color: var(--list-table__title-color);
 }
 
-.lock-icon {
-  width: 20px;
-  height: 20px;
+.list-table__lock-icon {
+  width: var(--list-table__lock-icon-size);
+  height: var(--list-table__lock-icon-size);
+  color: var(--list-table__lock-icon-color);
 }
 
-.list-table-body {
+.list-table__body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--list-table__body-gap);
 }
 
-.list-table-row {
+.list-table__row {
   display: flex;
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 20px;
-  margin-bottom: 10px;
-  color: var(--color-dark-blue);
+  font-weight: var(--list-table__row-font-weight);
+  font-size: var(--list-table__row-font-size);
+  line-height: var(--list-table__row-line-height);
+  margin-bottom: var(--list-table__row-margin-bottom);
+  color: var(--list-table__row-color);
 }
 
-.list-table-cell {
+.list-table__cell {
   flex: 1;
 }

@@ -1,42 +1,68 @@
 @import "../../styles/variables.css";
 
 :root {
-  --list-item-font-weight: 400px;
-  --list-item-font-size: 20px;
-  --list-item-line-height: 20px;
+  --list-item-card-background: var(--color-white);
+  --list-item-card-shadow-color: var(--color-shadow);
+  --list-item-card-padding: 10px;
+  
+  --list-item-card__cell-font-weight: 400;
+  --list-item-card__cell-font-size: 20px;
+  --list-item-card__cell-line-height: 20px;
+  --list-item-card__cell-color: var(--color-dark-blue);
+  --list-item-card__cell-margin-right: 0;
+  
+  --list-item-card__edit-icon-width: 16.52px;
+  --list-item-card__edit-icon-height: 16.52px;
+  --list-item-card__edit-icon-color: var(--color-blue);
 }
 
 .list-item-card {
   display: flex;
   align-items: center;
-  background: var(--color-white);
+  background: var(--list-item-card-background);
   border-radius: var(--card-item-border-radius);
-  box-shadow: var(--card-shadow) var(--color-shadow);
-  padding: 10px;
+  box-shadow: var(--card-shadow) var(--list-item-card-shadow-color);
+  padding: var(--list-item-card-padding);
 }
 
-.list-item-card-cell {
-  font-weight: var(--list-item-font-weight);
-  font-size: var(--list-item-font-size);
-  line-height: var(--list-item-line-height);
-  color: var(--color-dark-blue);
+.list-item-card__cell {
+  display: flex;
+  /* position: relative; */
+
+  font-weight: var(--list-item-card__cell-font-weight);
+  font-size: var(--list-item-card__cell-font-size);
+  line-height: var(--list-item-card__cell-line-height);
+  color: var(--list-item-card__cell-color);
   flex: 1;
 }
 
-.list-item-card-cell.align-left {
-  text-align: left;
+.list-item-card__cell.align-left {
+  justify-content: left;
 }
 
-.list-item-card-cell.align-center {
-  text-align: center;
+.list-item-card__cell.align-center {
+  justify-content: center;
 }
 
-.list-item-card-cell.align-right {
-  text-align: right;
+.list-item-card__cell.align-right {
+  /* position: absolute; */
+  /* right: 5px; */
+  justify-content: center;
+  margin-right: var(--list-item-card__cell-margin-right);
 }
 
-.list-item-card-cell.action-cell {
-  flex: 0 0 32px;
-  /* width: 16.52px; */
-  text-align: right;
+.list-item-card__edit-btn {
+  display: flex;
+  /* flex: 0 0 0 15%; */
+  /* text-align: right; */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.list-item-card__edit-icon {
+  width: var(--list-item-card__edit-icon-width);
+  height: var(--list-item-card__edit-icon-height);
+  color: var(--list-item-card__edit-icon-color);
 }
