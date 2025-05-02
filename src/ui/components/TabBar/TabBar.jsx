@@ -9,7 +9,7 @@ export default function TabBar({ tabs }) {
           key={path}
           to={path}
           className={({ isActive }) =>
-            isActive ? "tab-bar-item tab-bar-item--active" : "tab-bar-item"
+            isActive ? "tab-bar__item tab-bar__item--active" : "tab-bar__item"
           }
         >
           {label}

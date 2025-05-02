@@ -1,36 +1,52 @@
 @import "../../styles/variables.css";
 
-.tab-bar {
-  display: flex;
-  width: 504px;
-  height: 36px;
-  background: transparent;
-  box-shadow: var(--card-shadow) var(--color-shadow);
-  border-radius: var(--tabbar-border-radius);
-  overflow: hidden;
+:root {
+  --tab-bar-width: var(--tabbar-width);
+  --tab-bar-height: 36px;
+  --tab-bar-box-shadow: var(--card-shadow);
+  --tab-bar-shadow-color: var(--color-shadow);
+  --tab-bar-border-radius: var(--tabbar-border-radius);
+  --tab-bar-padding-x: 2px;
+
+  --tab-bar__item-font-size: 16px;
+  --tab-bar__item-font-weight: 500;
+  --tab-bar__item-line-height: 32px;
+  --tab-bar__item-margin-y: 2px;
+  --tab-bar__item-color: var(--color-blue);
+  
+  --tab-bar__item--active-color: var(--color-dark-blue);
+  --tab-bar__item--active-background: var(--color-white);
+  --tab-bar__item--active-line-height: 32px;
 }
 
-.tab-bar-item {
+.tab-bar {
+  display: flex;
+  width: var(--tab-bar-width);
+  height: var(--tab-bar-height);
+  background: transparent;
+  box-shadow: var(--tab-bar-box-shadow) var(--tab-bar-shadow-color);
+  border-radius: var(--tab-bar-border-radius);
+  overflow: hidden;
+  padding: 0 var(--tab-bar-padding-x);
+  align-items: center;
+}
+
+.tab-bar__item {
   flex: 1;
   text-align: center;
   text-decoration: none;
-  /* #4E82B5 */
-  color: var(--color-blue);
-  font-size: 16px;
-  font-weight: 500;
-  /* чтобы неактивный таб ровно 36px */
-  line-height: 36px;
+  color: var(--tab-bar__item-color);
+  font-size: var(--tab-bar__item-font-size);
+  font-weight: var(--tab-bar__item-font-weight);
+  line-height: var(--tab-bar__item-line-height);
+  margin: var(--tab-bar__item-margin-y) 0;
+  transition: all 0.3s ease;
 }
 
-.tab-bar-item--active {
-  background: var(--color-white);
-  /* #325374 */
-  color: var(--color-dark-blue);
-  /* уменьшаем до 32px */
-  height: 32px;
-  line-height: 32px;
-  /* центрируем по вертикали в 36px контейнера */
-  margin: 2px 0;
-  border-radius: 7px;
+.tab-bar__item--active {
+  background: var(--tab-bar__item--active-background);
+  color: var(--tab-bar__item--active-color);
+  line-height: var(--tab-bar__item--active-line-height);
+  border-radius: var(--tabbar-item-border-radius);
   box-shadow: var(--card-shadow) var(--color-shadow);
 }
