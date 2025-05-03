@@ -23,7 +23,6 @@ export default function TopCards() {
           <p className="top-cards-tickets">{tickets}</p>
         </div>
       </div>
-    </div>);
+    </div>
+  );
 }
-
-;
