@@ -16,7 +16,7 @@
   --bottom-nav-bar__tab-line-height: 0;
   --bottom-nav-bar__tab-letter-spacing: 0.06px;
   
-  --bottom-nav-bar__icon-size: 22px;
+  --bottom-nav-bar__icon-size: auto;
   --bottom-nav-bar__icon-margin-bottom: 13px;
 }
 
