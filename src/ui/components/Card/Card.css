@@ -59,11 +59,11 @@
   cursor: pointer;
   width: 52px;
   height: 52px;
-  padding: 11px 0 11px 0;
+  padding: 11px 11px ;
 }
 
 .card-qr-button--white {
-  background: var(--color-primary-light-blue);
+  background: rgba(209, 232, 255, 0.42);
   color: var(--color-primary-blue);
 }
 
@@ -78,8 +78,8 @@
 }
 
 .card-qr-icon {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
 }
 
 .card-body {
