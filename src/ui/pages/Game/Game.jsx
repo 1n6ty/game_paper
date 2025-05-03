@@ -7,14 +7,12 @@ import { loadGameData, GameAPI } from "../../../domain/gameUseCases";
 
 import "./Game.css";
 
-const LOADING_DELAY = 600;  // миллисекунды
-
 export default function Game() {
   const { gameName } = useParams();
   const canvasRef = useRef(null);
   const gameInstanceRef = useRef(null);
   const { authRawData } = useContext(UserContext);
-  
+
   const [gameConfig, setGameConfig] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [showLoading, setShowLoading] = useState(true);
@@ -28,27 +26,64 @@ export default function Game() {
   }, []);
 
   useEffect(() => {
-    
-    // эмулируем прогресс пока ждём ответа
-    const tick = setInterval(() => {
-      setLoadingProgress(p => Math.min(p + 10, 100));
-      console.log("Загрузка игры...");
-    }, 200);
- 
-    loadGameData(gameName)
-      .then(config => {
-        clearInterval(tick);
-        setLoadingProgress(100);
-        setGameConfig(config);
-      })
-      .catch(error => {
-        clearInterval(tick);
+    let tick = null;
+    let onlineListener = null;
 
-        // после завершения загрузки небольшая пауза, чтобы пользователь увидел 100%
-        setTimeout(() => setShowLoading(false), LOADING_DELAY);
+    const startProgressTick = () => {
+      tick = setInterval(() => {
+        setLoadingProgress(prev => {
+          let increment;
+          if (prev < 70) {
+            increment = Math.random() * 5;
+          } else if (prev < 90) {
+            increment = Math.random() * 2;
+          } else {
+            increment = 0;
+          }
 
-        console.error("Ошибка загрузки данных игры:", error);
-      });
+          const newValue = Math.min(prev + increment, 90);
+          console.log(`Загрузка: ${newValue.toFixed(0)}%`);
+          return newValue;
+        });
+      }, 300);
+    };
+
+    const attemptLoadGame = () => {
+      if (!tick) {
+        startProgressTick();
+      }
+
+      loadGameData(gameName)
+        .then(config => {
+          clearInterval(tick);
+          tick = null;
+          setLoadingProgress(100);
+          setGameConfig(config);
+          if (onlineListener) {
+            window.removeEventListener("online", onlineListener);
+            onlineListener = null;
+          }
+        })
+        .catch(error => {
+          console.error("Ошибка загрузки данных игры:", error);
+
+          if (!onlineListener) {
+            onlineListener = () => {
+              console.log("Соединение с интернетом восстановлено, повторная загрузка игры.");
+              attemptLoadGame();
+            };
+
+            window.addEventListener("online", onlineListener);
+          }
+        });
+    };
+
+    attemptLoadGame();
+
+    return () => {
+      if (tick) clearInterval(tick);
+      if (onlineListener) window.removeEventListener("online", onlineListener);
+    };
   }, [gameName]);
 
   useEffect(() => {
@@ -65,12 +100,11 @@ export default function Game() {
           gameInstance.onFinish = (canvas, tmp, score) => {
             console.info("Игра завершена!");
             console.log(`Счет: ${score}`);
-            setScore(parseInt(score));
+            setScore(parseInt(score, 10));
             setGameOver(true);
           };
         },
         () => {
-          // после загрузки всех ассетов скрываем экран загрузки
           setShowLoading(false);
         }
       );
@@ -79,9 +113,7 @@ export default function Game() {
   }, [gameConfig, authRawData]);
 
   const handleRestart = () => {
-    if (gameInstanceRef.current)
-      gameInstanceRef.current.start();
-
+    if (gameInstanceRef.current) gameInstanceRef.current.start();
     setGameOver(false);
   };
 
@@ -91,14 +123,10 @@ export default function Game() {
 
   return (
     <div className="game-container">
-      {showLoading && <GameLoading progress={loadingProgress} />}
+      {showLoading && <GameLoading progress={Math.round(loadingProgress)} />}
       <canvas ref={canvasRef} className="game-canvas"></canvas>
       {gameOver && (
-        <GameOver
-          score={score}
-          onRestart={handleRestart}
-          onExit={handleExit}
-        />
+        <GameOver score={score} onRestart={handleRestart} onExit={handleExit} />
       )}
     </div>
   );
