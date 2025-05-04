@@ -1,4 +1,4 @@
-const __VERSION__ = "3C";
+const __VERSION__ = "3.1C";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
@@ -78,7 +78,7 @@ const GRID_PADDING_TOP = 113.49;
 const CELL_WIDTH = 54.73;
 const CELL_HEIGHT = 54.73;
 const CELL_GAP = 5;
-const CELL_PADDING = 5;
+const CELL_PADDING = 0;
 
 const NEW_CELL_START_Y = CELL_HEIGHT + CELL_GAP;
 
@@ -182,29 +182,22 @@ const drawRoundedPlus = (ctx, x, y, width, height, armThickness, radius) => {
   drawRoundedPolygon(ctx, pts, radius);
 };
 
-const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor) => {
+const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor, strokeWidth = 2) => {
   ctx.fillStyle = fillColor;
   ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = strokeWidth;
   roundRect(ctx, x, y, width, height, radius);
   ctx.stroke();
   ctx.fill();
 };
 
-const drawImageInCell = (
-  ctx,
-  image,
-  drawX,
-  drawY,
-  cellW,
-  cellH,
-  cellPadding
-) => {
+const drawImageInCell = (ctx, image, drawX, drawY, cellW, cellH, cellPadding, maxScale = 1) => {
   const availableWidth = cellW - 2 * cellPadding;
   const availableHeight = cellH - 2 * cellPadding;
   const scale = Math.min(
     availableWidth / image.naturalWidth,
-    availableHeight / image.naturalHeight
+    availableHeight / image.naturalHeight,
+    maxScale
   );
   const drawWidth = image.naturalWidth * scale;
   const drawHeight = image.naturalHeight * scale;
@@ -558,7 +551,8 @@ class Renderer {
         highlightedTargetY,
         HEADER_TARGET_CARD_IMAGE_WIDTH,
         HEADER_TARGET_CARD_IMAGE_HEIGHT,
-        CELL_PADDING * 2
+        CELL_PADDING,
+        1.2
       );
     }
 
@@ -675,11 +669,11 @@ class Renderer {
       drawImageInCell(
         this.ctx,
         orderProductImg,
-        targetCardX + 5,
-        targetCardY + 4,
+        targetCardX,
+        targetCardY,
         CELL_WIDTH,
-        CELL_HEIGHT,
-        (CELL_PADDING * 1.5)
+        TARGET_CARD_HEIGHT,
+        10
       );
     }
 
@@ -690,16 +684,16 @@ class Renderer {
 
     this.ctx.fillText(
       `${score}/${targetItemsCount}`,
-      targetCardX + (TARGET_CARD_WIDTH * 3) / 4 - 6,
+      targetCardX + TARGET_CARD_WIDTH / 2 + 22,
       targetCardY + TARGET_CARD_HEIGHT / 2,
-      TARGET_CARD_WIDTH / 2 - 4
+      TARGET_CARD_WIDTH / 2 + 8
     );
 
     this.ctx.fillText(
       `Шаги ${currentStep}/${stepsCount}`,
       stepsCardX + STEPS_CARD_WIDTH / 2,
       stepsCardY + STEPS_CARD_HEIGHT / 2,
-      STEPS_CARD_WIDTH - 13
+      STEPS_CARD_WIDTH - 8
     );
 
     this.ctx.restore();
@@ -758,9 +752,10 @@ class Renderer {
     let strokeColor = STEPS_STROKE_COLOR;
     let fillColor = STEPS_BG_COLOR;
     let alpha = 1;
-    const scaleFactor = 1.10;
+    let scaleFactor = 1;
   
     if (selected) {
+      scaleFactor = 1.06;
       cellW *= scaleFactor;
       cellH *= scaleFactor;
       const dx = (cellW - CELL_WIDTH) / 2;
@@ -785,10 +780,11 @@ class Renderer {
   
     this.ctx.save();
     this.ctx.globalAlpha = alpha;
-    drawCard(this.ctx, posX, posY, cellW, cellH, 9, strokeColor, fillColor);
+    drawCard(this.ctx, posX, posY, cellW, cellH, 9, strokeColor, fillColor, 
+      2 * scaleFactor + 1.3 * (scaleFactor !== 1));
     const img = this.images[cell.type];
     if (img) {
-      drawImageInCell(this.ctx, img, posX, posY, cellW, cellH, CELL_PADDING);
+      drawImageInCell(this.ctx, img, posX, posY, cellW, cellH, CELL_PADDING, scaleFactor);
     }
 
     this.ctx.restore();
@@ -872,9 +868,9 @@ class GameEngine {
 
     this.trainingCount = +initGameData.trainingCount || 0;
     this.showTutorial = this.trainingCount < 3;
-    this.stepsCount = +initGameData.maxStepsCount || 20;
+    this.stepsCount = +initGameData.maxStepsCount || 10;
     this.currentStep = 0;
-    this.targetItemsCount = +initGameData.targetItemsCount || 1;
+    this.targetItemsCount = +initGameData.targetItemsCount || 10;
     this.score = 0;
     
     this.isGameOver = false;
