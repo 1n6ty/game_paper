@@ -1,9 +1,9 @@
-const __VERSION__ = "2.3C";
+const __VERSION__ = "3C";
 
 // const PATH = "./assets/match3/";
 const PATH = "/media/assets/match3/";
 
-const ASSET_PATHS = {
+const cardPaths = {
   smetanaGlass: `${PATH}smetana_glass.svg`,
   curd: `${PATH}curd.svg`,
   butter: `${PATH}butter.svg`,
@@ -20,7 +20,7 @@ const MAX_CANVAS_WIDTH = 428;
 const MAX_CANVAS_HEIGHT = 809;
 
 const HEADER_BG_TOP_COLOR = "#FFFFFF";
-const HEADER_BG_BOTTOM_COLOR = "#9FC7F0";
+const HEADER_BG_BOTTOM_COLOR = "#A6BDE5";
 const HEADER_HEIGHT = 279;
 
 const LAMBOY_PADDING_LEFT = 84;
@@ -29,8 +29,8 @@ const LAMBOY_PADDING_TOP = 0;
 const LAMBOY_WIDTH = 344;
 const LAMBOY_HEIGHT = 363;
 
-const HEADER_UP_DIVIDER_COLOR = "#5485C9";
-const HEADER_DOWN_DIVIDER_COLOR = "#739BD3";
+const HEADER_UP_DIVIDER_COLOR = "#224C93";
+const HEADER_DOWN_DIVIDER_COLOR = "#2C62B8";
 const HEADER_UP_DIVIDER_HEIGHT = 4;
 const HEADER_DOWN_DIVIDER_HEIGHT = 22;
 
@@ -41,30 +41,30 @@ const HEADER_TARGET_CARD_HEIGHT = 70.72;
 const HEADER_TARGET_CARD_BORDER_RADIUS = 12;
 const HEADER_TARGET_CARD_IMAGE_WIDTH = 70.72;
 const HEADER_TARGET_CARD_IMAGE_HEIGHT = 70.72;
-const HEADER_TARGET_COUNTER_BG_COLOR = "#DB6971";
+const HEADER_TARGET_COUNTER_BG_COLOR = "#B2222C";
+const HEADER_TARGET_STROKE_COLOR = "#22498A";
 const HEADER_TARGET_COUNTER_TEXT_COLOR = "#FFFFFF";
 const HEADER_TARGET_COUNTER_RADIUS = 24;
 
-const BODY_BG_TOP_COLOR = "#EBF5FF";
-const BODY_BG_BOTTOM_COLOR = "#D8EBFF";
+const BODY_BG_COLOR = "#FFFFFF";
 
 const COUNTERS_PADDING_TOP = 18;
 const COUNTERS_PADDING_LEFT = 84;
 const COUNTERS_GAP = 10;
 
 const STEPS_BG_COLOR = "#FFFFFF";
-const STEPS_STROKE_COLOR = "#4E82B5";
-const STEPS_TEXT_COLOR = "#4E82B5";
+const STEPS_STROKE_COLOR = "#224C93";
+const STEPS_TEXT_COLOR = "#224C93";
 const STEPS_CARD_WIDTH = 134;
 const STEPS_CARD_HEIGHT = 61;
 
 const TARGET_BG_COLOR = "#FFFFFF";
-const TARGET_STROKE_COLOR = "#4E82B5";
+const TARGET_STROKE_COLOR = "#224C93";
 const TARGET_CARD_WIDTH = 116;
 const TARGET_CARD_HEIGHT = 61;
 
-const GRID_ZONE_BG_COLOR = "#B2D2F3";
-const GRID_ZONE_STROKE_COLOR = "#4E82B5";
+const GRID_ZONE_BG_COLOR = "#527EC9";
+const GRID_ZONE_STROKE_COLOR = "#224C93";
 const GRID_ZONE_PADDING_LEFT = 21;
 const GRID_ZONE_PADDING_TOP = 97;
 const GRID_ZONE_WIDTH = 386;
@@ -77,9 +77,10 @@ const GRID_PADDING_TOP = 113.49;
 
 const CELL_WIDTH = 54.73;
 const CELL_HEIGHT = 54.73;
+const CELL_GAP = 5;
 const CELL_PADDING = 5;
 
-const NEW_CELL_START_Y = CELL_HEIGHT + CELL_PADDING;
+const NEW_CELL_START_Y = CELL_HEIGHT + CELL_GAP;
 
 const loadImage = src =>
   new Promise(resolve => {
@@ -184,6 +185,7 @@ const drawRoundedPlus = (ctx, x, y, width, height, armThickness, radius) => {
 const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor) => {
   ctx.fillStyle = fillColor;
   ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 2;
   roundRect(ctx, x, y, width, height, radius);
   ctx.stroke();
   ctx.fill();
@@ -522,8 +524,8 @@ class Renderer {
     const x0 = GRID_PADDING_LEFT;
     const y0 = HEADER_HEIGHT + GRID_PADDING_TOP;
     return {
-      x: x0 + pos.col * (CELL_WIDTH + CELL_PADDING),
-      y: y0 + pos.row * (CELL_HEIGHT + CELL_PADDING),
+      x: x0 + pos.col * (CELL_WIDTH + CELL_GAP),
+      y: y0 + pos.row * (CELL_HEIGHT + CELL_GAP),
     };
   }
 
@@ -543,7 +545,7 @@ class Renderer {
       HEADER_TARGET_CARD_WIDTH,
       HEADER_TARGET_CARD_HEIGHT,
       HEADER_TARGET_CARD_BORDER_RADIUS,
-      STEPS_STROKE_COLOR,
+      HEADER_TARGET_STROKE_COLOR,
       STEPS_BG_COLOR
     );
 
@@ -556,7 +558,7 @@ class Renderer {
         highlightedTargetY,
         HEADER_TARGET_CARD_IMAGE_WIDTH,
         HEADER_TARGET_CARD_IMAGE_HEIGHT,
-        CELL_PADDING
+        CELL_PADDING * 2
       );
     }
 
@@ -673,11 +675,11 @@ class Renderer {
       drawImageInCell(
         this.ctx,
         orderProductImg,
-        targetCardX + 4,
-        targetCardY + 7,
-        (CELL_WIDTH * 6) / 7,
-        (CELL_HEIGHT * 6) / 7,
-        CELL_PADDING
+        targetCardX + 5,
+        targetCardY + 4,
+        CELL_WIDTH,
+        CELL_HEIGHT,
+        (CELL_PADDING * 1.5)
       );
     }
 
@@ -707,15 +709,7 @@ class Renderer {
     const { width, height } = this.dims;
     const scaledHeaderHeight = HEADER_HEIGHT * this.scale;
 
-    const gradient = this.ctx.createLinearGradient(
-      0,
-      scaledHeaderHeight,
-      0,
-      height
-    );
-    gradient.addColorStop(0, BODY_BG_TOP_COLOR);
-    gradient.addColorStop(1, BODY_BG_BOTTOM_COLOR);
-    this.ctx.fillStyle = gradient;
+    this.ctx.fillStyle = BODY_BG_COLOR;
     this.ctx.fillRect(
       0,
       scaledHeaderHeight,
@@ -774,7 +768,7 @@ class Renderer {
       posX -= dx;
       posY -= dy;
       strokeColor = STEPS_STROKE_COLOR;
-      fillColor = BODY_BG_BOTTOM_COLOR;
+      // fillColor = BODY_BG_BOTTOM_COLOR;
     }
   
     if (cell._removalProgress != null) {
@@ -864,7 +858,7 @@ class GameEngine {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.tmp = tmp;
-    this.assetKeys = Object.keys(ASSET_PATHS);
+    this.assetKeys = Object.keys(cardPaths);
     
     const seed = initGameData.seed || Date.now().toString(16);
     this.randomGen = new LCG(seed);
@@ -993,7 +987,7 @@ class GameEngine {
   }
 
   async loadAssets() {
-    const entries = [...Object.entries(ASSET_PATHS), ["lamBoy", lamBoyUrl]];
+    const entries = [...Object.entries(cardPaths), ["lamBoy", lamBoyUrl]];
     const imgs = await Promise.all(entries.map(([, p]) => loadImage(p)));
     entries.forEach(([k], i) => (this.images[k] = imgs[i]));
 
@@ -1054,10 +1048,14 @@ class GameEngine {
           // revert model
           this.grid.cells[a.row][a.col] = fromCell;
           this.grid.cells[b.row][b.col] = toCell;
-          fromCell.row = a.row; fromCell.col = a.col;
-          toCell.row = b.row; toCell.col = b.col;
-          delete fromCell._animX; delete fromCell._animY;
-          delete toCell._animX; delete toCell._animY;
+          fromCell.row = a.row; 
+          fromCell.col = a.col;
+          toCell.row = b.row; 
+          toCell.col = b.col;
+          delete fromCell._animX; 
+          delete fromCell._animY;
+          delete toCell._animX; 
+          delete toCell._animY;
           this.requestRender();
         }));
       }
@@ -1249,8 +1247,8 @@ class GameEngine {
     const y = e.clientY - rect.top;
     const gridStartX = this.offset.x + GRID_PADDING_LEFT * this.scale;
     const gridStartY = this.offset.y + (HEADER_HEIGHT + GRID_PADDING_TOP) * this.scale;
-    const cellWidth = (CELL_WIDTH + CELL_PADDING) * this.scale;
-    const cellHeight = (CELL_HEIGHT + CELL_PADDING) * this.scale;
+    const cellWidth = (CELL_WIDTH + CELL_GAP) * this.scale;
+    const cellHeight = (CELL_HEIGHT + CELL_GAP) * this.scale;
     const col = Math.floor((x - gridStartX) / cellWidth);
     const row = Math.floor((y - gridStartY) / cellHeight);
     if (row < 0 || col < 0 || row >= this.grid.rows || col >= this.grid.cols) return null;
