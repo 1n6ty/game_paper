@@ -1,9 +1,9 @@
-const __VERSION__ = "2.3C";
+const __VERSION__ = "3C";
 
 // const PATH = "./assets/memory/";
 const PATH = "/media/assets/memory/";
 
-const CARD_PATHS = {
+const cardPaths = {
   bottle: `${PATH}cards/bottle.svg`,
   can: `${PATH}cards/can.svg`,
   cat: `${PATH}cards/cat.svg`,
@@ -11,7 +11,7 @@ const CARD_PATHS = {
   flowerPink: `${PATH}cards/flowerPink.svg`,
   flowerPurple: `${PATH}cards/flowerPurple.svg`,
   flowerWhite: `${PATH}cards/flowerWhite.svg`,
-  lambumiz: `${PATH}cards/lambumiz.svg`,
+  cookie: `${PATH}cards/cookie.svg`,
   leaf: `${PATH}cards/leaf.svg`,
   milkGlass: `${PATH}cards/milkGlass.svg`,
   yogurtChocolate: `${PATH}cards/yogurtChocolate.svg`,
@@ -75,7 +75,8 @@ const GRID_PADDING_TOP = 217;
 
 const CELL_WIDTH = 72;
 const CELL_HEIGHT = 72;
-const CELL_PADDING = 4;
+const CELL_GAP = 4;
+const CELL_PADDING = 0;
 const CELL_CARD_RADIUS = 10;
 
 const BUSHES_WIDTH = 428;
@@ -118,20 +119,13 @@ const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor) => {
   ctx.fill();
 };
   
-const drawImageInCell = (
-  ctx,
-  image,
-  drawX,
-  drawY,
-  cellW,
-  cellH,
-  cellPadding
-) => {
+const drawImageInCell = (ctx, image, drawX, drawY, cellW, cellH, cellPadding) => {
   const availableWidth = cellW - 2 * cellPadding;
   const availableHeight = cellH - 2 * cellPadding;
   const scale = Math.min(
     availableWidth / image.naturalWidth,
-    availableHeight / image.naturalHeight
+    availableHeight / image.naturalHeight,
+    1
   );
   const drawWidth = image.naturalWidth * scale;
   const drawHeight = image.naturalHeight * scale;
@@ -257,8 +251,8 @@ class Renderer {
     const x0 = GRID_PADDING_LEFT;
     const y0 = GRID_PADDING_TOP;
     return {
-      x: x0 + pos.col * (CELL_WIDTH + CELL_PADDING),
-      y: y0 + pos.row * (CELL_HEIGHT + CELL_PADDING),
+      x: x0 + pos.col * (CELL_WIDTH + CELL_GAP),
+      y: y0 + pos.row * (CELL_HEIGHT + CELL_GAP),
     };
   }
 
@@ -346,19 +340,18 @@ class Renderer {
     const fbScale = cell._scale || 1;
     this.ctx.translate(x + shake, y);
 
-    // масштабируем вокруг центра
-    this.ctx.translate(CELL_WIDTH/2, CELL_HEIGHT/2);
+    this.ctx.translate(CELL_WIDTH / 2, CELL_HEIGHT / 2);
     this.ctx.scale(fbScale, fbScale);
-    this.ctx.translate(-CELL_WIDTH/2, -CELL_HEIGHT/2);
+    this.ctx.translate(-CELL_WIDTH / 2, -CELL_HEIGHT / 2);
   
     const flip = cell._flipProgress;
     if (flip != null) {
       const scaleX = flip <= 0.5
         ? (1 - flip * 2)
         : ((flip - 0.5) * 2);
-      this.ctx.translate(CELL_WIDTH/2, CELL_HEIGHT/2);
+      this.ctx.translate(CELL_WIDTH / 2, CELL_HEIGHT / 2);
       this.ctx.scale(scaleX, 1);
-      this.ctx.translate(-CELL_WIDTH/2, -CELL_HEIGHT/2);
+      this.ctx.translate(-CELL_WIDTH / 2, -CELL_HEIGHT / 2);
     }
   
     if (cell._removalProgress != null) {
@@ -464,7 +457,7 @@ class GameEngine {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.tmp = tmp;
-    this.assetKeys = Object.keys(CARD_PATHS);
+    this.assetKeys = Object.keys(cardPaths);
 
     this.dimensions = { width: MAX_CANVAS_WIDTH, height: MAX_CANVAS_HEIGHT };
     this.scale = Math.min(this.dimensions.width / MAX_CANVAS_WIDTH, this.dimensions.height / MAX_CANVAS_HEIGHT);
@@ -604,7 +597,7 @@ class GameEngine {
   }
 
   async loadAssets() {
-    const entries = [...Object.entries(CARD_PATHS), 
+    const entries = [...Object.entries(cardPaths), 
       ["bushes", bushesUrl],
       ["ground", groundUrl]
     ];
@@ -819,9 +812,7 @@ class GameEngine {
     const p2 = this.secondCell;
     const c1 = this.grid.cells[p1.row][p1.col];
     const c2 = this.grid.cells[p2.row][p2.col];
-    
-    this.currentStep++;
-    
+        
     let animPromise;
     
     if (c1.type === c2.type) {
@@ -831,6 +822,7 @@ class GameEngine {
         animMatchFeedbackConsts.shrink
       );
     } else {
+      this.currentStep++;
       animPromise = this.animMismatchFeedback([p1, p2], 
         animDurations.mismatch, 
         BACK_COOLDOWN,
@@ -865,8 +857,8 @@ class GameEngine {
     const y = (e.clientY - rect.top);
     const startX = GRID_PADDING_LEFT * this.scale + this.offset.x;
     const startY = GRID_PADDING_TOP  * this.scale + this.offset.y;
-    const cellW = (CELL_WIDTH + CELL_PADDING) * this.scale;
-    const cellH = (CELL_HEIGHT + CELL_PADDING) * this.scale;
+    const cellW = (CELL_WIDTH + CELL_GAP) * this.scale;
+    const cellH = (CELL_HEIGHT + CELL_GAP) * this.scale;
     const col = Math.floor((x - startX) / cellW);
     const row = Math.floor((y - startY) / cellH);
     if (row < 0 || col < 0 || row >= this.grid.rows || col >= this.grid.cols) return null;
