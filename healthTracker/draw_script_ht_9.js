@@ -1,6 +1,7 @@
-const __VERSION__ = "9.2";
+const __VERSION__ = "9.3";
 
-const PATH = "/media/assets/healthTracker/";  // /media/assets/healthTracker/
+// const PATH = "./assets/healthTracker/";
+const PATH = "/media/assets/healthTracker/";
 
 const glassUrl = `${PATH}glass.svg`;
 const decorationsUrl = `${PATH}decorations.svg`;
@@ -14,7 +15,7 @@ const GLASS_HEIGHT = 259;
 const FILLING_WIDTH = 154.96;
 const FILLING_HEIGHT = 208.68;
 const DECOR_WIDTH = 792;
-const DECOR_HEIGHT = 448;
+const DECOR_HEIGHT = 480.1;
 const TOTAL_DAYS = 7;  // всего дней для заполнения
 
 const TITLE_COLOR = "#779FBD";
