@@ -2,7 +2,7 @@ import { fetchDataMatrix } from "../infrastructure/index";
 
 // Возвращает список всех видео
 // В формате { game_name_1: cover_url_1, game_name_2: cover_url_2, ... }
-// async function loadDMVideos() {
+// export async function loadDMVideos() {
 //     const gameLinks = await fetchDMVideoLinks();
 //     const result = {};
 //     Object.keys(gameLinks).forEach(gameName => {
@@ -11,15 +11,30 @@ import { fetchDataMatrix } from "../infrastructure/index";
 //     return result;
 //   };
 
-async function getScoreByDatamatrix(authRawData, dataMatrixText) {
-  // {score: int}
-  const data = await fetchDataMatrix(authRawData, dataMatrixText); 
-  const score = data.score;
-  if (typeof score !== "number") {
-    console.log("Неверный формат данных!");
+export async function getScoreAndPathByDatamatrix(authRawData, dataMatrixText) {
+  try {
+    const data = await fetchDataMatrix(authRawData, dataMatrixText);
+
+    if (typeof data.score !== "number") {
+      throw new Error("Unexpected response format: score is not a number");
+    }
+
+    return {
+      score: data.score,
+      path: data.path || null,
+      scanned: false,
+    };
+  } catch (e) {
+    if (e.isClientError) {
+      // Уже просканировано (или другая 4xx)
+      return {
+        score: null,
+        path: null,
+        scanned: true,
+      };
+    }
+
+    // Пробрасываем все прочие ошибки дальше
+    throw e;
   }
-
-  return score, data.path; 
 }
-
-export { getScoreByDatamatrix };
