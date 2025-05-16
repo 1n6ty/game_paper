@@ -1,108 +1,85 @@
 import { fetchGameLinks } from "../infrastructure";
+import GameApi from "../infrastructure/GameApi";
 
 // Возвращает названия доступных игр
 // В формате { game_name_1: cover_url_1, game_name_2: cover_url_2, ... }
-async function loadGames() {
-  const gameLinks = await fetchGameLinks();
-  const result = {};
-  Object.keys(gameLinks).forEach(gameName => {
-    result[gameName] = "/media/" + gameLinks[gameName].cover_url;
-  });
-  return result;
-}
-
-// Возвращает имя и url доступных игр
-async function loadGameData(gameName) {
-  const gameLinks = await fetchGameLinks();
-  return {
-    gameName,
-    gameUrl: "/media/" + gameLinks[gameName].draw_url
-  };
-}
-
-class GameAPI {
-  #tmp = {};
-  #module = Object();
-  #onFinish = () => { };
-  #onAssetsLoaded = () => { };
-
-  /**
-   * @param {HTMLElement} canvas
-   * @param {string} auth_raw_data Telegram raw_data of user transaction
-   * @param {string} game_name
-   * @param {string} draw_script_url  
-  */
-  constructor(canvas, auth_raw_data, game_name, draw_script_url, onModuleLoad = () => { }, onAssetsLoaded = () => { }) {
-    this.canvas = canvas;
-    this.auth_raw_data = auth_raw_data;
-    this.game_name = game_name;
-    this.draw_script_url = draw_script_url;
-    this.#onAssetsLoaded = onAssetsLoaded;
-
-    import(/* webpackIgnore: true */ draw_script_url).then(
-      obj => {
-        this.#module = obj;
-        onModuleLoad();
-      }
-    ).catch(
-      reason => {
-        console.error("Draw script load error with " + reason);
-      }
-    );
-  }
-
-  set onFinish(method = (canvas, tmp, score) => { }) {
-    this.#onFinish = method;
-  }
-
-  finish = game_data => {
-    fetch("/gamefinish/", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: this.auth_raw_data,
-        "X-CSRFToken": window.CSRF_TOKEN
-      },
-      body: JSON.stringify(game_data)
-    }).then(response => {
-      response.json().then(
-        response_json => {
-          this.#module.deinit(this.canvas, this.#tmp);
-          this.#onFinish(this.canvas, this.#tmp, response_json.score);
-        }
-      );
+export async function loadGames() {
+  try {
+    const gameLinks = await fetchGameLinks();
+    const result = {};
+    Object.keys(gameLinks).forEach(gameName => {
+      result[gameName] = "/media/" + gameLinks[gameName].cover_url;
     });
-  };
-
-  start() {
-    fetch("/gameinit/", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: this.auth_raw_data,
-        "X-CSRFToken": window.CSRF_TOKEN
-      },
-      body: JSON.stringify({
-        game_name: this.game_name
-      })
-    }).then(
-      response => {
-        response.json().then(
-          init_game_data => {
-            this.#tmp = this.#module.init(this.canvas, init_game_data.init, this.#tmp, this.finish, this.#onAssetsLoaded);
-          }
-        ).catch(reason => {
-          console.error("Game init parsing error with" + reason);
-        });
-      }
-    ).catch(
-      reason => {
-        console.error("Game init fetching error with" + reason);
-      }
-    );
+    return result;    
+  } catch (e) {
+    throw new Error("Games loading failed: " + e.message);
   }
 }
 
-export { loadGames, loadGameData, GameAPI };
+// Возвращает имя и url игры с именем gameName
+export async function loadGameData(gameName) {
+  try {
+    const gameLinks = await fetchGameLinks();
+    return {
+      gameName,
+      gameUrl: "/media/" + gameLinks[gameName].draw_url
+    };
+  } catch (e) {
+    throw new Error("Game data loading failed: " + e.message);
+  }
+}
+
+/**
+ * Запускает игру (запрашивает инициализационные данные, вызывает модуль инициализации).
+ * @param {GameApi} gameApi - экземпляр GameApi.
+ */
+export function startGame(gameApi) {
+  if (!gameApi)
+    console.error("[gameUseCases] startGame: gameApi является null или undefined!");
+  else
+    gameApi.start();
+}
+
+/**
+ * Завершает игру, не передавая никакие данные в неё (запрашивает инициализационные данные, вызывает модуль завершения).
+ * @param {GameApi} gameApi - экземпляр GameApi.
+ */
+export function finishGame(gameApi) {
+  if (!gameApi)
+    console.error("[gameUseCases] finishGame: gameApi является null или undefined!");
+  else
+    gameApi.finish({});
+}
+
+/**
+ * Инициализация игрового процесса с настройкой колбэков.
+ * @param {Object} params
+ * @param {HTMLCanvasElement} params.canvas
+ * @param {string} params.authRawData
+ * @param {string} params.gameName
+ * @param {string} params.drawScriptUrl
+ * @param {Function} params.onModuleLoad
+ * @param {Function} params.onAssetsLoaded
+ * @param {Function} params.onFinish
+ * @returns {GameApi}
+ */
+export function initGameApi({
+  canvas,
+  authRawData,
+  gameName,
+  drawScriptUrl,
+  onModuleLoad = () => {},
+  onAssetsLoaded = () => {},
+  onFinish = () => {}
+}) {
+  const api = new GameApi(
+    canvas,
+    authRawData,
+    gameName,
+    drawScriptUrl,
+    onModuleLoad,
+    onAssetsLoaded
+  );
+  api.onFinish = onFinish;
+  return api;
+}

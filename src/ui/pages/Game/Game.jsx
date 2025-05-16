@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
 import GameOver from "../../components/GameOver/GameOver";
 import GameLoading from "../../components/GameLoading/GameLoading";
-import { loadGameData, GameAPI } from "../../../domain/gameUseCases";
+import { loadGameData, initGameApi, startGame, finishGame } from "../../../domain/gameUseCases";
 
 import "./Game.css";
 
@@ -22,7 +22,7 @@ export default function Game() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    return () => gameInstanceRef?.current?.finish({});
+    return () => finishGame(gameInstanceRef?.current);
   }, []);
 
   useEffect(() => {
@@ -89,31 +89,26 @@ export default function Game() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (gameConfig && canvas) {
-      const gameInstance = new GameAPI(
-        canvas,
-        authRawData,
-        gameConfig.gameName,
-        gameConfig.gameUrl,
-        () => {
-          gameInstance.start();
-
-          gameInstance.onFinish = (canvas, tmp, score) => {
-            console.info("Игра завершена!");
-            console.log(`Счет: ${score}`);
-            setScore(parseInt(score, 10));
-            setGameOver(true);
-          };
-        },
-        () => {
-          setShowLoading(false);
+      const gameInstance = initGameApi({
+        canvas: canvas,
+        authRawData: authRawData,
+        gameName: gameConfig.gameName,
+        drawScriptUrl: gameConfig.gameUrl,
+        onModuleLoad: () => gameInstance.start(),
+        onAssetsLoaded: () => setShowLoading(false),
+        onFinish: (canvas, tmp, score) => {
+          console.info("Игра завершена!");
+          console.log(`Счет: ${score}`);
+          setScore(parseInt(score, 10));
+          setGameOver(true);
         }
-      );
+      });
       gameInstanceRef.current = gameInstance;
     }
   }, [gameConfig, authRawData]);
 
   const handleRestart = () => {
-    if (gameInstanceRef.current) gameInstanceRef.current.start();
+    startGame(gameInstanceRef?.current);
     setGameOver(false);
   };
 
