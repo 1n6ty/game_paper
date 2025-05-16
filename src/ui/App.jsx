@@ -6,13 +6,17 @@ import BottomNavBar from "./components/BottomNavBar/BottomNavBar";
 import Home from "./pages/Home/Home";
 import Games from "./pages/Games/Games";
 import Scanner from "./pages/Scanner/Scanner";
+import Activities from "./pages/Activities/Activities";
 import Game from "./pages/Game/Game";
 
 import { UserProvider } from "./contexts/UserContext";
 
 import HomeIcon from "../assets/icons/Home.svg?react";
 import GamesIcon from "../assets/icons/Games.svg?react";
+import ActivitiesIcon from "../assets/icons/Play.svg?react";
 import ScannerIcon from "../assets/icons/Qr.svg?react";
+
+import BackgroundSvgUrl from "/bg.svg";
 
 import "./App.css";
 
@@ -29,6 +33,13 @@ const routeConfig = [
     element: <Games />,
     label: "Игры",
     svgr: <GamesIcon />,
+    showInTab: true,
+  },
+  {
+    path: "/activities",
+    element: <Activities />,
+    label: "Активности",
+    svgr: <ActivitiesIcon />,
     showInTab: true,
   },
   {
@@ -64,7 +75,9 @@ export default function App() {
 
   return (
     <UserProvider>
-      <div className="app-container">
+      <div className="app-container" style={{
+        "--bg-image": `url("${BackgroundSvgUrl}")`
+      }}>
         <main className="content">
           {element}
         </main>

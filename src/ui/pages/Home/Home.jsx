@@ -12,12 +12,23 @@ import RewardItem3Svg from "../../../assets/RewardItem3.svg?react";
 import MilkGlassSvg from "../../../assets/MilkGlass.svg?react";
 import CowSvg from "../../../assets/Cow.svg?react";
 
-import { GL_URL } from "../../../global";
+import TicketSvgUrl from "/ticket.svg";
+import LogoSvgUrl from "/icons/logo.svg";
+
 import "./Home.css";
 
 export default function Home() {
   const { totalScore, tickets } = useContext(UserContext);
   const factText = "Молоко очень полезное! Оно богато витаминами А, В6, В12, С, Е и др.";
+  const factoryHistory = (
+    <div className="card-text">
+      <p>ПАО «Ламбумиз» — надёжная упаковка
+      с 1972 года! Более 50 лет мы создаём упаковку, которая помогает сохранять лучшее в каждом продукте.</p>
+      <p>Мы работаем для тех, кто ценит качество, безопасность и свежесть. 
+      Каждая упаковка — это результат современных технологий и любви к своему делу. </p>
+      <span>Ламбумиз — когда важно сохранить главное</span>
+    </div>);
+
   const startLambsCount = 30;
 
   const rewardCount1 = 10;
@@ -66,7 +77,7 @@ export default function Home() {
         enableQr={true}
         enableQrGap={false}
       >
-        <img src={`${GL_URL}ticket.svg`} alt="Билет" className="img-center ticket-img" />
+        <img src={TicketSvgUrl} alt="Билет" className="img-center ticket-img" />
       </Card>
 
       <CardTip
@@ -80,18 +91,14 @@ export default function Home() {
         title="История завода"
       >
         <div className="card-text">
-          <p>ПАО «Ламбумиз» — надёжная упаковка
-          с 1972 года! Более 50 лет мы создаём упаковку, которая помогает сохранять лучшее в каждом продукте.</p>
-          <p>Мы работаем для тех, кто ценит качество, безопасность и свежесть. 
-          Каждая упаковка — это результат современных технологий и любви к своему делу. </p>
-          <span>Ламбумиз — когда важно сохранить главное</span>
+          {factoryHistory}
         </div>
       </Card>
 
       <Card
         variant="light-blue"
         title="Контакты"
-        image={`${GL_URL}icons/logo.svg`}
+        image={LogoSvgUrl}
         imagePosition="top-right"
       >
         <div className="card-text">

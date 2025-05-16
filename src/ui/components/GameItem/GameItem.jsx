@@ -1,19 +1,13 @@
 import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
 import "./GameItem.css";
 
 export default function GameItem({ 
   title,
-  image
+  image,
+  onClick
 }) {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    navigate(`/games/${title}`);
-  };
-
   return (
-    <div className="game-item" onClick={handleClick}>
+    <div className="game-item" onClick={() => onClick(title)}>
       <div className="game-item-top">
         {image ? (
           <img src={image} alt={title} className="game-item-img" />
@@ -30,5 +24,6 @@ export default function GameItem({
 
 GameItem.propTypes = {
   title: PropTypes.string.isRequired,
-  image: PropTypes.string.isRequired
+  image: PropTypes.string.isRequired,
+  onClick: PropTypes.func.isRequired
 };

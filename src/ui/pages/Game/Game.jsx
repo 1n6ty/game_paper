@@ -123,10 +123,21 @@ export default function Game() {
 
   return (
     <div className="game-container">
-      {showLoading && <GameLoading progress={Math.round(loadingProgress)} />}
-      <canvas ref={canvasRef} className="game-canvas"></canvas>
+      {showLoading && (
+        <GameLoading 
+          progress={Math.round(loadingProgress)} 
+        />
+      )}
+      <canvas 
+        ref={canvasRef} 
+        className="game-canvas" 
+      />
       {gameOver && (
-        <GameOver score={score} onRestart={handleRestart} onExit={handleExit} />
+        <GameOver 
+          score={score} 
+          onRestart={handleRestart}
+          onExit={handleExit}
+        />
       )}
     </div>
   );

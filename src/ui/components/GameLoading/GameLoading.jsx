@@ -1,6 +1,8 @@
 import PropTypes from "prop-types";
 import BottleSvg from "../../../assets/Bottle.svg?react";
-import { GL_URL } from "../../../global";
+
+import BottleClipSvgUrl from "/bottleClip.svg";
+
 import "./GameLoading.css";
 
 export default function GameLoading({ 
@@ -16,8 +18,8 @@ export default function GameLoading({
             className="game-loading__fill"
             style={{ 
               height: `${progress}%`,
-              maskImage: `url('${GL_URL}bottle-clip.svg')`,
-              WebkitMaskImage: `url('${GL_URL}bottle-clip.svg')`
+              maskImage: `url('${BottleClipSvgUrl}')`,
+              WebkitMaskImage: `url('${BottleClipSvgUrl}')`
             }}
           />
 

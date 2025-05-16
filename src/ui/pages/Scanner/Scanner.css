@@ -10,10 +10,9 @@
 }
 
 .scanner-container {
+  flex: 1;
   position: relative;
-  width: 100%;
   height: var(--scanner-height);
-  overflow: hidden;
   background: var(--color-bg-camera);
 }
 
@@ -193,35 +192,5 @@
   width: 90%;
   max-width: 500px;
   color: white;
-  z-index: 4;
-}
-
-.playback-video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 90%;
-  max-height: 90%;
-  z-index: 10;
-  object-fit: contain;
-}
-
-.error-msg {
-  font-weight: 500;
-  font-size: 18px;
-  line-height: 26px;
-  letter-spacing: 0.1px;
-  text-align: center;
-
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  max-width: 400px;
-  padding: 2px 6px 2px 6px;
-  border-radius: var(--card-border-radius);
-  color: #E97373;
   z-index: 4;
 }

@@ -1,9 +1,9 @@
 @import "../../styles/variables.css";
 
 .games-list-container {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(auto-fit, 173px);
   gap: 14px;
   justify-content: center;
-  overflow-y: auto;
 }
