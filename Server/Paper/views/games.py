@@ -6,32 +6,16 @@ from django.db.models.manager import BaseManager
 from ..models import Game, User, Settings
 
 from requests import Session, Response
-import hashlib, hmac
+import hashlib
 import json
-import os
 from urllib.parse import parse_qsl
-from operator import itemgetter
+
+from .index import _verify_authorization
 
 request_session = Session()
 request_session.trust_env = False
 
-BOT_TOKEN = os.getenv("MINIAPP_BOT_TOKEN", None)
-secret_key = hmac.new(
-    key=b"WebAppData", msg=BOT_TOKEN.encode(), digestmod=hashlib.sha256
-).digest()
-
-def _verify_authorization(parsed_data: dict) -> bool:
-    if "hash" not in parsed_data:
-        return False
-
-    hash_ = parsed_data.pop('hash')
-    data_check_string = "\n".join(
-        f"{k}={v}" for k, v in sorted(parsed_data.items(), key=itemgetter(0))
-    )
-    calculated_hash = hmac.new(
-        key=secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256
-    ).hexdigest()
-    return calculated_hash == hash_
+from django.views.decorators.csrf import csrf_exempt
 
 def get_score(req: HttpRequest) -> JsonResponse | HttpResponse:
     """
@@ -80,6 +64,7 @@ def get_game_links(req: HttpRequest) -> JsonResponse | HttpResponse:
         )
     return HttpResponse(status=400, content="No such method")
 
+@csrf_exempt
 def init_game(req: HttpRequest) -> None:
     """
      Inits game session for user on server side
@@ -131,6 +116,7 @@ def init_game(req: HttpRequest) -> None:
         )
     return HttpResponse(status=400, content="No such method")
 
+@csrf_exempt
 def finish_game(req: HttpRequest) -> HttpResponse | JsonResponse:
     """
         Checks whether the game was played correctly and compute score

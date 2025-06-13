@@ -183,3 +183,13 @@ class Game {
         );
     }
 }
+
+fetch('/randomfact/').then(
+    (response) => {
+        response.json().then(
+            (json_response) => {
+                // Do smth with json data {"text": str}
+            }
+        )
+    }
+);

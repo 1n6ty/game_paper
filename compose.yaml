@@ -73,6 +73,8 @@ services:
     image: mysql
     networks:
       - web
+    volumes:
+      - ./dbdata:/var/lib/mysql/
     environment:
       MYSQL_DATABASE: "Paperdb"
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}

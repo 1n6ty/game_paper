@@ -4,15 +4,15 @@ from django.conf import settings
 from subprocess import Popen, PIPE
 
 from .forms import AssetsModelForm
-from .models import User, Company, Game, Product_Type, Purchase, Assets, game_scripts_storage, Settings
+from .models import User, Game, Product_Type, Purchase, Assets, game_scripts_storage, Settings, Admin_User, Fact_about_milk
 # Register your models here.
+
+@admin.register(Admin_User)
+class Admin_User_Admin(admin.ModelAdmin):
+    pass
 
 @admin.register(User)
 class User_Admin(admin.ModelAdmin):
-    pass
-
-@admin.register(Company)
-class Company_Admin(admin.ModelAdmin):
     pass
 
 @admin.register(Game)
@@ -48,3 +48,7 @@ class Settings_Admin(admin.ModelAdmin):
     
     def has_delete_permission(self, request, obj=None):
         return False
+    
+@admin.register(Fact_about_milk)
+class Fact_about_milk_Admin(admin.ModelAdmin):
+    pass

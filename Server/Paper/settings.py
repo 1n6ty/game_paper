@@ -63,7 +63,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates/'
+            BASE_DIR / 'templates'
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -145,3 +145,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 import redis
 REDIS = redis.StrictRedis(host="redis", port=6379, decode_responses=True, db=0)
+SESSION_STORAGE = redis.StrictRedis(host="redis", port=6379, decode_responses=True, db=1)

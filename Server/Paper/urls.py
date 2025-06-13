@@ -17,18 +17,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from .views.index import index
+from .views.index import index, get_product_costs, get_random_fact_about_milk
 from .views.games import get_game_links, get_score, finish_game, init_game
-
-# For debug purpose
-from django.conf import settings
-from django.conf.urls.static import static
+from .views.datamatrix import proceed_datamatrix_text
+from .views.admin import render_admin
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin_dj/', admin.site.urls),
     path('', index, name="index"), # home page
     path('gamelinks/', get_game_links, name="gamelinks"), # games' links getter
     path('score/', get_score, name="score_get"), # score getter
     path('gamefinish/', finish_game, name="finish_game"), # Game process handler
     path('gameinit/', init_game, name="init_game"), # Game initiator
+    path('datamatrix/', proceed_datamatrix_text, name="datamatrix"), # Datamatrix proceedure
+    path('products/', get_product_costs, name="product_costs"), # product costs getter
+    path('admin/', render_admin, name="admin"), # admin page
+    path('randomfact/', get_random_fact_about_milk, name="random_fact")
 ]

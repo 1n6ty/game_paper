@@ -6,6 +6,41 @@ from subprocess import Popen, PIPE
 
 game_scripts_storage = FileSystemStorage(settings.BASE_DIR / 'games/', base_url=None)
 
+class Admin_User(models.Model):
+    name = models.CharField(
+        max_length=256,
+        verbose_name="User name",
+        null=False,
+        blank=False
+    )
+    email = models.EmailField(
+        verbose_name="Email",
+        null=False,
+        blank=False,
+        unique=True
+    )
+    rights = models.PositiveIntegerField(
+        verbose_name="Rights",
+        null=False,
+        blank=False
+    ) # rights (read, edit, create_users) in bits
+    duty = models.CharField(
+        max_length=256,
+        verbose_name="Duty",
+        null=False,
+        blank=False
+    )
+    password_hash = models.CharField(
+        max_length=512,
+        verbose_name="Password",
+        null=False,
+        blank=False
+    )
+
+    class Meta:
+        verbose_name = "Admin User"
+        verbose_name_plural = "Admin Users"
+
 class User(models.Model):
     tg_id = models.CharField(
         max_length=512,
@@ -14,7 +49,6 @@ class User(models.Model):
         blank=False,
         unique=True
     )
-    # TODO birthdate
     score = models.BigIntegerField(
         verbose_name="Score",
         null=False,
@@ -25,30 +59,6 @@ class User(models.Model):
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
-
-class Company(models.Model):
-    name = models.CharField(
-        verbose_name="Company name",
-        max_length=255,
-        null=False,
-        blank=False
-    )
-    region = models.CharField(
-        verbose_name="Region",
-        max_length=255,
-        null=False,
-        blank=False
-    )
-    datamatrix_code = models.CharField(
-        verbose_name="DataMatrix code",
-        max_length=255,
-        null=False,
-        blank=False
-    )
-
-    class Meta:
-        verbose_name = "Company"
-        verbose_name_plural = "Companies"
 
 class Game(models.Model):
     name = models.CharField(
@@ -100,25 +110,36 @@ class Game(models.Model):
         verbose_name_plural = "Games"
 
 class Product_Type(models.Model):
-    name = models.CharField(
-        verbose_name="Company name",
-        max_length=255,
-        null=False,
-        blank=False
-    )
-    company = models.ForeignKey(
-        verbose_name="Company (Product holder)", 
-        to=Company, 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True
-    )
-    datamatrix_code = models.CharField(
+    def get_path(self, filename) -> str:
+        return 'product_preloader/{0}'.format(self.gtin)
+
+    gtin = models.CharField(
         verbose_name="DataMatrix code",
         max_length=255,
         null=False,
         blank=False
     )
+    preloader = models.FileField(
+        verbose_name="Preloader",
+        upload_to=get_path,
+        blank=False,
+        null=False
+    )
+    score_for_purchase = models.IntegerField(
+        verbose_name="Score for purchase",
+        default=0,
+        null=False,
+        blank=False
+    )
+
+    def delete(self, **kwargs):
+        Popen(["rm", "-rf", settings.MEDIA_ROOT / self.preloader.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
+        super(Product_Type, self).delete(**kwargs)
+    
+    def save_model(self, request, obj, form, change):
+        if 'preloader' in form.changed_data:
+            Popen(["rm", "-rf", settings.MEDIA_ROOT / self.preloader.name], stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf8').communicate()
+        super(Product_Type, self).save_model(request, obj, form, change)
 
     class Meta:
         verbose_name = "Product"
@@ -132,15 +153,22 @@ class Purchase(models.Model):
         null=True, 
         blank=True
     )
-    date = models.DateField(
-        verbose_name="Birth date", 
+    date = models.DateTimeField(
+        verbose_name="Purchase date", 
         null=False, 
-        blank=True
+        blank=True,
+        auto_now_add=True
     )
     product_type = models.ForeignKey(
         to=Product_Type,
         verbose_name="Product",
         on_delete=models.DO_NOTHING
+    )
+    datamatrix_text = models.CharField(
+        verbose_name="DataMatrix code",
+        max_length=255,
+        null=False,
+        blank=False
     )
 
     class Meta:
@@ -180,3 +208,11 @@ class Settings(models.Model):
     class Meta:
         verbose_name = "Setting"
         verbose_name_plural = "Settings"
+
+class Fact_about_milk(models.Model):
+    fact = models.TextField(
+        verbose_name="Fact",
+        blank=False,
+        null=False,
+        default=""
+    )
