@@ -35,7 +35,7 @@
 }
 
 .top-cards-emblem-img {
-  width: calc(142.01px * var(--top-cards-emblem-scale));
+  width: calc(123px * var(--top-cards-emblem-scale));
   position: absolute;
   left: 50%;
   top: 50%;

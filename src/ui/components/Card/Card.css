@@ -104,7 +104,7 @@
 
 .card-image-top-right {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  max-width: 100px;
+  top: 9px;
+  right: 13px;
+  /* max-width: 100px; */
 }

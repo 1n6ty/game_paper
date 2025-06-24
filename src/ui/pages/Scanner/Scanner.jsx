@@ -122,7 +122,6 @@ export default function Scanner() {
 
       const codeReader = new BrowserDatamatrixCodeReader(BarcodeFormat.DATA_MATRIX);
 
-      // Если уже есть разрешение и сохранённый поток — сразу используем его
       if (hasCameraPermission && streamRef.current) {
         await attachStreamAndPlay(streamRef.current);
         startScanning(codeReader);
@@ -133,12 +132,11 @@ export default function Scanner() {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
 
-      // иначе запрашиваем поток
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
       streamRef.current = stream;
-      // запоминаем факт разрешения
+
       setHasCameraPermission(true);
       localStorage.setItem("cameraAllowed", "true");
       
@@ -212,7 +210,7 @@ export default function Scanner() {
             left: 0,
             width: "100%",
             height: "100%",
-            zIndex: 10,        // больше, чем 1
+            zIndex: 10,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
