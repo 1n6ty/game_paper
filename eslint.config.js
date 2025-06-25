@@ -3,6 +3,8 @@ import globals from "globals";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import tsplugin from "@typescript-eslint/eslint-plugin";
+import parser from "@typescript-eslint/parser";
 
 export default [
   { ignores: ["dist"] },
@@ -33,8 +35,8 @@ export default [
       ...reactHooks.configs.recommended.rules,
       "react-hooks/rules-of-hooks": "error", // проверка правильного использования React Hooks
       "react-hooks/exhaustive-deps": "warn",   // проверка зависимостей эффекта
-      
-      "no-unused-vars": ["warn", { 
+
+      "no-unused-vars": ["warn", {
         vars: "all",          // Проверять все переменные
         args: "after-used",   // Проверять аргументы после их использования
         ignoreRestSiblings: true  // Игнорировать неиспользуемые остаточные свойства (...rest)
@@ -82,6 +84,66 @@ export default [
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
+      ],
+    },
+  },
+  {
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      parser: parser,
+      parserOptions: {
+        project: "./tsconfig.eslint.json",
+        tsconfigRootDir: process.cwd(),
+        ecmaVersion: "latest",
+        sourceType: "module"
+      }
+    },
+    plugins: {
+      "@typescript-eslint": tsplugin
+    },
+    rules: {
+      ...tsplugin.configs.recommended.rules,
+
+      // Заменители JS-правил от @typescript-eslint
+      "no-unused-vars": "off",
+      "@/no-unused-vars": ["warn", {
+        vars: "all",
+        args: "after-used",
+        ignoreRestSiblings: true
+      }],
+
+      "brace-style": "off",
+      "@/brace-style": ["error", "1tbs", { allowSingleLine: true }],
+
+      quotes: "off",
+      "@/quotes": ["error", "double", {
+        avoidEscape: true,
+        allowTemplateLiterals: true,
+      }],
+
+      semi: "off",
+      // "@/semi": ["error", "always"],
+
+      indent: "off",
+      "@/indent": ["error", 2],
+
+      "max-len": ["error", {
+        code: 200,
+        ignoreUrls: true,
+        ignoreStrings: true,
+        ignoreTemplateLiterals: true,
+      }],
+      "arrow-parens": ["error", "as-needed"],
+      "quote-props": ["error", "as-needed"],
+      "jsx-quotes": ["error", "prefer-double"],
+      "comma-dangle": ["error", "only-multiline"],
+      "linebreak-style": "off",
+      "object-curly-spacing": ["error", "always"],
+      "space-before-function-paren": ["error", "never"],
+      "padding-line-between-statements": [
+        "error",
+        { blankLine: "always", prev: "block-like", next: "*" },
+        { blankLine: "always", prev: "function", next: "*" },
       ],
     },
   },
