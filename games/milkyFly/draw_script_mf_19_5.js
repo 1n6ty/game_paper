@@ -1,4 +1,4 @@
-const __VERSION__ = "19.4";
+const __VERSION__ = "19.5";
 
 const ASSETS = {
   ceilEvening: "ceilEvening",
@@ -53,7 +53,7 @@ const FALL_ANGLE = 90;
 const GRAVITY = 0.6;
 const JUMP_FORCE = -10;
 
-const PIPE_GAP = 160;
+const PIPE_GAP = 192;
 const PIPE_WIDTH = 66;
 const PIPE_INTERVAL = 100;
 const FLOOR_HEIGHT = DEFAULT_FLOOR_HEIGHT;
