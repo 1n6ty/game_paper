@@ -1,7 +1,7 @@
-const __VERSION__ = "3C";
+const __VERSION__ = "4Cd";
 
-// const PATH = "./assets/memory/";
-const PATH = "/media/assets/memory/";
+const PATH = "./assets/memory/";
+// const PATH = "/media/assets/memory/";
 
 const cardPaths = {
   bottle: `${PATH}cards/bottle.svg`,
@@ -17,6 +17,66 @@ const cardPaths = {
   yogurtChocolate: `${PATH}cards/yogurtChocolate.svg`,
   yogurtPink: `${PATH}cards/yogurtPink.svg`
 };
+
+const heartShapedField = (r, c, rows, cols) => {
+  const xn = (c / (cols - 1)) * 3 - 1.5;
+  const yn = (r / (rows - 1)) * 3 - 1.5;
+  const boundaryY = -Math.abs(xn) + 2;
+
+  let forbiddenFirstRow;
+  if (cols % 2 === 0) {
+    forbiddenFirstRow = [0, Math.floor(cols / 2) - 1, Math.floor(cols / 2), cols - 1];
+  } else {
+    forbiddenFirstRow = [0, Math.floor(cols / 2), cols - 1];
+  }
+  
+  if (r === 0 && forbiddenFirstRow.includes(c)) {
+    return false;
+  }
+
+  return yn <= boundaryY;
+};
+
+const plusField = (r, c, rows, cols) => {
+  const border =
+      (r === 0 || r === rows - 1) && (c === 0 || c === cols - 1);
+  return !border;
+};
+
+const withoutCenterField = (r, c, rows, cols) => ((r != (rows - 1) / 2) || (c != (cols - 1) / 2));
+
+const chaotic1Field = (r, c, rows, cols) => {
+  const borderRow0 = (r === 0 && (c != 2));
+  const borderCol0 = (c === 0 && (r != 3));
+  const borderCol2 = (c === 2 && (r >= 3 && r <= 4));
+  const borderCol3 = (c === 3 && (r >= 2 && r <= 3));
+  const borderCol4 = (c === 4 && r === 4);
+
+  return borderRow0 || borderCol0 || borderCol2 || borderCol3 || borderCol4;
+};
+
+const fields = [
+  // rect
+  {
+    grid: (r, c, rows, cols) => withoutCenterField(r, c, rows, cols),
+    ground: (r, c, rows, cols) => true 
+  }, 
+  // heart
+  {
+    grid: (r, c, rows, cols) => heartShapedField(r, c, rows, cols),
+    ground: (r, c, rows, cols) => heartShapedField(r, c, rows, cols) 
+  },
+  // plus
+  {
+    grid: (r, c, rows, cols) => plusField(r, c, rows, cols) && withoutCenterField(r, c, rows, cols),
+    ground: (r, c, rows, cols) => plusField(r, c, rows, cols) 
+  },
+  // // chaotic 1
+  // {
+  //   grid: (r, c, rows, cols) => chaotic1Field(r, c, rows, cols),
+  //   ground: (r, c, rows, cols) => chaotic1Field(r, c, rows, cols)
+  // }
+];
 
 const bushesUrl = `${PATH}bushes.svg`;
 const groundUrl = `${PATH}ground.svg`;
@@ -98,7 +158,6 @@ const loadImage = src =>
 const openCellEaseInOut = t => t;
 
 const roundRect = (ctx, x, y, width, height, radius) => {
-  ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
   ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
@@ -108,7 +167,143 @@ const roundRect = (ctx, x, y, width, height, radius) => {
   ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
+};
+
+const drawGroundCell = (ctx, x, y, size, gap, radius, 
+  hasUp, hasRight, hasDown, hasLeft,
+  hasUpLeft, hasUpRight, hasDownRight, hasDownLeft) => {
+
+  size += gap * 3.5;
+
+  const inner = size - gap * 2.5;
+
+  const rtl = !(hasUp && hasLeft || hasLeft || hasUp);
+  const rtr = !(hasUp && hasRight || hasRight || hasUp);
+  const rbr = !(hasDown && hasRight || hasRight || hasDown);
+  const rbl = !(hasDown && hasLeft || hasLeft || hasDown);
+
+  // 1) старт
+  if (rtl) {
+    ctx.moveTo(x + radius, y);
+  } else {
+    ctx.moveTo(x, y);
+  }
+
+  // 2) верхняя грань
+  if (rtr) {
+    ctx.lineTo(x + size - radius, y);
+    ctx.arcTo(x + size, y, x + size, y + radius, radius);
+  }
+ 
+  if (hasUpRight && !hasUp) {
+    ctx.lineTo(x + inner - radius, y);
+    ctx.arcTo(x + inner, y, x + inner, y - radius, radius);
+  } else {
+    ctx.lineTo(x + size, y);
+  }
+
+  // 3) правая грань
+  if (rbr) {
+    ctx.lineTo(x + size, y + size - radius);
+    ctx.arcTo(x + size, y + size, x + size - radius, y + size, radius);
+  } else {
+    ctx.lineTo(x + size, y + size);
+  }  
+  
+  if (hasDownRight && !hasRight) {
+    // ctx.lineTo(x + size, y + size - radius);
+    // ctx.arcTo(x + size, y + size, x + size + radius, y + size, radius);
+    
+    ctx.lineTo(x + size, y + size - radius);
+    ctx.arcTo(x + size, y + inner, x + size + radius, y + inner, radius);
+  } else {
+    ctx.lineTo(x + size, y + size);
+  }  
+
+  // 4) нижняя
+  if (rbl) {
+    ctx.lineTo(x + radius, y + size);
+    ctx.arcTo(x, y + size, x, y + size - radius, radius);
+  }
+
+  if (hasDownLeft && !hasDown) {
+    // ctx.lineTo(x + radius, y + size);
+    // ctx.arcTo(x, y + size, x, y + size + radius, radius);
+
+    ctx.lineTo(x + size - inner + radius, y + size);
+    ctx.arcTo(x + size - inner, y + size, x + size - inner, y + size + radius, radius);
+  } else {
+    ctx.lineTo(x, y + size);
+  }
+
+  // 5) левая
+  if (rtl) {
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+  }
+ 
+  if (hasUpLeft && !hasLeft) {
+    ctx.lineTo(x, y + size - inner + radius);
+    ctx.arcTo(x, y + size - inner, x - radius, y + size - inner, radius);
+  } else {
+    ctx.lineTo(x, y);
+  }
+};
+
+const drawGroundGrid = (
+  ctx,
+  x0, y0,
+  groundGrid,
+  cellSize,
+  gap,
+  radius,
+  fillColor
+) => {
+  if (!groundGrid || !groundGrid.length || !groundGrid[0].length) {
+    console.error("drawGroundGrid: сетка не задана!");
+    return;
+  }
+
+  const rows = groundGrid.length;
+  const cols = groundGrid[0].length;
+  const step = cellSize + gap;
+
+  ctx.save();
+  ctx.lineJoin  = "round";
+  ctx.fillStyle = fillColor;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (!groundGrid[r][c]) continue;
+      ctx.beginPath();
+
+      // Координаты ячейки с учётом gap между ними
+      const x = x0 + c * step;
+      const y = y0 + r * step;
+
+      const up        = groundGrid[r - 1]?.[c]     ?? false;
+      const right     = groundGrid[r]?.[c + 1]     ?? false;
+      const down      = groundGrid[r + 1]?.[c]     ?? false;
+      const left      = groundGrid[r]?.[c - 1]     ?? false;
+      const upLeft    = groundGrid[r - 1]?.[c - 1] ?? false;
+      const upRight   = groundGrid[r - 1]?.[c + 1] ?? false;
+      const downRight = groundGrid[r + 1]?.[c + 1] ?? false;
+      const downLeft  = groundGrid[r + 1]?.[c - 1] ?? false;
+
+      drawGroundCell(
+        ctx,
+        x, y,
+        cellSize, gap, radius,
+        up, right, down, left,
+        upLeft, upRight, downRight, downLeft
+      );
+
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
 };
   
 const drawCard = (ctx, x, y, width, height, radius, strokeColor, fillColor) => {
@@ -153,14 +348,32 @@ class Cell {
 
 // --- Grid: логика сетки ---
 class Grid {
-  constructor(rows, cols, assetKeys, randomFn, cellActivityRule = (row, col, rows, cols) => true) {
+  #random = () => {};
+  #isGroundCellActive = () => {};
+
+  constructor(rows, cols, assetKeys, randomFn, fieldActivityRules) {
     this.rows = rows;
     this.cols = cols;
     this.assetKeys = assetKeys;
-    this.random = randomFn;
+    this.#random = randomFn;
     this.cells = [];
-    this.isCellActive = (row, col) => cellActivityRule(row, col, rows, cols);
+    this.groundGrid = [];
+    this.isCellActive = (row, col) => !!fieldActivityRules.grid(row, col, rows, cols);
+    this.#isGroundCellActive = (row, col) => !!fieldActivityRules.ground(row, col, rows, cols);
+    this.generateGrid();
     this.initGrid();
+  }
+
+  generateGrid() {
+    for (let r = 0; r < this.rows; r++) {
+      const row = [];
+      for (let c = 0; c < this.cols; c++) {
+        row.push(this.#isGroundCellActive(r, c));
+      }
+
+      this.groundGrid.push(row);
+    }
+
   }
 
   initGrid() {
@@ -180,7 +393,7 @@ class Grid {
     const cellsForPairs = numPairs * 2;
     const shuffle = arr => {
       for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(this.random() * (i + 1));
+        const j = Math.floor(this.#random() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
 
@@ -265,10 +478,12 @@ class Renderer {
     const stepsCardX = STEPS_PADDING_LEFT;
     const stepsCardY = STEPS_PADDING_TOP;
 
+    this.ctx.beginPath();
     drawCard(this.ctx, stepsCardX, stepsCardY,
       STEPS_CARD_WIDTH, STEPS_CARD_HEIGHT, 12,
       STEPS_STROKE_COLOR, STEPS_BG_COLOR
     );
+    this.ctx.closePath();
 
     this.ctx.fillStyle = STEPS_TEXT_COLOR;
     this.ctx.font = "500 24px/0.15px Roboto Mono";
@@ -310,7 +525,7 @@ class Renderer {
     }
   }
 
-  drawBody(currentStep, stepsCount) {
+  drawBg() {
     const { width, height } = this.dims;
 
     this.ctx.save();
@@ -320,21 +535,24 @@ class Renderer {
     gradient.addColorStop(1, BODY_BG_BOTTOM_COLOR);
     this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, width, height);
-    this.ctx.restore();
 
-    this.drawStepsCard(currentStep, stepsCount);
-
-    this.ctx.save();
     this.ctx.fillStyle = BOTTOM_GROUND_BG_COLOR;
     this.ctx.fillRect(0, height - BOTTOM_GROUND_HEIGHT, width, BOTTOM_GROUND_HEIGHT);
     this.ctx.restore();
-
-    this.drawBushes();
   }
 
   drawCell(cell) {
-    const { x, y } = this.getCoords(cell);
+    const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
+    this.ctx.scale(dpr, dpr);
+
+    // this.ctx.save();
+    this.ctx.translate(this.offset.x, this.offset.y);
+    this.ctx.scale(this.scale, this.scale);
+
+    const { x, y } = this.getCoords(cell);
+
+    // this.ctx.save();
   
     const shake = cell._shake || 0;
     const fbScale = cell._scale || 1;
@@ -358,69 +576,93 @@ class Renderer {
       this.ctx.globalAlpha = 1 - cell._removalProgress;
     }
   
-    const showFace = flip != null
-      ? (flip > 0.5)
-      : cell.isOpened;
+    const showFace = flip != null ? (flip > 0.5) : cell.isOpened;
+
+    // очистка клетки
+    this.ctx.save();
+    this.ctx.beginPath();
+    roundRect(this.ctx, 0, 0, CELL_WIDTH, CELL_HEIGHT, CELL_CARD_RADIUS);
+    this.ctx.closePath();
+
+    this.ctx.globalCompositeOperation = "destination-out";
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    this.ctx.globalCompositeOperation = "source-over";
+    this.ctx.restore();
+
+    // отображение новой клетки
     if (showFace) {
-      drawCard(this.ctx, 0, 0,
-        CELL_WIDTH, CELL_HEIGHT,
-        CELL_CARD_RADIUS,
-        STEPS_STROKE_COLOR, STEPS_BG_COLOR);
+      this.ctx.beginPath();
+      drawCard(this.ctx, 0, 0, CELL_WIDTH, CELL_HEIGHT,
+        CELL_CARD_RADIUS, STEPS_BG_COLOR, STEPS_BG_COLOR
+      );
+      this.ctx.closePath();
+
       const img = this.images[cell.type];
       if (img) {
-        drawImageInCell(this.ctx, img,
-          0, 0, CELL_WIDTH, CELL_HEIGHT, CELL_PADDING);
+        drawImageInCell(this.ctx, img, 0, 0, CELL_WIDTH, CELL_HEIGHT, CELL_PADDING);
       }
     } else {
       if (this.images.ground) {
-        this.ctx.drawImage(this.images.ground,
-          0, 0, CELL_WIDTH, CELL_HEIGHT);
+        this.ctx.drawImage(this.images.ground, 0, 0, CELL_WIDTH, CELL_HEIGHT);
       }
     }
-  
+
     this.ctx.restore();
+    // this.ctx.restore();
+    // this.ctx.restore();
   }
 
-  drawGrid(grid) {
-    for (const row of grid.cells) {
+  drawCells(cells) {
+    for (const row of cells) {
       for (const cell of row) {
         if (!cell) continue;
-
         this.drawCell(cell);
       }
     }
   }  
 
-  drawGridZone(grid) {
+  drawGridZone(groundGrid) {
     this.ctx.save();
     this.ctx.translate(this.offset.x, this.offset.y);
     this.ctx.scale(this.scale, this.scale);
 
-    drawCard(this.ctx, 
+    // drawCard(this.ctx, 
+    //   GRID_ZONE_PADDING_LEFT,
+    //   GRID_ZONE_PADDING_TOP,
+    //   GRID_ZONE_WIDTH,
+    //   GRID_ZONE_HEIGHT,
+    //   GRID_ZONE_RADIUS,
+    //   GRID_ZONE_BG_COLOR,
+    //   GRID_ZONE_BG_COLOR
+    // );
+
+    drawGroundGrid(this.ctx, 
       GRID_ZONE_PADDING_LEFT,
       GRID_ZONE_PADDING_TOP,
-      GRID_ZONE_WIDTH,
-      GRID_ZONE_HEIGHT,
+      groundGrid,
+      CELL_WIDTH, 
+      CELL_GAP,
       GRID_ZONE_RADIUS,
       GRID_ZONE_BG_COLOR,
-      GRID_ZONE_BG_COLOR
     );
-
-    this.drawGrid(grid);
 
     this.ctx.restore();
   }
 
-  drawScene(grid, state) {
+  drawScene(groundGrid, state) {
     const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
     this.ctx.scale(dpr, dpr);
     const { width, height } = this.dims;
-    this.ctx.clearRect(0, 0, width, height);
+    // this.ctx.clearRect(0, 0, width, height);
+    
+    this.drawBg();
+    this.drawStepsCard(state.currentStep, state.stepsCount);
+    this.drawBushes();
 
-    this.drawBody(state.currentStep,
-      state.stepsCount);
-    this.drawGridZone(grid);
+    this.drawGridZone(groundGrid);
 
     this.ctx.restore();
   }
@@ -466,15 +708,20 @@ class GameEngine {
       y: (this.dimensions.height - MAX_CANVAS_HEIGHT * this.scale) / 2
     };
 
-    const seed = initGameData.seed || Date.now().toString(16);
+    const seed = initGameData.seed;
     this.randomGen = new LCG(seed);
 
-    this.trainingCount = +initGameData.trainingCount || 0;
+    this.trainingCount = +initGameData.trainingCount;
     this.showTutorial = this.trainingCount < 3;
-    this.stepsCount = +initGameData.maxStepsCount || 1;
+    this.stepsCount = +initGameData.maxStepsCount;
     this.currentStep = 0;
-    this.targetItemsCount = +initGameData.targetItemsCount || 20;
+    this.targetItemsCount = +initGameData.targetItemsCount;
     this.score = 0;
+
+    const fieldNumber = +initGameData.field || Math.floor(this.randomGen.random() * fields.length);
+
+    console.log("fieldNumber:", fieldNumber);
+    console.log("targetItemsCount:", this.targetItemsCount);
 
     this.canDrag = false;
     this.finishCb = null;
@@ -487,13 +734,7 @@ class GameEngine {
       GRID_COLS,
       this.assetKeys,
       () => this.randomGen.random(),
-      (r, c, rows, cols) => {
-        if ((r === (rows - 1) / 2) && (c === (cols - 1) / 2)) {
-          return false;
-        }
-    
-        return true;
-      }
+      fields[fieldNumber]
     );
     this.animMgr = new AnimationManager();
     this.renderer = new Renderer(this.ctx, {
@@ -539,10 +780,11 @@ class GameEngine {
     this.updateLogic(dt);
     this.animMgr.update(now);
     if (this.animMgr.isAnimating() || this.needsRender) {
-      this.renderer.drawScene(this.grid, {
+      this.renderer.drawScene(this.grid.groundGrid, {
         currentStep: this.currentStep,
         stepsCount: this.stepsCount
       });
+      this.renderer.drawCells(this.grid.cells);
       this.needsRender = false;
       this.gameLoopId = requestAnimationFrame(this.gameLoop.bind(this));
     } else { 
@@ -790,7 +1032,9 @@ class GameEngine {
   }
 
   async onCellClicked(cellPosition) {
-    if (!cellPosition) return;
+    const cell = this.grid.cells[cellPosition.row][cellPosition.col];
+
+    if (!cellPosition || !cell || cell.isOpened) return;
 
     if (!this.selectedCell) {
       this.selectedCell = cellPosition;
@@ -903,7 +1147,7 @@ function init(canvas, initGameData, tmp, finishFunc = gameData => { }, assetsLoa
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
-  if (!canvas) console.log("Canvas does not exist!");
+  if (!canvas) console.error("Canvas does not exist!");
 
   const engine = new GameEngine(canvas, initGameData, tmp);
   engine.setFinishCallback(finishFunc);
@@ -916,4 +1160,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop && engine.stopGameLoop();
 }
 
-export { init, deinit };
+// export { init, deinit };

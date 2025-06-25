@@ -75,10 +75,13 @@ const GRID_ZONE_RADIUS = 16;
 const GRID_PADDING_LEFT = 35.62;
 const GRID_PADDING_TOP = 113.49;
 
+const CELL_BG_COLOR = "#FFFFFF";
+const CELL_STROKE_COLOR = "#224C93";
 const CELL_WIDTH = 54.73;
 const CELL_HEIGHT = 54.73;
 const CELL_GAP = 5;
 const CELL_PADDING = 0;
+const CELL_RADIUS = 9;
 
 const NEW_CELL_START_Y = CELL_HEIGHT + CELL_GAP;
 
@@ -756,8 +759,8 @@ class Renderer {
     let cellH = CELL_HEIGHT;
     let posX = x0;
     let posY = y0;
-    let strokeColor = STEPS_STROKE_COLOR;
-    let fillColor = STEPS_BG_COLOR;
+    let strokeColor = CELL_STROKE_COLOR;
+    let fillColor = CELL_BG_COLOR;
     let alpha = 1;
     let scaleFactor = 1;
   
@@ -769,7 +772,7 @@ class Renderer {
       const dy = (cellH - CELL_HEIGHT) / 2;
       posX -= dx;
       posY -= dy;
-      strokeColor = STEPS_STROKE_COLOR;
+      strokeColor = CELL_STROKE_COLOR;
       // fillColor = BODY_BG_BOTTOM_COLOR;
     }
   
@@ -787,7 +790,7 @@ class Renderer {
   
     this.ctx.save();
     this.ctx.globalAlpha = alpha;
-    drawCard(this.ctx, posX, posY, cellW, cellH, 9, strokeColor, fillColor, 
+    drawCard(this.ctx, posX, posY, cellW, cellH, CELL_RADIUS, strokeColor, fillColor, 
       2 * scaleFactor + 1.3 * (scaleFactor !== 1));
     const img = this.images[cell.type];
     if (img) {
@@ -800,7 +803,7 @@ class Renderer {
   drawGrid(grid, selectedPos) {
     for (const row of grid.cells) {
       for (const cell of row) {
-        if (!cell || cell.isDeleted) continue;  // ← вместо проверки type==="disabled"
+        if (!cell || cell.isDeleted) continue;
         const sel = selectedPos
           && cell.row === selectedPos.row
           && cell.col === selectedPos.col;

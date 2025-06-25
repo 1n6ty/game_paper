@@ -5,6 +5,11 @@ import secrets
 
 TEST = True
 
+# {str: int}
+# Ключ - название поля 
+# Значение - число ячеек на поле, которое игроку нужно собрать
+FIELDS = {"rect": 24, "plus": 20, "heart": 16}
+
 class LCG:
     def __init__(self, seed):
         self.modulus = 2 ** 31
@@ -30,25 +35,22 @@ def init(perpetual: dict, tmp: dict) -> tuple[dict, dict, dict]:
 
     if TEST:
         maxStepsCount = 20
-        targetItemsCount = 12
     else:
         maxStepsCount = random.randint(10, 20)
 
-        alpha = 2
-        beta = maxStepsCount - 9 
-
-        beta_sample = np.random.beta(alpha, beta)
-
-        targetItemsCount = 10 + int(round(beta_sample * (20 - 10)))
+    randomGen = LCG(seed)
+    fieldIndex = int(randomGen.random() * len(FIELDS))
+    fieldSize = list(FIELDS.values())[fieldIndex]
 
     tmp["maxStepsCount"] = str(maxStepsCount)
-    tmp["targetItemsCount"] = str(targetItemsCount)
+    tmp["targetItemsCount"] = str(fieldSize)
 
     init_data = {
         "seed": seed,
         "maxStepsCount": str(maxStepsCount),
-        "targetItemsCount":  str(targetItemsCount),
-        "version": "3"
+        "targetItemsCount":  str(fieldSize),
+        "field": str(fieldIndex), 
+        "version": "4"
     }
 
     perpetual["last_seed"] = seed

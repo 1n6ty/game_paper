@@ -10,7 +10,7 @@
     rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-  <script id="myscript" src="./memory/draw_script_memory_classes.js"></script>
+  <script id="myscript" src="./match3/draw_script_match3_classes_3_1c.js"></script>
 </head>
 
 <body style="body {
@@ -31,7 +31,7 @@
       min-height: 0;
       ">
       <div style="  
-      width: 100vw;
+      /* width: 100vw; */
       height: 100%;
       background-color: #eac49c;
       display: flex;
@@ -49,20 +49,61 @@
   </div>
 
   <script>
+    // simulation for Memory
+
+    class LCGBack {
+      constructor(seed) {
+        this.modulus = 2 ** 31;
+        this.multiplier = 1103515245;
+        this.increment = 12345;
+        this.state = LCGBack.hash(seed) % this.modulus;
+      }
+
+      static hash(str) {
+        let hash = 5381;
+        for (let i = 0; i < str.length; i++) {
+          hash = (hash << 5) + hash + str.charCodeAt(i);
+          hash = hash & 0xffffffff;
+        }
+
+        return hash >>> 0;
+      }
+
+      random() {
+        this.state = (this.multiplier * this.state + this.increment) % this.modulus;
+        return this.state / this.modulus;
+      }
+    }
+
+    const FIELDS = {"rect": 24, "plus": 20, "heart": 16}
+
     const tmp = {};
     const canvas = document.getElementById("main_canvas");
     const script = document.getElementById("myscript");
+
+    const seed = Date.now().toString(16);
+    const randomGen = new LCGBack(seed)
+    // const fieldIndex = int(randomGen.random() * len(FIELDS))
+    // const fieldSize = list(FIELDS.values())[fieldIndex]
+
+    const initData = {
+      seed: seed,
+      trainingCount: "0",
+      maxStepsCount: "20",
+      targetItemsCount: 20,
+      version: "Local"
+    }
     console.log(script);
 
     const finishFunc = (gameData) => {
-      console.log("FINISH");
-      if (script.deinit) {
+      if (deinit) {
+        console.log("FINISH");
         deinit(canvas, tmp);
       }
     };
     if (init) {
       console.log("LAUNCH!");
-      init(canvas, {}, tmp, finishFunc);
+      init(canvas, initData, tmp, finishFunc);
     }
   </script>
 
