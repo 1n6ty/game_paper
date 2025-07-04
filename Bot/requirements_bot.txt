@@ -1,2 +1,2 @@
-pyTelegramBotAPI
-mysql-connector-python
+pyTelegramBotAPI==4.26.0
+mysql-connector-python==9.2.0

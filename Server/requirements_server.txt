@@ -1,5 +1,0 @@
-django
-PyMySQL
-requests
-redis
-gunicorn

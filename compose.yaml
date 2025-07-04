@@ -3,7 +3,7 @@ services:
     build: ./Bot
     environment:
       - MINIAPP_BOT_TOKEN=${MINIAPP_BOT_TOKEN}
-      - SITE_HOST=${SITE_HOST}
+      - MYSQL_DB_NAME=${MYSQL_DB_NAME}
       - MYSQL_DB_USER=${MYSQL_DB_USER}
       - MYSQL_DB_PASSWORD=${MYSQL_DB_PASSWORD}
     networks:
@@ -14,11 +14,10 @@ services:
         restart: true
     restart: always
   
-  score_app:
-    build: ./Score_app
+  games_app:
+    build: ./Games
     environment:
-      - DATA_LIFE_TIME=${DATA_LIFE_TIME}
-      - CLEAR_TIME=${CLEAR_TIME}
+      - TMP_MAX_LIFE_TIME=${TMP_MAX_LIFE_TIME}
     networks:
       - web
     expose:
@@ -28,11 +27,11 @@ services:
         condition: service_healthy
         restart: true
     volumes:
-      - ./games:/app/games
+      - ./media:/app/media
     restart: always
 
   server:
-    build: ./Server
+    build: ./Paper
     expose:
       - 8080
     networks:
@@ -40,6 +39,9 @@ services:
     environment:
       - MINIAPP_BOT_TOKEN=${MINIAPP_BOT_TOKEN}
       - SECRET_KEY=${SECRET_KEY}
+      - DOMAIN=${DOMAIN}
+      - SITE_HOST=${SITE_HOST}
+      - MYSQL_DB_NAME=${MYSQL_DB_NAME}
       - MYSQL_DB_USER=${MYSQL_DB_USER}
       - MYSQL_DB_PASSWORD=${MYSQL_DB_PASSWORD}
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
@@ -53,7 +55,6 @@ services:
         condition: service_healthy
         restart: true
     volumes:
-      - ./games:/app/games
       - ./static:/app/static
       - ./media:/app/media
       - ./templates:/app/templates
@@ -65,7 +66,7 @@ services:
       - web
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      timeout: 20s
+      timeout: 10s
       retries: 10
     restart: always
   
@@ -76,16 +77,29 @@ services:
     volumes:
       - ./dbdata:/var/lib/mysql/
     environment:
-      MYSQL_DATABASE: "Paperdb"
+      MYSQL_DATABASE: ${MYSQL_DB_NAME}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_PASSWORD: ${MYSQL_DB_PASSWORD}
       MYSQL_USER: ${MYSQL_DB_USER}
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
+      timeout: 10s
       retries: 10
     restart: always
   
+  certbot:
+    build: ./certbot
+    networks:
+      - web
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./cert:/etc/letsencrypt
+      - ./acme:/var/www/letsencrypt
+    depends_on:
+      - nginx
+    restart: always
+
   nginx:
     build: ./nginx
     networks:
@@ -93,17 +107,18 @@ services:
     ports:
       - 80:80
       - 443:443
+    environment:
+      DOMAIN: ${DOMAIN}
     depends_on:
       - redis
       - mysql
       - server
-      - score_app
+      - games_app
     volumes:
-      - ./games:/app/games
       - ./static:/app/static
       - ./media:/app/media
-      - ./cer:/etc/letsencrypt/live/milkclub.lambumiz.ru
-      - ./certbot/www:/var/www/certbot
+      - ./cert:/etc/letsencrypt
+      - ./acme:/var/www/letsencrypt
     restart: always
 
 networks:
