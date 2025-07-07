@@ -1,4 +1,4 @@
-const __VERSION__ = "5Cd";
+const __VERSION__ = "5.1C";
 
 // const PATH = "./assets/memory/";
 const PATH = "/media/assets/memory/";
@@ -825,7 +825,7 @@ class Renderer {
         ctx.textBaseline = "middle";
         ctx.fillText(popupData.buttonText, 
           buttonX + TUTORIAL_BUTTON_WIDTH / 2, 
-          buttonY + TUTORIAL_BUTTON_HEIGHT / 2 + 2);
+          buttonY + TUTORIAL_BUTTON_HEIGHT / 2);
       }
     }
 
@@ -1257,9 +1257,13 @@ class GameEngine {
   }
 
   async onCellClicked(cellPosition) {
+    if (!this.canDrag) return;
+
     const cell = this.grid.cells[cellPosition.row][cellPosition.col];
 
     if (!cellPosition || !cell || cell.isOpened) return;
+
+    this.canDrag = false;
 
     if (!this.selectedCell) {
       this.selectedCell = cellPosition;
@@ -1307,9 +1311,9 @@ class GameEngine {
     
     await animPromise;
 
-      if (!this.isTutorialActive) {
-        this.canDrag = true;
-    }
+    // if (!this.isTutorialActive) {
+    //     this.canDrag = true;
+    // }
     
     if (this.currentStep === this.stepsCount || (c1.type === c2.type && this.score === this.targetItemsCount)) {
       this.handleGameOver();
@@ -1336,7 +1340,7 @@ class GameEngine {
     const popupData = TUTORIAL_TEXTS[this.tutorialState];
     if (!popupData || !popupData.buttonText) return;
 
-    // 1. Получаем отступы для текущей карточки (с фолбэком)
+    // Получаем отступы для текущей карточки (с фолбэком)
     const paddingX = popupData.paddingX ?? TUTORIAL_POPUP_PADDING_X;
     const paddingY = popupData.paddingY ?? TUTORIAL_POPUP_PADDING_Y;
 
@@ -1386,15 +1390,12 @@ class GameEngine {
   }
 
   async advanceTutorial() {
-    // Логика для перехода после клика
-
     switch (this.tutorialState) {
       case TUTORIAL_STATE.INTRO:
         this.tutorialState = TUTORIAL_STATE.MEMORIZE;
         this.requestRender();
         this.advanceTutorial(); // Сразу запускаем логику для второго шага
         break;
-      // КОНЕЦ ДОБАВЛЕННОГО БЛОКА
       case TUTORIAL_STATE.MEMORIZE:
         this.grid.cells.flat().forEach(cell => { 
           if (cell) cell.isOpened = true;
@@ -1481,6 +1482,8 @@ class GameEngine {
       this.handleTutorialClick(e);
       return;
     }
+
+    console.log("isAnimating: ", this.animMgr.isAnimating());
 
     if (!this.canDrag || this.animMgr.isAnimating()) return;
     const pos = this.getCellGridPosition(e);

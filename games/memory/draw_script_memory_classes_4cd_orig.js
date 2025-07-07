@@ -1160,4 +1160,4 @@ function deinit(canvas, tmp) {
   engine.stopGameLoop && engine.stopGameLoop();
 }
 
-// export { init, deinit };
+export { init, deinit };
