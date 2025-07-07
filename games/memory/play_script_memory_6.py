@@ -8,7 +8,7 @@ TEST = True
 # {str: int}
 # Ключ - название поля 
 # Значение - число ячеек на поле, которое игроку нужно собрать
-FIELDS = {"rect": 24, "plus": 20, "heart": 16}
+FIELDS = {"rect": 24, "heart": 16, "plus": 20}
 
 class LCG:
     def __init__(self, seed):
@@ -40,20 +40,25 @@ def init(perpetual: dict, tmp: dict) -> tuple[dict, dict, dict]:
 
     randomGen = LCG(seed)
     fieldIndex = int(randomGen.random() * len(FIELDS))
-    fieldSize = list(FIELDS.values())[fieldIndex]
+    cell_count = list(FIELDS.values())[fieldIndex]
+    target_pairs = cell_count // 2
 
     tmp["maxStepsCount"] = str(maxStepsCount)
-    tmp["targetItemsCount"] = str(fieldSize)
+    tmp["targetItemsCount"] = str(target_pairs)
+
+    currentTrainingCount = int(perpetual.get("trainingCount", "0"))
 
     init_data = {
+        "trainingCount": str(currentTrainingCount),
         "seed": seed,
         "maxStepsCount": str(maxStepsCount),
-        "targetItemsCount":  str(fieldSize),
+        "targetItemsCount":  str(target_pairs),
         "field": str(fieldIndex), 
-        "version": "4"
+        "version": "6"
     }
 
     perpetual["last_seed"] = seed
+    perpetual["trainingCount"] = str(currentTrainingCount + 1)
 
     print("====== ps memory: init func END ======")
     return (perpetual, tmp, init_data)
