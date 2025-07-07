@@ -1,112 +1,228 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 
 <head>
   <meta charset="utf-8" />
+  <title>Игровая тестовая площадка</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-  <script id="myscript" src="./match3/draw_script_match3_classes_3_1c.js"></script>
-</head>
-
-<body style="body {
-  width: 100%; 
-  user-select: none;
-  outline: none;
-
-  margin: 0;
-}
-">
-  <div style="
-    display: grid;
-  grid-template-rows: 1fr auto;
-  height: 100vh;  
-  ">
-    <div style="
-      overflow-y: auto;
-      min-height: 0;
-      ">
-      <div style="  
-      /* width: 100vw; */
+  <style>
+    /* Базовые стили */
+    html, body {
       height: 100%;
-      background-color: #eac49c;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    /* Главный контейнер для разделения на меню и игровое поле */
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Стили для верхнего меню выбора игры */
+    .controls-panel {
+      flex-shrink: 0;
+      padding: 10px;
+      background-color: #333;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    .controls-panel label {
+      font-weight: 500;
+    }
+    .controls-panel select, .controls-panel button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #555;
+      background-color: #444;
+      color: white;
+      border-radius: 4px;
+    }
+    .controls-panel button {
+      cursor: pointer;
+      background-color: #007bff;
+      border-color: #007bff;
+      font-weight: 500;
+    }
+    .controls-panel button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Контейнер, центрирующий canvas */
+    .canvas-container {
+      flex-grow: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      touch-action: none;
-      ">
-          <canvas id="main_canvas" width="1280" height="720" style="  
-          display: block;
-        max-width: 100%;
-        height: auto;
-        "></canvas>
-      </div>
+      overflow: hidden;
+      background-color: #eac49c; /* Цвет фона из вашего примера */
+      touch-action: none; /* Отключает стандартные жесты браузера (скролл, зум) */
+      user-select: none; /* Запрещает выделение текста */
+    }
+
+    /* Стили самого canvas */
+    #main_canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      height: auto;
+      background: #000; /* Черный фон на случай, если игра не отрисует свой */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main-container">
+    <!-- Панель управления для выбора игры -->
+    <div class="controls-panel">
+      <label for="game-selector">Выберите игру:</label>
+      <select id="game-selector"></select>
+      <button id="load-game-btn">Загрузить</button>
+    </div>
+
+    <!-- Контейнер для игрового холста -->
+    <div class="canvas-container">
+      <canvas id="main_canvas"></canvas>
     </div>
   </div>
 
   <script>
-    // simulation for Memory
+    // =================================================================
+    // ЦЕНТР КОНФИГУРАЦИИ ИГР
+    // =================================================================
+    const GAME_CONFIGS = {
+      'milkyFly/draw_script_mf_19_5.js': {
+        name: 'Milky Fly',
+        initData: {
+          seed: Date.now().toString(16),
+          best_score: localStorage.getItem('milkyFlyBestScore') || 0,
+          entrances: (parseInt(localStorage.getItem('milkyFlyEntrances') || 0) + 1).toString(),
+          version: "Local Test Harness v2"
+        },
+        onFinish: (gameData) => {
+            console.log("Игра Milky Fly завершена!", gameData);
+            const currentBest = parseInt(localStorage.getItem('milkyFlyBestScore') || 0);
+            if (gameData.score > currentBest) {
+                localStorage.setItem('milkyFlyBestScore', gameData.score);
+                console.log(`Новый рекорд: ${gameData.score}`);
+            }
+        },
+        onInit: () => {
+          const entrances = parseInt(localStorage.getItem('milkyFlyEntrances') || 0) + 1;
+          localStorage.setItem('milkyFlyEntrances', entrances);
+        }
+      },
+      'match3/draw_script_match3_classes_3_1c.js': {
+        name: 'Match 3',
+        initData: {
+          seed: Date.now().toString(16),
+          trainingCount: (localStorage.getItem('match3TrainingCount') || 0).toString(),
+          maxStepsCount: '20',
+          targetItemsCount: '15',
+          version: "Local Test Harness v2"
+        },
+        onFinish: (gameData) => {
+          console.log("Игра Match 3 завершена!", gameData);
+          const currentBest = parseInt(localStorage.getItem('match3BestScore') || 0);
+          if (gameData.score > currentBest) {
+              localStorage.setItem('match3BestScore', gameData.score);
+              console.log(`Новый рекорд в Match 3: ${gameData.score}`);
+          }
+        },
+        onInit: () => {
+          const count = parseInt(localStorage.getItem('match3TrainingCount') || 0) + 1;
+          localStorage.setItem('match3TrainingCount', count.toString());
+        }
+      },
+    };
 
-    class LCGBack {
-      constructor(seed) {
-        this.modulus = 2 ** 31;
-        this.multiplier = 1103515245;
-        this.increment = 12345;
-        this.state = LCGBack.hash(seed) % this.modulus;
+    const canvas = document.getElementById("main_canvas");
+    const gameSelector = document.getElementById("game-selector");
+    const loadButton = document.getElementById("load-game-btn");
+    let currentGameObject = null;
+
+    function populateSelector() {
+      for (const scriptPath in GAME_CONFIGS) {
+        const option = document.createElement("option");
+        option.value = scriptPath;
+        option.textContent = GAME_CONFIGS[scriptPath].name;
+        gameSelector.appendChild(option);
       }
+    }
 
-      static hash(str) {
-        let hash = 5381;
-        for (let i = 0; i < str.length; i++) {
-          hash = (hash << 5) + hash + str.charCodeAt(i);
-          hash = hash & 0xffffffff;
+    /**
+     * Основная функция загрузки и инициализации игры.
+     */
+    async function loadGame() {
+      if (currentGameObject && typeof currentGameObject.deinit === 'function') {
+        console.log("Очистка предыдущей игры...");
+        currentGameObject.deinit(canvas, currentGameObject.tmp);
+        currentGameObject = null;
+      }
+      
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const scriptPath = gameSelector.value;
+      const config = GAME_CONFIGS[scriptPath];
+      if (!config) {
+        console.error("Конфигурация для игры не найдена:", scriptPath);
+        return;
+      }
+      
+      console.log(`Загрузка модуля: ${config.name}`);
+
+      try {
+        const gameModule = await import('./' + scriptPath);
+
+        if (typeof gameModule.init !== 'function' || typeof gameModule.deinit !== 'function') {
+            console.error(`Функции init() или deinit() не найдены в экспортах модуля: ${scriptPath}.`);
+            return;
         }
 
-        return hash >>> 0;
-      }
+        const tmp = {};
+        
+        const finishFunc = (gameData) => {
+            console.log("Игра завершена, вызвана finishFunc.");
+            if (config.onFinish) {
+                config.onFinish(gameData);
+            }
+            console.log("FINISH -> DEINIT");
+            gameModule.deinit(canvas, tmp);
+        };
 
-      random() {
-        this.state = (this.multiplier * this.state + this.increment) % this.modulus;
-        return this.state / this.modulus;
+        console.log("Модуль импортирован. Запуск init()...");
+        if (config.onInit) {
+          config.onInit();
+        }
+        gameModule.init(canvas, config.initData, tmp, finishFunc);
+        
+        currentGameObject = {
+          deinit: gameModule.deinit, // Сохраняем ссылку на функцию очистки из модуля
+          tmp: tmp,
+        };
+
+      } catch (error) {
+        console.error("Ошибка при динамическом импорте скрипта:", scriptPath, error);
       }
     }
 
-    const FIELDS = {"rect": 24, "plus": 20, "heart": 16}
-
-    const tmp = {};
-    const canvas = document.getElementById("main_canvas");
-    const script = document.getElementById("myscript");
-
-    const seed = Date.now().toString(16);
-    const randomGen = new LCGBack(seed)
-    // const fieldIndex = int(randomGen.random() * len(FIELDS))
-    // const fieldSize = list(FIELDS.values())[fieldIndex]
-
-    const initData = {
-      seed: seed,
-      trainingCount: "0",
-      maxStepsCount: "20",
-      targetItemsCount: 20,
-      version: "Local"
-    }
-    console.log(script);
-
-    const finishFunc = (gameData) => {
-      if (deinit) {
-        console.log("FINISH");
-        deinit(canvas, tmp);
-      }
-    };
-    if (init) {
-      console.log("LAUNCH!");
-      init(canvas, initData, tmp, finishFunc);
-    }
+    document.addEventListener("DOMContentLoaded", populateSelector);
+    loadButton.addEventListener("click", loadGame);
   </script>
-
 </body>
 
 </html>

@@ -1,4 +1,14 @@
-const __VERSION__ = "19.5";
+const __VERSION__ = "19.5-optimized-v3-final";
+
+// ===================================================================================
+// КОНФИГУРАЦИЯ ИГРЫ (ВСЕ "МАГИЧЕСКИЕ" ЧИСЛА ВЫНЕСЕНЫ СЮДА)
+// ===================================================================================
+
+const ASSET_PATHS = {
+  base: "/media/assets/milkyFly/",
+  // base: "./assets/milkyFly/",
+  get: (fileName) => ASSET_PATHS.base + fileName,
+};
 
 const ASSETS = {
   ceilEvening: "ceilEvening",
@@ -8,61 +18,64 @@ const ASSETS = {
   ceilMorning: "ceilMorning",
 };
 
-const PATH = "/media/assets/milkyFly/";  // /media/assets/milkyFly/
+const GAME_CONFIG = {
+  MAX_CANVAS_WIDTH: 428,
+  MAX_CANVAS_HEIGHT: 774,
+  DEFAULT_FLOOR_HEIGHT: 36,
+  INITIAL_SPEED: 2.3,
+  SPEED_MULTIPLIER: 1.2,
+  // Ограничение DT, чтобы избежать огромных "прыжков" после долгой неактивности вкладки (в секундах)
+  // Например, 1/15 ~ 66мс, игра не будет симулировать более 66мс за один кадр.
+  MAX_DELTA_TIME: 1 / 15, 
+};
 
-const ceilEveningUrl = `${PATH}ceil_evening.svg`;
-const ceilSunsetUrl = `${PATH}ceil_sunset.svg`;
-const ceilSunriseUrl = `${PATH}ceil_sunrise.svg`;
-const ceilDayUrl = `${PATH}ceil_day.svg`;
-const ceilMorningUrl = `${PATH}ceil_morning.svg`;
+const PLAYER_CONFIG = {
+  WIDTH: 94.65,
+  HEIGHT: 64.96,
+  GRAVITY: 0.6,
+  JUMP_FORCE: -10,
+  ROTATION_FALL_ANGLE: 90,
+  ROTATION_JUMP_ANGLE: -15,
+  ROTATION_SPEED: 2,
+  COLLISION_OFFSET: 28,
+};
 
-const pipeDefaultUrl = `${PATH}pipeDefault.svg`;
-const pipeSpecialUrl = `${PATH}pipeSpecial.svg`;
+const PIPE_CONFIG = {
+  WIDTH: 66,
+  GAP: 192,
+  SPAWN_INTERVAL: 100, // Базовый интервал
+  SPECIAL_PIPE_EVERY: 10,
+  ACCELERATE_EVERY: 10,
+};
 
-const cloudsUrl = `${PATH}clouds.svg`;
-const bushesDarkUrl = `${PATH}bushesDark.svg`;
-const bushesLightUrl = `${PATH}bushesLight.svg`;
+const PARALLAX_CONFIG = {
+  CLOUDS_SPEED: 0.01,
+  BUSHES_DARK_SPEED: 0.03,
+  BUSHES_LIGHT_SPEED: 0.08,
+  GROUND_SPEED: 1.0,
+};
 
-const grassUrl = `${PATH}grass.svg`;
+const UI_CONFIG = {
+  CEIL_DRAW_HEIGHT: 33,
+  FLOOR_DRAW_HEIGHT: 36,
+  TUTORIAL_TEXT: "Тап👆",
+  SCORE_FONT: "500 48px Roboto Mono",
+  BEST_SCORE_FONT: "500 15px Roboto Mono",
+  TEXT_COLOR_WHITE: "white",
+  TEXT_COLOR_DARK: "#4b4949",
+};
 
-const playerIdleUrl = `${PATH}cowIdle.svg`;
-const playerPressedUrl = `${PATH}cowPressed.svg`;
+const TUTORIAL_CONFIG = {
+  SWING_AMPLITUDE: 50, // px
+  SWING_PERIOD: 2.5,   // seconds
+  FLOAT_AMPLITUDE: 15, // px
+  FLOAT_SPEED: 3,
+  TEXT_SWING_AMPLITUDE: 0.1, // radians
+  TEXT_SWING_PERIOD: 2,      // seconds
+};
 
-const MAX_CANVAS_WIDTH = 428;
-const MAX_CANVAS_HEIGHT = 774;
-
-const DEFAULT_FLOOR_HEIGHT = 36;
-
-const CEIL_DRAW_HEIGHT = 33;
-const FLOOR_DRAW_HEIGHT = 36;
-const PLAYER_WIDTH = 94.65;
-const PLAYER_HEIGHT = 64.96;
-
-const CLOUDS_WIDTH = MAX_CANVAS_WIDTH;
-const BUSHES_WIDTH = MAX_CANVAS_WIDTH;
-const GROUND_WIDTH = MAX_CANVAS_WIDTH;
-
-// ====== Параметры игры ======
-const INITIAL_SPEED = 2.3;
-const SPEED_MULTIPLIER = 1.2;             // Увеличение скорости каждые 10 труб
-const PARALLAX_CLOUDS = 0.01;
-const PARALLAX_BUSHES_DARK = 0.03;
-const PARALLAX_BUSHES_LIGHT = 0.08;
-const PARALLAX_GRASS = 1;
-const FALL_ANGLE = 90;
-const GRAVITY = 0.6;
-const JUMP_FORCE = -10;
-
-const PIPE_GAP = 192;
-const PIPE_WIDTH = 66;
-const PIPE_INTERVAL = 100;
-const FLOOR_HEIGHT = DEFAULT_FLOOR_HEIGHT;
-
-const PLAYER_COLLISION_OFFSET = 28;
-const PLAYER_BOUNDARY_OFFSET = 50;
-
-// Массив вариантов заднего фона + потолок [ключ потолка, [цвет_верх, цвет_середина, цвет_низ]]
-const BACKGROUNDS = [
+// Массив вариантов фона [ключ потолка, [цвет_верх, цвет_середина, цвет_низ]]
+const BACKGROUND_DEFINITIONS = [
   [ASSETS.ceilEvening, ["#67AAEB", "#D3E8FF", "#FFFFFF"]],
   [ASSETS.ceilSunset, ["#67AAEB", "#F7CDCE", "#FFFFFF"]],
   [ASSETS.ceilSunrise, ["#97A0FF", "#D1E8FF", "#FFFFFF"]],
@@ -70,17 +83,20 @@ const BACKGROUNDS = [
   [ASSETS.ceilMorning, ["#AED7FF", "#D9ECFF", "#FEEEEF"]],
 ];
 
+// ===================================================================================
+// КОНЕЦ КОНФИГУРАЦИИ
+// ===================================================================================
+
 const loadImage = src =>
-  new Promise((resolve, reject) => {
+  new Promise((resolve) => {
     const img = new Image();
     img.src = src;
     img.onload = () => resolve(img);
     img.onerror = e => {
       console.error("Failed to load image:", src, e);
-      resolve(null); // возвращаем null, чтобы использовать fallback
+      resolve(null);
     };
   });
-
 
 class LCG {
   constructor(seed) {
@@ -96,7 +112,6 @@ class LCG {
       hash = ((hash << 5) + hash) + str.charCodeAt(i);
       hash = hash & 0xffffffff;
     }
-
     return hash >>> 0;
   }
 
@@ -109,7 +124,7 @@ class LCG {
 class GameEngine {
   constructor(canvas, initGameData, tmp) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
+    this.ctx = canvas.getContext("2d", { alpha: false });
 
     this.tmp = tmp || {};
     this.tmp.engine = this;
@@ -126,17 +141,23 @@ class GameEngine {
     console.log("Число посещений:", entrances);
     console.log("Туториал активен:", this.tutorialActive);
 
-    this.dimensions = {
-      width: MAX_CANVAS_WIDTH,
-      height: MAX_CANVAS_HEIGHT,
-    };
-
+    this.dimensions = { width: GAME_CONFIG.MAX_CANVAS_WIDTH, height: GAME_CONFIG.MAX_CANVAS_HEIGHT };
     this.inTime = null;
+    this.lastTime = 0;
 
+    this.playerHalfWidth = PLAYER_CONFIG.WIDTH / 2;
+    this.playerHalfHeight = PLAYER_CONFIG.HEIGHT / 2;
+    this.cappedDpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    this.pipePool = [];
+    this.pipePoolSize = 10;
+    
+    this.offscreenCanvas = document.createElement('canvas');
+    this.offscreenCtx = this.offscreenCanvas.getContext('2d');
+    
     this.state = {
-      speed: INITIAL_SPEED,
-      frame: 0,
-      pipes: [],
+      speed: GAME_CONFIG.INITIAL_SPEED,
+      pipeSpawnTimer: 0,
       cloudsX: 0,
       bushesDarkX: 0,
       bushesLightX: 0,
@@ -151,12 +172,10 @@ class GameEngine {
         floatOffset: 0,
       },
       ...(() => {
-        const rand = this.randomGenerator.random();
-        const index = Math.floor(rand * BACKGROUNDS.length);
-        console.log("Rand:", rand);
+        const index = Math.floor(this.randomGenerator.random() * BACKGROUND_DEFINITIONS.length);
         return {
-          selectedCeiling: BACKGROUNDS[index][0],
-          selectedGradient: BACKGROUNDS[index][1],
+          selectedCeiling: BACKGROUND_DEFINITIONS[index][0],
+          selectedGradient: BACKGROUND_DEFINITIONS[index][1],
         };
       })(),
       pipeCount: 0,
@@ -167,122 +186,145 @@ class GameEngine {
     };
 
     this.gameLoopId = null;
-    this.finishCb = () => { };
-
+    this.finishCb = () => {};
     this.images = {};
-    this.loadAssets();
-
-    this.lastCanvasHeight = 0;
     this.isResizing = false;
     this.resizeTimer = null;
 
-    this.boundHandleJump = e => this.handleJump(e);
-    window.addEventListener("keydown", this.boundHandleJump);
-    this.canvas.addEventListener("touchstart", this.boundHandleJump);
-
-    this.boundResizeCanvas = () => this.resizeCanvas();
-    window.addEventListener("resize", this.boundResizeCanvas);
-    this.resizeCanvas();
+    this.loadAssets().then(() => {
+      this.initPipePool();
+      this.setupEventListeners();
+      this.resizeCanvas(true);
+      this.preRenderBackground();
+      this.onAssetsLoaded();
+    });
+  }
+  
+  initPipePool() {
+    for (let i = 0; i < this.pipePoolSize; i++) {
+      this.pipePool.push({
+        x: 0, top: 0, bottom: 0, width: PIPE_CONFIG.WIDTH,
+        special: false, passed: false, active: false,
+      });
+    }
   }
 
-  resizeCanvas() {
+  setupEventListeners() {
+      this.boundHandleJump = e => this.handleJump(e);
+      window.addEventListener("keydown", this.boundHandleJump);
+      this.canvas.addEventListener("touchstart", this.boundHandleJump);
+      
+      this.boundResizeCanvas = () => this.resizeCanvas();
+      window.addEventListener("resize", this.boundResizeCanvas);
+  }
+
+  resizeCanvas(isInitialSetup = false) {
     const parent = this.canvas.parentElement;
     if (!parent) return;
 
-    console.log("Resize START");
-
-    if (this.resizeTimer)
-      clearTimeout(this.resizeTimer);
-
+    if (this.resizeTimer) clearTimeout(this.resizeTimer);
     this.isResizing = true;
 
     const GAP_FOR_GROUND = 60;
-
-    const parentWidth = parent.clientWidth;
-    const parentHeight = parent.clientHeight;
-    const newWidth = Math.min(parentWidth, MAX_CANVAS_WIDTH);
-    const newHeight = Math.min(parentHeight - GAP_FOR_GROUND, MAX_CANVAS_HEIGHT);
+    const newWidth = Math.min(parent.clientWidth, GAME_CONFIG.MAX_CANVAS_WIDTH);
+    const newHeight = Math.min(parent.clientHeight - GAP_FOR_GROUND, GAME_CONFIG.MAX_CANVAS_HEIGHT);
 
     this.dimensions.width = newWidth;
     this.dimensions.height = newHeight;
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = this.cappedDpr;
     this.canvas.width = newWidth * dpr;
     this.canvas.height = newHeight * dpr;
     this.canvas.style.width = `${newWidth}px`;
     this.canvas.style.height = `${newHeight}px`;
 
-    this.resizeTimer = setInterval(() => this.resizeCanvasEnd(), 200);
+    this.offscreenCanvas.width = this.canvas.width;
+    this.offscreenCanvas.height = this.canvas.height;
+    
+    if (!isInitialSetup) {
+        this.resizeTimer = setTimeout(() => this.resizeCanvasEnd(), 250);
+    } else {
+        this.isResizing = false;
+    }
   }
-
+  
   resizeCanvasEnd() {
     console.log("Resize END");
     this.isResizing = false;
-
-    if (this.resizeTimer)
-      clearTimeout(this.resizeTimer);
+    this.preRenderBackground();
+  }
+  
+  preRenderBackground() {
+    const { width, height } = this.dimensions;
+    const dpr = this.cappedDpr;
+    
+    this.offscreenCtx.save();
+    this.offscreenCtx.scale(dpr, dpr);
+    
+    const gradient = this.offscreenCtx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, this.state.selectedGradient[0]);
+    gradient.addColorStop(0.5, this.state.selectedGradient[1]);
+    gradient.addColorStop(1, this.state.selectedGradient[2]);
+    this.offscreenCtx.fillStyle = gradient;
+    this.offscreenCtx.fillRect(0, 0, width, height);
+    this.offscreenCtx.restore();
   }
 
   handleJump(e) {
     if (e.type === "keydown" && e.code !== "Space") return;
-    if (!this.inTime)
-      this.inTime = Date.now();
+    if (!this.inTime) this.inTime = Date.now();
     const st = this.state;
-    if (!st.isStarted) {
-      st.isStarted = true;
-      st.player.velocity = JUMP_FORCE;
-      return;
-    }
-
-    if (!st.isGameOver) {
-      st.player.velocity = JUMP_FORCE;
-      st.player.frameCounter = 0;
-    }
+    if (st.isGameOver) return;
+    if (!st.isStarted) st.isStarted = true;
+    st.player.velocity = PLAYER_CONFIG.JUMP_FORCE;
+    st.player.frameCounter = 0;
   }
 
   onAssetsLoaded() {
-    if (this.assetsLoadedCb)
-      this.assetsLoadedCb();
-
+    if (this.assetsLoadedCb) this.assetsLoadedCb();
     this.startGameLoop();
   }
 
   async loadAssets() {
-    const assets = {
-      clouds: loadImage(cloudsUrl),
-      bushesDark: loadImage(bushesDarkUrl),
-      bushesLight: loadImage(bushesLightUrl),
-      grass: loadImage(grassUrl),
-      pipeDefault: loadImage(pipeDefaultUrl),
-      pipeSpecial: loadImage(pipeSpecialUrl),
-      playerIdle: loadImage(playerIdleUrl),
-      playerPressed: loadImage(playerPressedUrl),
-      ceilEvening: loadImage(ceilEveningUrl),
-      ceilSunset: loadImage(ceilSunsetUrl),
-      ceilSunrise: loadImage(ceilSunriseUrl),
-      ceilDay: loadImage(ceilDayUrl),
-      ceilMorning: loadImage(ceilMorningUrl),
+    const assetMap = {
+      clouds: ASSET_PATHS.get('clouds.svg'), 
+      bushesDark: ASSET_PATHS.get('bushesDark.svg'), 
+      bushesLight: ASSET_PATHS.get('bushesLight.svg'),
+      grass: ASSET_PATHS.get('grass.svg'), 
+      pipeDefault: ASSET_PATHS.get('pipeDefault.svg'), 
+      pipeSpecial: ASSET_PATHS.get('pipeSpecial.svg'),
+      playerIdle: ASSET_PATHS.get('cowIdle.svg'), 
+      playerPressed: ASSET_PATHS.get('cowPressed.svg'), 
+      ceilEvening: ASSET_PATHS.get('ceil_evening.svg'), 
+      ceilSunset: ASSET_PATHS.get('ceil_sunset.svg'),
+      ceilSunrise: ASSET_PATHS.get('ceil_sunrise.svg'), 
+      ceilDay: ASSET_PATHS.get('ceil_day.svg'), 
+      ceilMorning: ASSET_PATHS.get('ceil_morning.svg'),
     };
-    const keys = Object.keys(assets);
-    const loaded = await Promise.all(Object.values(assets));
-    keys.forEach((key, idx) => {
-      this.images[key] = loaded[idx] || null;
-    });
-
-    this.onAssetsLoaded();
+    const promises = Object.entries(assetMap).map(([key, url]) =>
+      loadImage(url).then(img => ({ key, img }))
+    );
+    const results = await Promise.all(promises);
+    results.forEach(({ key, img }) => { this.images[key] = img; });
   }
 
   startGameLoop() {
     console.log("Start GameLoop");
-    this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+    this.lastTime = performance.now();
+    this.gameLoopId = requestAnimationFrame(timestamp => this.gameLoop(timestamp));
   }
 
-  gameLoop() {
+  gameLoop(timestamp) {
     if (this.state.isGameOver) return;
-    const dt = 1 / 60;
+    
+    // Убираем ограничение 'dt', чтобы симуляция была верной на медленных устройствах.
+    // Вместо этого ограничиваем максимальный шаг, чтобы избежать "прыжка" после долгой неактивности.
+    const dt = Math.min((timestamp - this.lastTime) / 1000, GAME_CONFIG.MAX_DELTA_TIME);
+    this.lastTime = timestamp;
+
     this.updateLogic(dt);
     this.drawScene();
-    this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
+    this.gameLoopId = requestAnimationFrame(timestamp => this.gameLoop(timestamp));
   }
 
   stopGameLoop() {
@@ -290,331 +332,247 @@ class GameEngine {
     window.removeEventListener("keydown", this.boundHandleJump);
     this.canvas.removeEventListener("touchstart", this.boundHandleJump);
     window.removeEventListener("resize", this.boundResizeCanvas);
-    if (this.resizeTimer)
-      clearTimeout(this.resizeTimer);
+    if (this.resizeTimer) clearTimeout(this.resizeTimer);
     if (this.gameLoopId) {
-      console.log("gameLoopId cleared");
-      cancelAnimationFrame(this.gameLoopId);
+        console.log("gameLoopId cleared");
+        cancelAnimationFrame(this.gameLoopId);
     }
   }
 
-  updateParallax(fps) {
+  updateParallax(timeScale) {
     const st = this.state;
-    st.cloudsX -= st.speed * PARALLAX_CLOUDS * fps;
-    st.bushesDarkX -= st.speed * PARALLAX_BUSHES_DARK * fps;
-    st.bushesLightX -= st.speed * PARALLAX_BUSHES_LIGHT * fps;
-    st.groundX -= st.speed * PARALLAX_GRASS * fps;
-    if (st.cloudsX <= -CLOUDS_WIDTH) st.cloudsX += CLOUDS_WIDTH;
-    if (st.bushesDarkX <= -BUSHES_WIDTH) st.bushesDarkX += BUSHES_WIDTH;
-    if (st.bushesLightX <= -BUSHES_WIDTH) st.bushesLightX += BUSHES_WIDTH;
-    if (st.groundX <= -GROUND_WIDTH) st.groundX += GROUND_WIDTH;
+    st.cloudsX = (st.cloudsX - st.speed * PARALLAX_CONFIG.CLOUDS_SPEED * timeScale) % GAME_CONFIG.MAX_CANVAS_WIDTH;
+    st.bushesDarkX = (st.bushesDarkX - st.speed * PARALLAX_CONFIG.BUSHES_DARK_SPEED * timeScale) % GAME_CONFIG.MAX_CANVAS_WIDTH;
+    st.bushesLightX = (st.bushesLightX - st.speed * PARALLAX_CONFIG.BUSHES_LIGHT_SPEED * timeScale) % GAME_CONFIG.MAX_CANVAS_WIDTH;
+    st.groundX = (st.groundX - st.speed * PARALLAX_CONFIG.GROUND_SPEED * timeScale) % GAME_CONFIG.MAX_CANVAS_WIDTH;
   }
 
-  animatePlayerIdle(dt) {
+  animatePlayer(timeScale, dt) {
     const st = this.state;
-    if (this.tutorialActive) {
-      const period = 2.5; // секунда
-      const amplitude = 50; // максимальное смещение вверх
+    if (!st.isStarted) {
       this.tutorialTimer += dt;
-      const phase = this.tutorialTimer % period;
-      // Используем синус для плавного подъёма и спуска: от 0 до amplitude
-      const offset = amplitude * Math.sin(Math.PI * phase / period);
-      st.player.y = this.dimensions.height / 2 - offset;
-      st.player.velocity = JUMP_FORCE;
-
-    } else {
-      // Стандартная "плавающая" анимация
-      st.player.floatOffset += dt * 3;
-      st.player.y = this.dimensions.height / 2 + Math.sin(st.player.floatOffset) * 15;
+      if (this.tutorialActive) {
+        st.player.y = this.dimensions.height / 2 - (TUTORIAL_CONFIG.SWING_AMPLITUDE * Math.sin(Math.PI * (this.tutorialTimer % TUTORIAL_CONFIG.SWING_PERIOD) / TUTORIAL_CONFIG.SWING_PERIOD));
+      } else {
+        st.player.y = this.dimensions.height / 2 + Math.sin(this.tutorialTimer * TUTORIAL_CONFIG.FLOAT_SPEED) * TUTORIAL_CONFIG.FLOAT_AMPLITUDE;
+      }
+      return;
     }
-  }
-
-  calculatePlayerGravity(fps) {
-    const st = this.state;
-    st.player.velocity += GRAVITY * fps;
-    st.player.y += st.player.velocity * fps;
-    if (st.player.velocity > 0) {
-      st.player.rotation = Math.min(FALL_ANGLE, st.player.rotation + 2 * fps);
-    } else {
-      st.player.rotation = -15;
-    }
-  }
-
-  animatePlayer(fps, dt) {
-    const st = this.state;
-    st.player.frameCounter += fps;
-    const frameDelay = st.player.velocity > 2 ? 3 : 5;
-    if (st.player.frameCounter >= frameDelay) {
+    st.player.velocity += PLAYER_CONFIG.GRAVITY * timeScale;
+    st.player.y += st.player.velocity * timeScale;
+    st.player.rotation = st.player.velocity > 0 
+        ? Math.min(PLAYER_CONFIG.ROTATION_FALL_ANGLE, st.player.rotation + PLAYER_CONFIG.ROTATION_SPEED * timeScale) 
+        : PLAYER_CONFIG.ROTATION_JUMP_ANGLE;
+    st.player.frameCounter += timeScale;
+    if (st.player.frameCounter >= (st.player.velocity > 2 ? 3 : 5)) {
       st.player.currentFrame = (st.player.currentFrame + 1) % 2;
       st.player.frameCounter = 0;
     }
-
-    if (!st.isStarted) {
-      this.animatePlayerIdle(dt);
-      return;
-    }
-
-    this.calculatePlayerGravity(fps);
   }
-
-  generateTubes(fps) {
-    // Ограничения для труб
-    const minTubeTop = this.dimensions.height / 4;                     // трубы не появляются слишком высоко
-    const maxTubeTop = this.dimensions.height / 2;  // и не слишком низко
-
+  
+  generateTubes() {
     const st = this.state;
     if (!st.isStarted) return;
-    if (st.frame % (PIPE_INTERVAL / (INITIAL_SPEED * 0.4)) < fps) {
-      st.pipeCount++;
-      const topHeight = Math.floor(this.randomGenerator.random() * (maxTubeTop - minTubeTop)) + minTubeTop;
-      st.pipes.push({
-        x: this.dimensions.width,
-        top: topHeight,
-        bottom: topHeight + PIPE_GAP,
-        width: PIPE_WIDTH,
-        special: (st.pipeCount % 10 === 0),
-        passed: false,
-      });
+    const PIPE_SPAWN_INTERVAL = PIPE_CONFIG.SPAWN_INTERVAL / (GAME_CONFIG.INITIAL_SPEED * 0.4);
+    while (st.pipeSpawnTimer >= PIPE_SPAWN_INTERVAL) {
+      st.pipeSpawnTimer -= PIPE_SPAWN_INTERVAL;
+      let pipe = this.pipePool.find(p => !p.active);
+      if (pipe) {
+        const minTubeTop = this.dimensions.height / 4;
+        const maxTubeTop = this.dimensions.height / 2;
+        st.pipeCount++;
+        const topHeight = Math.floor(this.randomGenerator.random() * (maxTubeTop - minTubeTop)) + minTubeTop;
+        pipe.active = true;
+        pipe.passed = false;
+        pipe.x = this.dimensions.width;
+        pipe.top = topHeight;
+        pipe.bottom = topHeight + PIPE_CONFIG.GAP;
+        pipe.special = (st.pipeCount % PIPE_CONFIG.SPECIAL_PIPE_EVERY === 0);
+      }
     }
   }
-
-  moveTubes() {
+  
+  moveTubesAndCheckScore() {
     const st = this.state;
     if (!st.isStarted) return;
-    for (let pipe of st.pipes) {
+    for (let pipe of this.pipePool) {
+      if (!pipe.active) continue;
       pipe.x -= st.speed;
-      if (!pipe.passed && pipe.x + PIPE_WIDTH < st.player.x) {
+      if (pipe.x + pipe.width < 0) {
+        pipe.active = false;
+        continue;
+      }
+      if (!pipe.passed && pipe.x + PIPE_CONFIG.WIDTH < st.player.x) {
         pipe.passed = true;
         st.passedPipes++;
-        if (st.passedPipes > 0 && st.passedPipes % 10 === 0 && st.lastAccelerated !== st.passedPipes) {
-          st.speed *= SPEED_MULTIPLIER;
+        if (st.passedPipes > 0 
+          && st.passedPipes % PIPE_CONFIG.ACCELERATE_EVERY === 0 
+          && st.lastAccelerated !== st.passedPipes) {
+          st.speed *= GAME_CONFIG.SPEED_MULTIPLIER;
           st.lastAccelerated = st.passedPipes;
         }
       }
     }
-
-    st.pipes = st.pipes.filter(pipe => pipe.x + pipe.width > 0);
   }
 
-  detectTubeCollision() {
-    if (this.isResizing) return;
+  detectCollisions() {
+    if (this.isResizing || !this.state.isStarted) return;
     const st = this.state;
-    if (!st.isStarted) return;
+    
+    // Проверка столкновения с потолком и полом
+    if (st.player.y - this.playerHalfHeight < 0 || st.player.y + this.playerHalfHeight > this.dimensions.height - GAME_CONFIG.DEFAULT_FLOOR_HEIGHT) {
+      this.handleGameOver();
+      return;
+    }
 
-    const scaleX = this.dimensions.width / MAX_CANVAS_WIDTH;
-    const scaleY = 1;
-
+    const scaleX = this.dimensions.width / GAME_CONFIG.MAX_CANVAS_WIDTH;
     const playerX = st.player.x * scaleX;
     const playerY = st.player.y;
-    const collisionOffset = PLAYER_COLLISION_OFFSET * Math.min(scaleX, scaleY);
+    const collisionOffset = PLAYER_CONFIG.COLLISION_OFFSET;
 
-    for (let pipe of st.pipes) {
-      if (
-        playerX + collisionOffset > pipe.x &&
-        playerX - collisionOffset < pipe.x + pipe.width &&
-        (playerY - collisionOffset < pipe.top || playerY + collisionOffset > pipe.bottom)
-      ) {
+    for (let pipe of this.pipePool) {
+      if (!pipe.active) continue;
+      if (playerX + collisionOffset > pipe.x && playerX - collisionOffset < pipe.x + pipe.width &&
+         (playerY - collisionOffset < pipe.top || playerY + collisionOffset > pipe.bottom)) {
         this.handleGameOver();
         return;
       }
     }
   }
 
-  detectGroundCollision() {
-    if (this.isResizing) return;
-    const st = this.state;
-
-    const scaleY = 1;
-    const playerY = st.player.y * scaleY;
-    const boundaryOffset = PLAYER_BOUNDARY_OFFSET * scaleY;
-
-    if (playerY - boundaryOffset < 0 || playerY + boundaryOffset > this.dimensions.height - FLOOR_HEIGHT) {
-      this.handleGameOver();
-      return;
-    }
-  }
-
   updateLogic(dt) {
-    const fps = dt * 60;
-    this.state.frame += fps;
-
-    this.updateParallax(fps);
-
-    this.animatePlayer(fps, dt);
-
-    this.generateTubes(fps);
-
-    this.moveTubes();
-
-    this.detectTubeCollision();
-    this.detectGroundCollision();
+    const timeScale = dt * 60;
+    this.state.pipeSpawnTimer += timeScale;
+    this.updateParallax(timeScale);
+    this.animatePlayer(timeScale, dt);
+    this.generateTubes();
+    this.moveTubesAndCheckScore();
+    this.detectCollisions();
   }
 
   drawScene() {
-    const dpr = window.devicePixelRatio || 1;
+    this.ctx.drawImage(this.offscreenCanvas, 0, 0);
+    
     this.ctx.save();
-    this.ctx.scale(dpr, dpr);
+    this.ctx.scale(this.cappedDpr, this.cappedDpr);
+    
     const { width, height } = this.dimensions;
-    this.ctx.clearRect(0, 0, width, height);
+    const st = this.state;
+    const img = this.images;
+    const floorY = height - GAME_CONFIG.DEFAULT_FLOOR_HEIGHT;
 
-    // Фон - градиент
-    const gradient = this.ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, this.state.selectedGradient[0]);
-    gradient.addColorStop(0.5, this.state.selectedGradient[1]);
-    gradient.addColorStop(1, this.state.selectedGradient[2]);
-    this.ctx.fillStyle = gradient;
-    this.ctx.fillRect(0, 0, width, height);
-
-    // Параллакс-слои (облака, кусты)
-    if (this.images.clouds) {
-      this.ctx.drawImage(this.images.clouds, this.state.cloudsX, height - FLOOR_HEIGHT - 237, CLOUDS_WIDTH, 387);
-      this.ctx.drawImage(this.images.clouds, this.state.cloudsX + CLOUDS_WIDTH - 1, height - FLOOR_HEIGHT - 237, CLOUDS_WIDTH, 387);
+    // Параллакс-слои
+    if (img.clouds) {
+      this.ctx.drawImage(img.clouds, st.cloudsX, floorY - 237, GAME_CONFIG.MAX_CANVAS_WIDTH, 387);
+      this.ctx.drawImage(img.clouds, st.cloudsX + GAME_CONFIG.MAX_CANVAS_WIDTH, floorY - 237, GAME_CONFIG.MAX_CANVAS_WIDTH, 387);
+    }
+    if (img.bushesDark) {
+      this.ctx.drawImage(img.bushesDark, st.bushesDarkX, floorY - 78, GAME_CONFIG.MAX_CANVAS_WIDTH, 228);
+      this.ctx.drawImage(img.bushesDark, st.bushesDarkX + GAME_CONFIG.MAX_CANVAS_WIDTH, floorY - 78, GAME_CONFIG.MAX_CANVAS_WIDTH, 228);
+    }
+    if (img.bushesLight) {
+      this.ctx.drawImage(img.bushesLight, st.bushesLightX, floorY - 52, GAME_CONFIG.MAX_CANVAS_WIDTH, 202);
+      this.ctx.drawImage(img.bushesLight, st.bushesLightX + GAME_CONFIG.MAX_CANVAS_WIDTH, floorY - 52, GAME_CONFIG.MAX_CANVAS_WIDTH, 202);
     }
 
-    if (this.images.bushesDark) {
-      this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX, height - FLOOR_HEIGHT - 78, BUSHES_WIDTH, 228);
-      this.ctx.drawImage(this.images.bushesDark, this.state.bushesDarkX + BUSHES_WIDTH - 1, height - FLOOR_HEIGHT - 78, BUSHES_WIDTH, 228);
-    }
-
-    if (this.images.bushesLight) {
-      this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX, height - FLOOR_HEIGHT - 52, BUSHES_WIDTH, 202);
-      this.ctx.drawImage(this.images.bushesLight, this.state.bushesLightX + BUSHES_WIDTH - 1, height - FLOOR_HEIGHT - 52, BUSHES_WIDTH, 202);
-    }
-
-    // Трубы
-    for (let pipe of this.state.pipes) {
-      const pipeImg = pipe.special ? this.images.pipeSpecial : this.images.pipeDefault;
+    // Трубы из пула
+    for (let pipe of this.pipePool) {
+      if (!pipe.active) continue;
+      const pipeImg = pipe.special ? img.pipeSpecial : img.pipeDefault;
       if (!pipeImg) continue;
-      const scaledPipeHeight = PIPE_WIDTH * (pipeImg.naturalHeight / pipeImg.naturalWidth);
+      const scaledPipeHeight = pipe.width * (pipeImg.naturalHeight / pipeImg.naturalWidth);
+      // Верхняя труба (перевернутая)
       this.ctx.save();
       this.ctx.translate(pipe.x, pipe.top);
       this.ctx.scale(1, -1);
       this.ctx.drawImage(pipeImg, 0, 0, pipe.width, scaledPipeHeight);
       this.ctx.restore();
+      // Нижняя труба
       this.ctx.drawImage(pipeImg, pipe.x, pipe.bottom, pipe.width, scaledPipeHeight);
     }
 
-    // Потолок
-    const ceilingImg = this.images[this.state.selectedCeiling];
+    // Потолок и пол
+    const ceilingImg = img[st.selectedCeiling];
     if (ceilingImg) {
-      this.ctx.drawImage(ceilingImg, this.state.groundX, 0, GROUND_WIDTH, CEIL_DRAW_HEIGHT);
-      this.ctx.drawImage(ceilingImg, this.state.groundX + GROUND_WIDTH - 1, 0, GROUND_WIDTH, CEIL_DRAW_HEIGHT);
-    } else {
-      // Fallback
-      this.ctx.fillStyle = this.state.selectedGradient[0];
-      this.ctx.fillRect(0, 0, GROUND_WIDTH, CEIL_DRAW_HEIGHT);
+      this.ctx.drawImage(ceilingImg, st.groundX, 0, GAME_CONFIG.MAX_CANVAS_WIDTH, UI_CONFIG.CEIL_DRAW_HEIGHT);
+      this.ctx.drawImage(ceilingImg, st.groundX + GAME_CONFIG.MAX_CANVAS_WIDTH, 0, GAME_CONFIG.MAX_CANVAS_WIDTH, UI_CONFIG.CEIL_DRAW_HEIGHT);
     }
-
-    // Пол
-    if (this.images.grass) {
-      this.ctx.drawImage(this.images.grass, this.state.groundX, height - FLOOR_HEIGHT, GROUND_WIDTH, FLOOR_DRAW_HEIGHT);
-      this.ctx.drawImage(this.images.grass, this.state.groundX + GROUND_WIDTH - 1, height - FLOOR_HEIGHT, GROUND_WIDTH, FLOOR_DRAW_HEIGHT);
+    if (img.grass) {
+      this.ctx.drawImage(img.grass, st.groundX, floorY, GAME_CONFIG.MAX_CANVAS_WIDTH, UI_CONFIG.FLOOR_DRAW_HEIGHT);
+      this.ctx.drawImage(img.grass, st.groundX + GAME_CONFIG.MAX_CANVAS_WIDTH, floorY, GAME_CONFIG.MAX_CANVAS_WIDTH, UI_CONFIG.FLOOR_DRAW_HEIGHT);
     }
 
     // Корова
     this.ctx.save();
-
-    const scaleX = this.dimensions.width / MAX_CANVAS_WIDTH;
-    // const scaleY = this.dimensions.height / MAX_CANVAS_HEIGHT;
-
-    const adjustedX = this.state.player.x * scaleX;
-    const adjustedY = this.state.player.y;
-
-    this.ctx.translate(adjustedX, adjustedY);
-    this.ctx.rotate((this.state.player.rotation * Math.PI) / 180);
-
-    const playerImg = this.state.player.currentFrame === 0 ? this.images.playerIdle : this.images.playerPressed;
+    const scaleX = this.dimensions.width / GAME_CONFIG.MAX_CANVAS_WIDTH;
+    const playerDrawX = st.player.x * scaleX;
+    this.ctx.translate(playerDrawX, st.player.y);
+    this.ctx.rotate((st.player.rotation * Math.PI) / 180);
+    const playerImg = st.player.currentFrame === 0 ? img.playerIdle : img.playerPressed;
     if (playerImg) {
-      this.ctx.drawImage(
-        playerImg,
-        -PLAYER_WIDTH / 2,
-        -PLAYER_HEIGHT / 2,
-        PLAYER_WIDTH,
-        PLAYER_HEIGHT
-      );
+      this.ctx.drawImage(playerImg, -this.playerHalfWidth, -this.playerHalfHeight, PLAYER_CONFIG.WIDTH, PLAYER_CONFIG.HEIGHT);
     }
-
     this.ctx.restore();
 
-    // Туториал
-    if (!this.state.isStarted && this.tutorialActive) {
+    // UI (Туториал и счет)
+    if (!st.isStarted && this.tutorialActive) {
       const textX = width / 2;
-      const textY = height / 2 + PLAYER_HEIGHT / 2 + 24;
-      const swingAmplitude = 0.1; // приблизительно 6 градусов
-      const period = 2; // секунды
-      const swingAngle = swingAmplitude * Math.sin((this.tutorialTimer * 2 * Math.PI) / period);
-
+      const textY = height / 2 + this.playerHalfHeight + 24;
       this.ctx.save();
       this.ctx.translate(textX, textY);
-      this.ctx.rotate(swingAngle);
+      this.ctx.rotate(TUTORIAL_CONFIG.TEXT_SWING_AMPLITUDE * Math.sin((this.tutorialTimer * 2 * Math.PI) / TUTORIAL_CONFIG.TEXT_SWING_PERIOD));
       this.ctx.textAlign = "center";
       this.ctx.font = "500 30px Roboto Mono";
-      this.ctx.fillStyle = "#4b4949";
-      this.ctx.fillText("Тап👆", 0, 0);
+      this.ctx.fillStyle = UI_CONFIG.TEXT_COLOR_DARK;
+      this.ctx.fillText(UI_CONFIG.TUTORIAL_TEXT, 0, 0);
       this.ctx.restore();
     }
-
-    // Текст счета
     this.ctx.textBaseline = "middle";
-    this.ctx.fillStyle = "white";
-    this.ctx.font = "500 15px/24px Roboto Mono";
+    this.ctx.fillStyle = UI_CONFIG.TEXT_COLOR_WHITE;
+    this.ctx.font = UI_CONFIG.BEST_SCORE_FONT;
+    this.ctx.textAlign = "left";
     this.ctx.fillText(`лучший результат: ${this.bestScore}`, 21, 60);
-
     this.ctx.textAlign = "center";
-    this.ctx.font = "500 48px/24px Roboto Mono";
-    this.ctx.fillText(`${this.state.passedPipes}`, width / 2, 120);
-
+    this.ctx.font = UI_CONFIG.SCORE_FONT;
+    this.ctx.fillText(`${st.passedPipes}`, width / 2, 120);
+    
     this.ctx.restore();
   }
 
   handleGameOver() {
+    if (this.state.isGameOver) return;
     console.log("GameOver");
-
     this.state.isGameOver = true;
+
     if (this.finishCb) {
-      const spentTime = (this.inTime ? Date.now() - this.inTime : 0) / 1000;  // in seconds
+      const spentTime = (this.inTime ? Date.now() - this.inTime : 0) / 1000;
       console.log("spentTime", spentTime);
-      const gameData = {
-        score: this.state.passedPipes,
-        spentTime: spentTime
-      };
-      this.finishCb(gameData);
-    }
-
-    if (this.gameLoopId) {
-      console.log("gameLoopId cleared");
-      cancelAnimationFrame(this.gameLoopId);
+      this.finishCb({ score: this.state.passedPipes, spentTime });
     }
   }
 
-  setFinishCallback(cb) {
-    this.finishCb = cb;
-  }
-
-  setAssetsLoadedCallback(cb) {
-    this.assetsLoadedCb = cb;
-  }
-
-  static getInstance(tmp) {
-    return tmp.engine;
-  }
+  setFinishCallback(cb) { this.finishCb = cb; }
+  setAssetsLoadedCallback(cb) { this.assetsLoadedCb = cb; }
+  static getInstance(tmp) { return tmp.engine; }
 }
 
-function init(canvas, initGameData, tmp, finishCallback = gameData => { }, assetsLoadedCallback = () => { }) {
+function init(canvas, initGameData, tmp, finishCallback, assetsLoadedCallback) {
   console.log("Version:", __VERSION__);
   console.log("Py Version:", initGameData.version);
 
-  if (!canvas) console.log("Canvas does not exist!");
-
+  if (!canvas) {
+    console.error("Canvas does not exist!");
+    return;
+  }
   const engine = new GameEngine(canvas, initGameData, tmp);
-  engine.setFinishCallback(finishCallback);
-  engine.setAssetsLoadedCallback(assetsLoadedCallback);
+  engine.setFinishCallback(finishCallback || (() => {}));
+  engine.setAssetsLoadedCallback(assetsLoadedCallback || (() => {}));
   return tmp;
 }
 
 function deinit(canvas, tmp) {
   const engine = GameEngine.getInstance(tmp);
-  engine.stopGameLoop();
+  if (engine) engine.stopGameLoop();
 }
 
 export { init, deinit };
