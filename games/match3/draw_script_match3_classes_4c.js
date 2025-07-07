@@ -1,12 +1,12 @@
-const __VERSION__ = "3.1C-optimized";
+const __VERSION__ = "4C";
 
 // ===================================================================================
 // ИГРОВАЯ КОНФИГУРАЦИЯ
 // ===================================================================================
 
 const PATHS = {
-  // ASSETS: "/media/assets/match3/",
-  ASSETS: "./assets/match3/",
+  ASSETS: "/media/assets/match3/",
+  // ASSETS: "./assets/match3/",
   CARDS: {
     smetanaGlass: "smetana_glass.svg",
     curd: "curd.svg",
@@ -85,7 +85,8 @@ const UI_ELEMENTS = {
     BORDER_RADIUS: 12, IMAGE_SCALE: 1.2
   },
   TARGET_COUNTER: {
-    RADIUS: 24, FONT: "500 16px Roboto Mono",
+    RADIUS: 24, 
+    FONT: "500 16px Roboto Mono",
     get X_OFFSET() { return 55 + this.RADIUS; },
     get Y_OFFSET() { return 33 + this.RADIUS; }
   },
@@ -115,11 +116,16 @@ const ANIMATION_CONFIG = {
 };
 
 const TUTORIAL_STATE = {
-    NONE: 'none', INTRO: 'intro', STEP_2_HEADER_TARGET: 'step_2_header_target',
-    STEP_3_SHOW_SWAP: 'step_3_show_swap', STEP_4_PERFORM_SWAP: 'step_4_perform_swap',
-    STEP_5_MATCH_EFFECT: 'step_5_match_effect', STEP_6_NEW_ELEMENTS: 'step_6_new_elements',
-    STEP_7_TARGET_COUNTER: 'step_7_target_counter', STEP_8_STEPS_COUNTER: 'step_8_steps_counter',
-    COMPLETE: 'complete',
+  NONE: 'none', 
+  INTRO: 'intro', 
+  STEP_2_HEADER_TARGET: 'step_2_header_target',
+  STEP_3_SHOW_SWAP: 'step_3_show_swap', 
+  STEP_4_PERFORM_SWAP: 'step_4_perform_swap',
+  STEP_5_MATCH_EFFECT: 'step_5_match_effect', 
+  STEP_6_NEW_ELEMENTS: 'step_6_new_elements',
+  STEP_7_TARGET_COUNTER: 'step_7_target_counter', 
+  STEP_8_STEPS_COUNTER: 'step_8_steps_counter',
+  COMPLETE: 'complete',
 };
 
 const TUTORIAL_CONFIG = {
@@ -145,34 +151,39 @@ const TUTORIAL_CONFIG = {
     [TUTORIAL_STATE.STEP_2_HEADER_TARGET]: {
       text: "Помоги Ламбою собрать\nзаказ из продуктов",
       y: 181, width: 241, isModal: true, hasArrow: true, centerBlock: true, highlightType: 'header',
+      awaitClick: true, autoAdvanceAfter: 3000,
     },
     [TUTORIAL_STATE.STEP_3_SHOW_SWAP]: {
       text: "Передвигай элементы, чтобы выстроить\nтри и более одинаковых подряд",
-      y: 260, width: 366, spotlight: true,
+      y: 260, width: 366, spotlight: true, hasArrow: true,
+      awaitClick: true, autoAdvanceAfter: 3000,
     },
     [TUTORIAL_STATE.STEP_4_PERFORM_SWAP]: {
       text: "Передвигай элементы, чтобы выстроить\nтри и более одинаковых подряд",
-      y: 260, width: 366, spotlight: true,
+      y: 260, width: 366, spotlight: true, hasArrow: true,
     },
     [TUTORIAL_STATE.STEP_5_MATCH_EFFECT]: {
       text: "Передвигай элементы, чтобы выстроить\nтри и более одинаковых подряд",
-      y: 260, width: 366, spotlight: true,
+      y: 260, width: 366, spotlight: true, hasArrow: true,
+      awaitClick: true, autoAdvanceAfter: 3000,
     },
     [TUTORIAL_STATE.STEP_6_NEW_ELEMENTS]: {
       text: "Передвигай элементы, чтобы выстроить\nтри и более одинаковых подряд",
-      y: 260, width: 366, spotlight: true,
+      y: 260, width: 366, spotlight: true, hasArrow: true,
+      awaitClick: true, autoAdvanceAfter: 3000,
     },
     [TUTORIAL_STATE.STEP_7_TARGET_COUNTER]: {
       text: "За каждый собранный заказ ты\nполучаешь 10 ламбиксов",
-      y: 375, width: 298, isModal: true, hasArrow: true, centerBlock: true, highlightType: 'targetCounter',
+      y: 375, width: 298, isModal: true, hasArrow: true, centerBlock: true, 
+      highlightType: 'targetCounter',
+      awaitClick: true, autoAdvanceAfter: 3000,
     },
     [TUTORIAL_STATE.STEP_8_STEPS_COUNTER]: {
       text: "Не забывай следить за\nограниченным количеством\nшагов. Попробуем?", buttonText: "Давай играть",
-      y: 390, width: 284, isModal: true, hasArrow: true, centerBlock: true, highlightType: 'stepsCounter',
+      y: 390, width: 284, isModal: true, centerBlock: true, highlightType: 'stepsCounter',
     },
   }
 };
-
 
 // ===================================================================================
 // УТИЛИТАРНЫЕ ФУНКЦИИ
@@ -594,8 +605,6 @@ class AnimationManager {
 }
 
 // --- Renderer (все методы отрисовки) ---
-// --- НАЧАЛО БЛОКА ДЛЯ ВСТАВКИ: ПОЛНАЯ ЗАМЕНА КЛАССА Renderer ---
-
 class Renderer {
   constructor(ctx, opts) {
     this.ctx = ctx;
@@ -800,7 +809,8 @@ class Renderer {
         ctx.fillStyle = TUTORIAL_CONFIG.BUTTON.TEXT_COLOR;
         ctx.font = TUTORIAL_CONFIG.BUTTON.FONT;
         ctx.textBaseline = "middle";
-        ctx.fillText(popupData.buttonText, layout.buttonX + TUTORIAL_CONFIG.BUTTON.WIDTH / 2, layout.buttonY + TUTORIAL_CONFIG.BUTTON.HEIGHT / 2 + 2);
+        ctx.fillText(popupData.buttonText, layout.buttonX + TUTORIAL_CONFIG.BUTTON.WIDTH / 2, 
+          layout.buttonY + TUTORIAL_CONFIG.BUTTON.HEIGHT / 2);
       }
     }
 
@@ -899,6 +909,7 @@ class GameEngine {
     this.tutorialState = this.showTutorial ? TUTORIAL_STATE.INTRO : TUTORIAL_STATE.NONE;
     this.tutorialMove = null;
     this.tutorialHand = { x: 0, y: 0, scale: 1, visible: false };
+    this.tutorialTimeoutId = null;
 
     this.boundResize = () => { this.resizeCanvas(); this.requestRender(); };
     this.boundHandlePointerDown = e => this.handlePointerDown(e);
@@ -911,19 +922,19 @@ class GameEngine {
   async init() {
     console.log("Engine initialization started...");
     await this.loadAssets();
-    this.resizeCanvas(); // Устанавливаем размер холста после загрузки
-    this.initTutorialLayouts(); // Рассчитываем макеты, когда все готово
-    
+    this.resizeCanvas();
+    this.initTutorialLayouts();
+
     window.addEventListener("resize", this.boundResize);
     this.canvas.addEventListener("pointerdown", this.boundHandlePointerDown);
     
     if (this.assetsLoadedCb) this.assetsLoadedCb();
-    
+
     if (this.isTutorialActive) {
       this.findTutorialMove();
       this.runTutorial();
     }
-    this.requestRender(); // Первый рендер
+    this.requestRender();
     console.log("Engine initialization complete.");
   }
   
@@ -1036,16 +1047,16 @@ class GameEngine {
     // this.onAssetsLoaded();
   }
 
-  onAssetsLoaded() {
-    this.resizeCanvas();
-    if (this.assetsLoadedCb) this.assetsLoadedCb();
-    this.initTutorialLayouts(); 
-    if (this.isTutorialActive) {
-      this.findTutorialMove();
-      this.runTutorial();
-    }
-    this.requestRender();
-  }
+  // onAssetsLoaded() {
+  //   this.resizeCanvas();
+  //   if (this.assetsLoadedCb) this.assetsLoadedCb();
+  //   this.initTutorialLayouts(); 
+  //   if (this.isTutorialActive) {
+  //     this.findTutorialMove();
+  //     this.runTutorial();
+  //   }
+  //   this.requestRender();
+  // }
 
   animSwap(a, b) {
     const duration = ANIMATION_CONFIG.SWAP_DURATION;
@@ -1121,9 +1132,17 @@ class GameEngine {
 
   handlePointerDown(e) {
     if (this.isTutorialActive) {
-      this.handleTutorialClick(e);
+      const popupData = TUTORIAL_CONFIG.TEXTS[this.tutorialState];
+      if (!popupData) return;
+
+      if (popupData.buttonText) {
+        this.handleTutorialClick(e);
+      } else if (popupData.awaitClick) {
+        this.advanceTutorial();
+      }
       return;
     }
+
     if (this.animMgr.isAnimating()) return;
     const pos = this.getCellGridPosition(e);
     if (pos) this.onCellClicked(pos);
@@ -1332,54 +1351,62 @@ class GameEngine {
   }
 
   async advanceTutorial() {
-    switch (this.tutorialState) {
+    if (this.tutorialTimeoutId) {
+      clearTimeout(this.tutorialTimeoutId);
+      this.tutorialTimeoutId = null;
+    }
+
+    const previousState = this.tutorialState;
+
+    switch (previousState) {
       case TUTORIAL_STATE.INTRO:
         this.tutorialState = TUTORIAL_STATE.STEP_2_HEADER_TARGET;
-        this.requestRender();
-        await new Promise(r => setTimeout(r, 2000));
-        this.advanceTutorial();
         break;
       case TUTORIAL_STATE.STEP_2_HEADER_TARGET:
         this.tutorialState = TUTORIAL_STATE.STEP_3_SHOW_SWAP;
         const toCoords = this.renderer.getCoords(this.tutorialMove.to);
-        this.tutorialHand.x = toCoords.x + CELL_WIDTH / 2;
-        this.tutorialHand.y = toCoords.y - CELL_HEIGHT;
+        this.tutorialHand.x = toCoords.x + CELL_CONFIG.WIDTH / 2;
+        this.tutorialHand.y = toCoords.y - CELL_CONFIG.HEIGHT;
         this.tutorialHand.visible = true;
-        this.requestRender();
-        await new Promise(r => setTimeout(r, 1000));
-        this.advanceTutorial();
         break;
       case TUTORIAL_STATE.STEP_3_SHOW_SWAP:
         this.tutorialState = TUTORIAL_STATE.STEP_4_PERFORM_SWAP;
-        this.requestRender();
-        this.advanceTutorial();
-        break;
+        this.advanceTutorial(); // Этот шаг автоматический, сразу запускаем следующий
+        return; // Выходим, чтобы не устанавливать таймер для него
       case TUTORIAL_STATE.STEP_4_PERFORM_SWAP:
         await this.animateHandAndSwap();
         this.tutorialState = TUTORIAL_STATE.STEP_5_MATCH_EFFECT;
-        this.requestRender();
-        await new Promise(r => setTimeout(r, 800));
+        break;
+      case TUTORIAL_STATE.STEP_5_MATCH_EFFECT:
         this.tutorialState = TUTORIAL_STATE.STEP_6_NEW_ELEMENTS;
-        this.requestRender();
-        await new Promise(r => setTimeout(r, 800));
+        break;
+      case TUTORIAL_STATE.STEP_6_NEW_ELEMENTS:
         this.tutorialHand.visible = false;
         this.tutorialState = TUTORIAL_STATE.STEP_7_TARGET_COUNTER;
-        this.requestRender();
-        this.advanceTutorial();
         break;
       case TUTORIAL_STATE.STEP_7_TARGET_COUNTER:
-        await new Promise(r => setTimeout(r, 2000));
         this.tutorialState = TUTORIAL_STATE.STEP_8_STEPS_COUNTER;
-        this.requestRender();
         break;
       case TUTORIAL_STATE.STEP_8_STEPS_COUNTER:
         this.isTutorialActive = false;
         this.tutorialState = TUTORIAL_STATE.COMPLETE;
         this.canDrag = true;
-        this.requestRender();
         break;
     }
-  }
+
+    this.requestRender();
+
+    const nextPopupData = TUTORIAL_CONFIG.TEXTS[this.tutorialState];
+    if (nextPopupData?.autoAdvanceAfter) {
+      const stateWhenTimerWasSet = this.tutorialState; 
+      
+      this.tutorialTimeoutId = setTimeout(() => {
+        if (this.tutorialState === stateWhenTimerWasSet) {
+           this.advanceTutorial();
+        }
+      }, nextPopupData.autoAdvanceAfter);
+    }
+  } 
 
   async animateHandAndSwap() {
     const { from, to } = this.tutorialMove;
@@ -1389,7 +1416,7 @@ class GameEngine {
     const handStartY = this.tutorialHand.y;
 
     await this._animate(500, t => {
-      const targetY = toCoords.y + CELL_HEIGHT / 2 + 10;
+      const targetY = toCoords.y + CELL_CONFIG.HEIGHT / 2 + 10;
       this.tutorialHand.y = handStartY + (targetY - handStartY) * t;
     });
 
@@ -1399,9 +1426,9 @@ class GameEngine {
     await this._animate(200, t => { this.tutorialHand.scale = 0.9 + 0.1 * t; });
     
     await this._animate(500, t => {
-      const currentHandY = toCoords.y + CELL_HEIGHT / 2 + 10;
-      const targetX = fromCoords.x + CELL_WIDTH / 2;
-      const targetY = fromCoords.y + CELL_HEIGHT / 2 + 10;
+      const currentHandY = toCoords.y + CELL_CONFIG.HEIGHT / 2 + 10;
+      const targetX = fromCoords.x + CELL_CONFIG.WIDTH / 2;
+      const targetY = fromCoords.y + CELL_CONFIG.HEIGHT / 2 + 10;
       this.tutorialHand.x = handStartX + (targetX - handStartX) * t;
       this.tutorialHand.y = currentHandY + (targetY - currentHandY) * t;
     });
