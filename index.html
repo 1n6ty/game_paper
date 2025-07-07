@@ -108,43 +108,65 @@
         name: 'Milky Fly',
         initData: {
           seed: Date.now().toString(16),
-          best_score: localStorage.getItem('milkyFlyBestScore') || 0,
-          entrances: (parseInt(localStorage.getItem('milkyFlyEntrances') || 0) + 1).toString(),
+          best_score: sessionStorage.getItem('milkyFlyBestScore') || 0,
+          entrances: (parseInt(sessionStorage.getItem('milkyFlyEntrances') || 0) + 1).toString(),
           version: "Local Test Harness v2"
         },
         onFinish: (gameData) => {
             console.log("Игра Milky Fly завершена!", gameData);
-            const currentBest = parseInt(localStorage.getItem('milkyFlyBestScore') || 0);
+            const currentBest = parseInt(sessionStorage.getItem('milkyFlyBestScore') || 0);
             if (gameData.score > currentBest) {
-                localStorage.setItem('milkyFlyBestScore', gameData.score);
+                sessionStorage.setItem('milkyFlyBestScore', gameData.score);
                 console.log(`Новый рекорд: ${gameData.score}`);
             }
         },
         onInit: () => {
-          const entrances = parseInt(localStorage.getItem('milkyFlyEntrances') || 0) + 1;
-          localStorage.setItem('milkyFlyEntrances', entrances);
+          const entrances = parseInt(sessionStorage.getItem('milkyFlyEntrances') || 0) + 1;
+          sessionStorage.setItem('milkyFlyEntrances', entrances);
         }
       },
-      'match3/draw_script_match3_classes_3_1c.js': {
+      'match3/draw_script_match3_classes_3_2c.js': {
         name: 'Match 3',
         initData: {
           seed: Date.now().toString(16),
-          trainingCount: (localStorage.getItem('match3TrainingCount') || 0).toString(),
+          trainingCount: ( 0).toString(),
           maxStepsCount: '20',
           targetItemsCount: '15',
           version: "Local Test Harness v2"
         },
         onFinish: (gameData) => {
           console.log("Игра Match 3 завершена!", gameData);
-          const currentBest = parseInt(localStorage.getItem('match3BestScore') || 0);
+          const currentBest = parseInt(sessionStorage.getItem('match3BestScore') || 0);
           if (gameData.score > currentBest) {
-              localStorage.setItem('match3BestScore', gameData.score);
+              sessionStorage.setItem('match3BestScore', gameData.score);
               console.log(`Новый рекорд в Match 3: ${gameData.score}`);
           }
         },
         onInit: () => {
-          const count = parseInt(localStorage.getItem('match3TrainingCount') || 0) + 1;
-          localStorage.setItem('match3TrainingCount', count.toString());
+          const count = parseInt(sessionStorage.getItem('match3TrainingCount') || 0) + 1;
+          sessionStorage.setItem('match3TrainingCount', count.toString());
+        }
+      },
+      'memory/draw_script_memory_classes_5_1c.js': {
+        name: 'Memory',
+        initData: {
+          seed: Date.now().toString(16),
+          trainingCount: (sessionStorage.getItem('memoryTrainingCount') || 0).toString(),
+          maxStepsCount: '40',
+          targetItemsCount: '10', // Количество пар для победы
+          version: "Local Test Harness v2"
+        },
+        onFinish: (gameData) => {
+          console.log("Игра Memory завершена!", gameData);
+          const currentBest = parseInt(sessionStorage.getItem('memoryBestScore') || 0);
+          if (gameData.score > currentBest) {
+              sessionStorage.setItem('memoryBestScore', gameData.score.toString());
+              console.log(`Новый рекорд в Memory: ${gameData.score}`);
+          }
+        },
+        onInit: () => {
+          const count = parseInt(sessionStorage.getItem('memoryTrainingCount') || 0) + 1;
+          sessionStorage.setItem('memoryTrainingCount', count.toString());
         }
       },
     };
