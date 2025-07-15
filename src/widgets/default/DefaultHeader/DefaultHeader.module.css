@@ -1,0 +1,36 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-medium) var(--spacing-large);
+  background-color: var(--colors-surface);
+  border-bottom: 1px solid var(--colors-border, #eee);
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--colors-primary);
+}
+
+.nav {
+  display: flex;
+  gap: var(--spacing-medium);
+}
+
+.navLink {
+  text-decoration: none;
+  color: var(--colors-text);
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.navLink:hover {
+  color: var(--colors-primary);
+}
+
+.navLink.active {
+  color: var(--colors-primary);
+  border-bottom-color: var(--colors-primary);
+}

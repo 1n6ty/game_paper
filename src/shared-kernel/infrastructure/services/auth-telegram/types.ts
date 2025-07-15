@@ -1,0 +1,5 @@
+export interface TelegramUser {
+  username: string;
+  first_name: string;
+  last_name: string;
+}
