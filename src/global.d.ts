@@ -1,7 +1,5 @@
 export {};
 
-export const TEST = true;
-
 declare global {
   const __USE_MOCKS__: boolean;
 

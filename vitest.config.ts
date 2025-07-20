@@ -1,12 +1,13 @@
 /// <reference types="vitest" />
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
-defineConfig({
+// eslint-disable-next-line import/no-default-export
+export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: "./src/tests/setup.ts", // Файл для доп. настроек, например, импорта jest-dom
+    setupFiles: "./src/setupTests.ts",
   },
 });

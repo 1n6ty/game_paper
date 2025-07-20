@@ -4,9 +4,23 @@
     "moduleResolution": "Bundler",
     "target": "ES2022",
     "jsx": "react-jsx",
+    "strict": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "sourceMap": true
+    "sourceMap": true,
+
+    "baseUrl": "src",
+    "paths": {
+      "@/app/features/*": ["app/features/*"],
+      "@/app/shared-kernel/*": ["app/shared-kernel/*"],
+      "@/app/shell/*": ["app/shell/*"],
+      "@/app/themes/*": ["app/themes/*"],
+      "@/app/widgets/*": ["app/widgets/*"],
+      "@/app/di/*": ["app/di/*"],
+      "@/prod/*": ["prod/*"],
+      "@/locales/*": ["locales/*"]
+    }
   },
-  "exclude": ["node_modules", "**/node_modules/*"]
+  "include": ["src"],
+  "exclude": ["node_modules", "**/node_modules/*", "dist"]
 }
