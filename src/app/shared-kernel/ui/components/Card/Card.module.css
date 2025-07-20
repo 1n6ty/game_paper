@@ -1,0 +1,112 @@
+.card {
+  /* font-family: var(--typography-fontFamily); */
+  position: relative;
+  padding: 16px;
+  border-radius: var(--card-border-radius, 16px);
+  box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+.card--variant-primary {
+  background: var(--color-surface, white);
+  color: var(--color-text, #212529);
+}
+
+.card--variant-secondary {
+  background: var(--color-primary, #007bff);
+  color: var(--color-surface, white);
+}
+
+.card--variant-tertiary {
+  background: var(--color-surface-secondary, #f0f8ff);
+  color: var(--color-primary, #007bff);
+}
+
+.card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 9px;
+}
+
+.card__title {
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
+  margin: 0;
+}
+
+.card__title--size-small {
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.card__body {
+  position: relative;
+}
+
+.card__body--with-action-gap {
+  margin-right: 60px; /* 52px кнопка + 8px отступ */
+}
+
+.card__text {
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
+  margin: 0;
+}
+
+.card__action {
+  /* action - это часть хедера, но позиционируется абсолютно относительно карточки */
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.card__action-button {
+  display: flex;
+  border: none;
+  border-radius: 11px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 52px;
+  height: 52px;
+  padding: 11px;
+}
+
+.card__action-button--variant-primary {
+  background: var(--color-surface-secondary, #f0f8ff);
+  color: var(--color-primary, #007bff);
+}
+
+.card__action-button--variant-secondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-primary, #007bff);
+}
+
+.card__action-button--variant-tertiary {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-primary, #007bff);
+}
+
+.card__action-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.card__image {
+  position: absolute;
+}
+
+.card__image--position-bottom-right {
+  bottom: 16px;
+  right: 16px;
+  max-width: 100px;
+}
+
+.card__image--position-top-right {
+  top: 9px;
+  right: 13px;
+  max-width: 120px;
+}

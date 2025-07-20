@@ -1,0 +1,10 @@
+.user-card {
+  display: flex;
+  gap: var(--spacing-medium);
+}
+
+.user-card__name {
+}
+
+.user-card__tickets {
+}

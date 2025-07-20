@@ -1,0 +1,64 @@
+:root {
+  --color-progress-bg: #fff5e0;
+  --score-bar-border-radius: 9px;
+}
+
+.score-bar {
+  display: flex;
+  background: white;
+
+  padding: 8px 13px;
+  border-radius: var(--score-bar-border-radius);
+  box-shadow: var(--card-shadow);
+
+  gap: 8px;
+}
+
+.score-bar__icon {
+  width: 31.06px;
+  height: 44.75px;
+}
+
+.score-bar__info {
+  flex: 1;
+}
+
+.score-bar__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.score-bar__title {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  color: var(--color-primary-dark-blue);
+}
+
+.score-bar__value {
+  font-family: "Roboto Mono", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  color: var(--color-primary-dark-blue);
+}
+
+.score-bar__progress--bg {
+  margin-top: 1px;
+  width: 100%;
+  height: 13px;
+  background-color: var(--color-progress-bg);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.score-bar__progress--fill {
+  height: 100%;
+  background-color: var(--color-primary-dark-blue);
+  transition: width 0.3s ease;
+  width: 0;
+  border-radius: 10px;
+}

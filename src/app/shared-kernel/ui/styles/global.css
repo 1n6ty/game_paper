@@ -1,0 +1,60 @@
+/* --- CSS Reset --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+blockquote,
+q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+
+/* --- Base Styles --- */
+body {
+  font-family: var(--typography-fontFamily, sans-serif);
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+
+  /* Используем CSS-переменные из темы */
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
