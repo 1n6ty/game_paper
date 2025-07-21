@@ -1,5 +1,5 @@
 import { FC, SVGProps } from "react";
-import { Card } from "@/app/shared-kernel/ui/components/Card/Card";
+import { Card } from "@/app/shared-kernel/ui/components/card/Card";
 import {
   CardRewardItem,
   CardRewardItemProps,

@@ -20,7 +20,7 @@ export const mockConfig: AppConfig = {
           "USER_CARD",
           "SCORE_BAR",
           "CARD_REWARD",
-          "SOME_WIDGET",
+          "BRAND_AND_USER",
           "SOME_WIDGET",
           "SOME_WIDGET",
         ],

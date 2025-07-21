@@ -5,3 +5,7 @@ export interface DataMatrixResponse {
   score: number;
   path?: string;
 }
+
+export interface DataMatrixApiEndpoints {
+  scanDataMatrix: string;
+}

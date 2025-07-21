@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/app/shared-kernel/ui/components/Card/Card";
+import { Card } from "@/app/shared-kernel/ui/components/card/Card";
 
 export const SomeWidget = () => {
   const navigate = useNavigate();

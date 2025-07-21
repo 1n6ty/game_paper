@@ -83,25 +83,23 @@
 
 import React from "react";
 import cn from "classnames";
+import { Box } from "@/app/shared-kernel/ui/components/box/Box";
 import styles from "./Card.module.css";
 
-type CardVariant = "primary" | "secondary" | "accent";
+type RootProps = {
+  children?: React.ReactNode;
+  className?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
 
-interface RootProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: CardVariant;
-}
-const Root = ({ className, variant = "primary", ...props }: RootProps) => (
-  <div
-    className={cn(styles.card, styles[`card--variant-${variant}`], className)}
-    {...props}
-  />
+const Root = ({ className, ...props }: RootProps) => (
+  <Box className={cn(styles.card, className)} {...props} />
 );
 
 const Header = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn(styles.card__header, className)} {...props} />
+  <Box className={cn(styles.card__header, className)} {...props} />
 );
 
 const Title = ({
@@ -115,7 +113,7 @@ const Body = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn(styles.card__body, className)} {...props} />
+  <Box className={cn(styles.card__body, className)} {...props} />
 );
 
 export const Card = {

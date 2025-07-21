@@ -1,3 +1,4 @@
+import { BrandAndUserView } from "@/app/features/feature-score/ui/widgets/brand-and-user/BrandAndUser.view";
 import { CardReward } from "./CardReward/CardReward";
 import { DefaultBottomNavBar } from "./default/DefaultBottomNavBar/DefaultBottomNavBar";
 import { DefaultFooter } from "./default/DefaultFooter/DefaultFooter";
@@ -24,6 +25,8 @@ export const widgetRegistry = {
   // Виджеты каркаса
   HEADER_DEFAULT: DefaultHeader,
   FOOTER_DEFAULT: DefaultFooter,
+
+  BRAND_AND_USER: BrandAndUserView,
 
   BOTTOM_NAV_DEFAULT: DefaultBottomNavBar,
 };

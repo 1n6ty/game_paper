@@ -1,7 +1,7 @@
 import React from "react";
-import { useCouponPolicyQuery } from "@/app/features/feature-user/infrastructure/queries/useCouponPolicyQuery";
-import { useUserWithRewardsQuery } from "@/app/features/feature-user/infrastructure/queries/useUserWithRewardsQuery";
-import { Card } from "@/app/shared-kernel/ui/components/Card/Card";
+import { useCouponPolicyQuery } from "@/app/features/feature-score/infrastructure/queries/useCouponPolicyQuery";
+import { useUserWithRewardsQuery } from "@/app/features/feature-score/infrastructure/queries/useUserWithRewardsQuery";
+import { Card } from "@/app/shared-kernel/ui/components/card/Card";
 // import MilkGlassSvg from "@/assets/MilkGlass.svg?react";
 import styles from "./ScoreBar.module.css";
 

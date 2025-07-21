@@ -3,24 +3,23 @@ import { GameRepository } from "@/app/features/feature-game/domain/ports/GameRep
 import { HttpClient } from "@/app/shared-kernel/application/ports/HttpClient";
 import { Logger } from "@/app/shared-kernel/application/ports/Logger";
 import { mapGameLinksResponseToGames } from "./mapper";
-import { gameRepositoryPaths } from "./paths";
-import { GameLinksResponse } from "./types";
+import { GameApiEndpoints, GameLinksResponse } from "./types";
 
 interface GameRepoDependencies {
   httpClient: HttpClient;
   logger: Logger;
+  endpoints: GameApiEndpoints;
 }
 
 /**
  * Получает и преобразует список игр с сервера.
  */
-const getGamesImpl = async (
-  httpClient: HttpClient,
-  logger: Logger
-): Promise<Game[]> => {
-  const response = await httpClient.get<GameLinksResponse>(
-    gameRepositoryPaths.GAME_LINKS
-  );
+const getGamesImpl = async ({
+  httpClient,
+  logger,
+  endpoints,
+}: GameRepoDependencies): Promise<Game[]> => {
+  const response = await httpClient.get<GameLinksResponse>(endpoints.getGames);
 
   logger.info("getGamesImpl", "Получен список игр (сырой вид):", response);
 
@@ -32,8 +31,9 @@ const getGamesImpl = async (
 export const createGameRepository = ({
   httpClient,
   logger,
+  endpoints,
 }: GameRepoDependencies): GameRepository => {
   return {
-    getGames: () => getGamesImpl(httpClient, logger),
+    getGames: () => getGamesImpl({ httpClient, logger, endpoints }),
   };
 };

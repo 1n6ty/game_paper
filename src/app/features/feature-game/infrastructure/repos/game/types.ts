@@ -7,3 +7,7 @@ export interface GameLinksResponse {
     cover_url: string;
   };
 }
+
+export interface GameApiEndpoints {
+  getGames: string;
+}

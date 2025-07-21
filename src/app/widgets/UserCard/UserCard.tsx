@@ -1,8 +1,8 @@
 import React from "react";
-import { useCouponPolicyQuery } from "@/app/features/feature-user/infrastructure/queries/useCouponPolicyQuery";
-import { useUserWithRewardsQuery } from "@/app/features/feature-user/infrastructure/queries/useUserWithRewardsQuery";
+import { useCouponPolicyQuery } from "@/app/features/feature-score/infrastructure/queries/useCouponPolicyQuery";
+import { useUserWithRewardsQuery } from "@/app/features/feature-score/infrastructure/queries/useUserWithRewardsQuery";
 import { getFullName } from "@/app/shared-kernel/domain/entities/User";
-import { Card } from "@/app/shared-kernel/ui/components/Card/Card";
+import { Card } from "@/app/shared-kernel/ui/components/card/Card";
 // import MilkTicketSvg from "@/assets/MilkTicket.svg?react";
 import styles from "./UserCard.module.css";
 

@@ -5,3 +5,8 @@ export interface GameInitResponse {
 export interface GameFinishResponse {
   score: number;
 }
+
+export interface GameEngineApiEndpoints {
+  gameInit: string;
+  gameFinish: string;
+}

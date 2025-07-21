@@ -5,7 +5,7 @@ const logStyles = {
   WARN: "color: #F7B500; font-weight: bold;",
   ERROR: "color: #D8000C; font-weight: bold;",
   SCOPE: "color: #007BFF;",
-  FUNCTION: "color: #7D3C98;",
+  FUNCTION: "color: #7199FF;",
 };
 
 const createConsoleLogger = (scope?: string): Logger => {

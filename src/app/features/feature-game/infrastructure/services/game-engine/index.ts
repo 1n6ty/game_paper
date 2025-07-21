@@ -1,15 +1,22 @@
 import { GameEngineConfig } from "@/app/features/feature-game/application/ports/GameEngineFactory";
 import { GameEngine } from "@/app/features/feature-game/domain/entities/GameEngine";
+import {
+  GameModule,
+  TmpState,
+} from "@/app/features/feature-game/infrastructure/services/game-engine-factory/types";
 import { HttpClient } from "@/app/shared-kernel/application/ports/HttpClient";
 import { Logger } from "@/app/shared-kernel/application/ports/Logger";
-import { GameModule, TmpState } from "./factory/types";
 import { convertKeysFromSnakeToCamel } from "./mapper";
-import { gameEnginePaths } from "./paths";
-import { GameFinishResponse, GameInitResponse } from "./types";
+import {
+  GameEngineApiEndpoints,
+  GameFinishResponse,
+  GameInitResponse,
+} from "./types";
 
 interface GameEngineDependencies {
   httpClient: HttpClient;
   logger: Logger;
+  endpoints: GameEngineApiEndpoints;
 }
 
 let tmpState: TmpState;
@@ -17,7 +24,7 @@ let tmpState: TmpState;
 const startImpl = async (
   gameModule: GameModule | null,
   config: GameEngineConfig,
-  { httpClient, logger }: GameEngineDependencies
+  { httpClient, logger, endpoints }: GameEngineDependencies
 ) => {
   const { canvas, authRawData, gameName, onAssetsLoaded } = config;
 
@@ -29,7 +36,7 @@ const startImpl = async (
 
   try {
     const initGameData = await httpClient.post<GameInitResponse>(
-      gameEnginePaths.GAME_INIT,
+      endpoints.gameInit,
       {
         body: { game_name: gameName },
         authData: authRawData,
@@ -54,11 +61,15 @@ const startImpl = async (
       camelInit,
       tmpState,
       (gameData) =>
-        finishImpl(gameData, gameModule, config, { httpClient, logger }),
+        finishImpl(gameData, gameModule, config, {
+          httpClient,
+          logger,
+          endpoints,
+        }),
       onAssetsLoaded
     );
   } catch (error) {
-    logger.error("startImpl", "Ошибка инициализации игры", error);
+    logger.error("startImpl", "Ошибка инициализации игры", error as Error);
   }
 };
 
@@ -66,7 +77,7 @@ const finishImpl = async (
   gameDataFromScript: unknown,
   gameModule: GameModule | null,
   config: GameEngineConfig,
-  { httpClient, logger }: GameEngineDependencies
+  { httpClient, logger, endpoints }: GameEngineDependencies
 ) => {
   const { canvas, authRawData, onFinish } = config;
 
@@ -78,7 +89,7 @@ const finishImpl = async (
 
   try {
     const responseJson = await httpClient.post<GameFinishResponse>(
-      gameEnginePaths.GAME_FINISH,
+      endpoints.gameFinish,
       {
         body: gameDataFromScript,
         authData: authRawData,
@@ -91,19 +102,20 @@ const finishImpl = async (
 
     onFinish(responseJson.score);
   } catch (error) {
-    logger.error("finishImpl", "Ошибка завершения игры", error);
+    logger.error("finishImpl", "Ошибка завершения игры", error as Error);
   }
 };
 
 export const createGameEngine = (
   gameModule: GameModule | null,
   config: GameEngineConfig,
-  { httpClient, logger }: GameEngineDependencies
+  { httpClient, logger, endpoints }: GameEngineDependencies
 ): GameEngine => {
   tmpState = {};
 
   return {
-    start: () => startImpl(gameModule, config, { httpClient, logger }),
+    start: () =>
+      startImpl(gameModule, config, { httpClient, logger, endpoints }),
     finish: () =>
       finishImpl(
         {
@@ -111,7 +123,7 @@ export const createGameEngine = (
         },
         gameModule,
         config,
-        { httpClient, logger }
+        { httpClient, logger, endpoints }
       ),
   };
 };

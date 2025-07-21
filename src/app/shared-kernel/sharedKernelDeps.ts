@@ -1,26 +1,37 @@
 import { Container } from "inversify";
+import { ApiConfig } from "./application/ports/ApiConfig";
 import { HttpClient } from "./application/ports/HttpClient";
 import { Logger } from "./application/ports/Logger";
 import { AuthService } from "./domain/ports/AuthService";
-import { createHttpClient } from "./infrastructure/http";
-import { telegramAuthService } from "./infrastructure/services/auth-telegram";
-import { rootLogger } from "./infrastructure/services/logger-console";
 
 export const sharedIdentifiers = {
   Logger: Symbol.for("Logger"),
   HttpClient: Symbol.for("HttpClient"),
   AuthService: Symbol.for("AuthService"),
+  ApiConfig: Symbol.for("ApiConfig"),
 };
 
-export const registerSharedKernel = (container: Container) => {
-  container.bind<Logger>(sharedIdentifiers.Logger).toConstantValue(rootLogger);
+export interface SharedKernelImplementations {
+  logger: Logger;
+  httpClient: HttpClient;
+  authService: AuthService;
+  apiConfig: ApiConfig;
+}
+
+export const registerSharedKernel = (
+  container: Container,
+  impls: SharedKernelImplementations
+) => {
+  container
+    .bind<Logger>(sharedIdentifiers.Logger)
+    .toConstantValue(impls.logger);
   container
     .bind<HttpClient>(sharedIdentifiers.HttpClient)
-    .toConstantValue(createHttpClient());
-
+    .toConstantValue(impls.httpClient);
   container
     .bind<AuthService>(sharedIdentifiers.AuthService)
-    .toDynamicValue((context) => {
-      return telegramAuthService; // У него пока нет зависимостей
-    });
+    .toConstantValue(impls.authService);
+  container
+    .bind<ApiConfig>(sharedIdentifiers.ApiConfig)
+    .toConstantValue(impls.apiConfig);
 };

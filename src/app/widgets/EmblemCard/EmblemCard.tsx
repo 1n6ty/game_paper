@@ -1,6 +1,6 @@
 import React from "react";
 import EmblemSvgUrl from "/emblem.svg";
-import { Card } from "@/app/shared-kernel/ui/components/Card/Card";
+import { Card } from "@/app/shared-kernel/ui/components/card/Card";
 import styles from "./EmblemCard.module.css";
 
 export const EmblemCard = () => {

@@ -4,12 +4,12 @@ import { DataMatrixRepository } from "@/app/features/feature-datamatrix/domain/p
 import { HttpClient } from "@/app/shared-kernel/application/ports/HttpClient";
 import { Logger } from "@/app/shared-kernel/application/ports/Logger";
 import { mapDataMatrixResponseToDataMatrixScanResult } from "./mapper";
-import { dataMatrixRepositoryPaths } from "./paths";
-import { DataMatrixResponse } from "./types";
+import { DataMatrixApiEndpoints, DataMatrixResponse } from "./types";
 
 interface DataMatrixRepoDependencies {
   httpClient: HttpClient;
   logger: Logger;
+  endpoints: DataMatrixApiEndpoints;
 }
 
 /**
@@ -18,8 +18,7 @@ interface DataMatrixRepoDependencies {
 const scanImpl = async (
   text: string,
   authData: string,
-  httpClient: HttpClient,
-  logger: Logger
+  { httpClient, logger, endpoints }: DataMatrixRepoDependencies
 ): Promise<DataMatrixScanResult> => {
   logger.info("scanImpl", `Отправка запроса на сканирование`, {
     textLength: text.length,
@@ -27,7 +26,7 @@ const scanImpl = async (
 
   try {
     const response = await httpClient.post<DataMatrixResponse>(
-      dataMatrixRepositoryPaths.DATAMATRIX,
+      endpoints.scanDataMatrix,
       {
         body: { text },
         authData: authData,
@@ -57,9 +56,10 @@ const scanImpl = async (
 export const createDataMatrixRepository = ({
   httpClient,
   logger,
+  endpoints,
 }: DataMatrixRepoDependencies): DataMatrixRepository => {
   return {
     scanDataMatrix: ({ text, authData }) =>
-      scanImpl(text, authData, httpClient, logger),
+      scanImpl(text, authData, { httpClient, logger, endpoints }),
   };
 };
