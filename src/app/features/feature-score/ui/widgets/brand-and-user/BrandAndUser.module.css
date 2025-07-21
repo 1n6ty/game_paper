@@ -1,0 +1,32 @@
+.brand-and-user__emblem-card {
+  position: relative;
+  flex: 1;
+  padding: 0;
+  background-color: var(--color-surface);
+  border-radius: 9px;
+}
+
+.brand-and-user__emblem-img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 123px;
+}
+
+.brand-and-user__user-card {
+  flex: 1;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--color-surface-secondary);
+  border-radius: 9px;
+}
+
+.brand-and-user__username {
+  font-weight: var(--fontWeights-medium);
+  color: var(--color-primary);
+}
+
+.brand-and-user__tickets {
+  font-weight: var(--fontWeights-regular);
+  color: var(--color-primary);
+}

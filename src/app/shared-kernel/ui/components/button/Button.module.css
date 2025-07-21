@@ -1,0 +1,48 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+  font-weight: var(--fontWeights-medium); /* Делаем текст на кнопке жирнее */
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button--size-md {
+  padding: var(--spacing-xs) var(--spacing-md);
+  gap: var(--spacing-xs);
+}
+
+.button--size-lg {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  gap: var(--spacing-sm);
+}
+
+.button--variant-primary {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.button--variant-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.button--variant-secondary {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-primary);
+}
+
+.button--variant-secondary:hover:not(:disabled) {
+  background-color: var(--color-surface-tertiary);
+}
+
+.button__label {
+  line-height: 1; /* Убираем лишний интерлиньяж, чтобы текст был по центру */
+}
