@@ -1,0 +1,32 @@
+.game-promo-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadows-medium-offset-x) var(--shadows-medium-offset-y)
+    var(--shadows-medium-blur-radius) var(--shadows-medium-spread-radius)
+    var(--shadows-medium-color);
+  padding: var(--spacing-m);
+  position: relative;
+}
+
+.game-promo-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-m);
+  margin-bottom: var(--spacing-s);
+}
+
+.game-promo-card__title {
+  font-size: var(--font-h1-font-size);
+  font-weight: var(--font-h1-font-weight);
+  line-height: var(--font-h1-line-height);
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.game-promo-card__body {
+  font-size: var(--font-body2-font-size);
+  font-weight: var(--font-body2-font-weight);
+  line-height: var(--font-body2-line-height);
+  color: var(--color-primary);
+}

@@ -32,8 +32,6 @@ export const createApp = (config: AppConfig) => {
 
     const BottomNavComponent = bottomNav ? widgetRegistry[bottomNav] : null;
 
-    console.log(theme);
-
     return (
       <>
         <ThemeInjector theme={theme} />
@@ -51,6 +49,7 @@ export const createApp = (config: AppConfig) => {
                         path={path}
                         element={
                           <DynamicPageRenderer
+                            theme={theme}
                             layout={layout}
                             registry={widgetRegistry}
                           />

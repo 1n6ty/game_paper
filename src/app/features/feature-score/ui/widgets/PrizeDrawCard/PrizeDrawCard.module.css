@@ -1,0 +1,42 @@
+.prize-draw-card {
+  background-color: var(--color-primary-variant);
+  color: var(--color-text-on-primary);
+  padding: var(--spacing-m);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadows-medium-offset-x) var(--shadows-medium-offset-y)
+    var(--shadows-medium-blur-radius) var(--shadows-medium-spread-radius)
+    var(--shadows-medium-color);
+  overflow: hidden;
+}
+
+.prize-draw-card__header {
+  margin-bottom: var(--spacing-s);
+}
+
+.prize-draw-card__title {
+  font-size: var(--font-h1-font-size);
+  font-weight: var(--font-h1-font-weight);
+  line-height: var(--font-h1-line-height);
+  margin: 0;
+}
+
+.prize-draw-card__qr-button {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  border-radius: var(--radius-medium);
+  width: 52px;
+  height: 52px;
+  font-size: 30px;
+}
+
+.prize-draw-card__body {
+  font-size: var(--font-body2-font-size);
+  font-weight: var(--font-body2-font-weight);
+  line-height: var(--font-body2-line-height);
+}
+
+.prize-draw-card__ticket-img {
+  display: block;
+  margin: var(--spacing-s) auto 0;
+  height: 132px;
+}

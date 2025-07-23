@@ -1,11 +1,10 @@
-import { BrandAndUserView } from "@/app/features/feature-score/ui/widgets/brand-and-user/BrandAndUser.view";
-import { CardReward } from "./CardReward/CardReward";
+import { GamePromoCard } from "@/app/features/feature-game/ui/widgets/GamePromoCard/GamePromoCard";
+import { PrizeDrawCard } from "@/app/features/feature-score/ui/widgets/PrizeDrawCard/PrizeDrawCard";
+import { ScannableProductsCard } from "@/app/features/feature-score/ui/widgets/ScannableProductsCard/ScannableProductsCard";
+import { CardTip } from "@/app/features/feature-tip/ui/widgets/CardTip/CardTip";
 import { DefaultBottomNavBar } from "./default/DefaultBottomNavBar/DefaultBottomNavBar";
 import { DefaultFooter } from "./default/DefaultFooter/DefaultFooter";
 import { DefaultHeader } from "./default/DefaultHeader/DefaultHeader";
-import { SomeWidget } from "./default/SomeWidget/SomeWidget";
-import { ScoreBar } from "./ScoreBar/ScoreBar";
-import { UserCard } from "./UserCard/UserCard";
 
 /**
  * Регистр всех доступных компонентов для сборки приложения.
@@ -15,18 +14,16 @@ export const widgetRegistry = {
   // GAME_LIST_MODERN: GameListModern,
   // ...
 
-  SOME_WIDGET: SomeWidget,
-
   // shared
-  USER_CARD: UserCard,
-  SCORE_BAR: ScoreBar,
-  CARD_REWARD: CardReward,
+
+  PRIZE_DRAW_CARD: PrizeDrawCard,
+  GAME_PROMO: GamePromoCard,
+  CARD_TIP: CardTip,
+  SCANNABLE_PRODUCTS_CARD: ScannableProductsCard,
 
   // Виджеты каркаса
   HEADER_DEFAULT: DefaultHeader,
   FOOTER_DEFAULT: DefaultFooter,
-
-  BRAND_AND_USER: BrandAndUserView,
 
   BOTTOM_NAV_DEFAULT: DefaultBottomNavBar,
 };

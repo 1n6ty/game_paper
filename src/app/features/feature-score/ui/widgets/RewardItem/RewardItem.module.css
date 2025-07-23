@@ -1,0 +1,32 @@
+.reward-item {
+  /* Компонент является flex-элементом, поэтому не имеет своих отступов */
+  gap: var(--spacing-s);
+}
+
+.reward-item__visual {
+  /* Контейнер для большой иконки */
+  min-height: 88px; /* Задаем минимальную высоту, чтобы верстка не прыгала */
+  display: flex;
+  align-items: center;
+}
+
+.reward-item__icon--large {
+  width: 95px;
+  height: 88px;
+}
+
+.reward-item__info {
+  gap: 4px; /* Используем системный токен вместо 2px */
+}
+
+.reward-item__count {
+  font-size: var(--font-body2-font-size);
+  font-weight: var(--font-body2-font-weight);
+  color: var(--color-primary);
+  line-height: 1; /* Убираем лишнюю высоту строки для лучшего выравнивания */
+}
+
+.reward-item__icon--small {
+  width: 16px;
+  height: 23px;
+}

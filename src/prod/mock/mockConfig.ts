@@ -13,16 +13,21 @@ export const mockConfig: AppConfig = {
       label: "Главная",
       showInMenu: true,
       layout: {
-        gap: "small",
+        gap: "m",
         header: "HEADER_DEFAULT", // Эта страница имеет шапку
         footer: "FOOTER_DEFAULT", // и подвал
         widgets: [
-          "USER_CARD",
-          "SCORE_BAR",
-          "CARD_REWARD",
-          "BRAND_AND_USER",
-          "SOME_WIDGET",
-          "SOME_WIDGET",
+          "PRIZE_DRAW_CARD",
+          "CARD_TIP",
+          "GAME_PROMO",
+          "SCANNABLE_PRODUCTS_CARD",
+          "GAME_PROMO",
+          "GAME_PROMO",
+          "GAME_PROMO",
+          "GAME_PROMO",
+          "GAME_PROMO",
+          "GAME_PROMO",
+          "GAME_PROMO",
         ],
       },
     },

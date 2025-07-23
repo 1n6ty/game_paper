@@ -1,5 +1,6 @@
 export interface Color {
   primary: string;
+  primaryVariant: string;
   background: string;
   surface: string;
   surfaceSecondary: string;

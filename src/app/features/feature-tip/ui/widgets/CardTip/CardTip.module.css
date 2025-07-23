@@ -1,0 +1,46 @@
+.card-tip {
+  position: relative;
+  padding: var(--spacing-m);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadows-medium-offset-x) var(--shadows-medium-offset-y)
+    var(--shadows-medium-blur-radius) var(--shadows-medium-spread-radius)
+    var(--shadows-medium-color);
+  background-color: var(--color-surface);
+}
+
+.card-tip__title {
+  font-size: var(--font-h1-font-size);
+  font-weight: var(--font-h1-font-weight);
+  line-height: var(--font-h1-line-height);
+  color: var(--color-primary);
+  margin: 0 0 var(--spacing-s);
+}
+
+.card-tip__content {
+  gap: var(--spacing-s);
+}
+
+.card-tip__text-container {
+  flex: 1;
+  /* ПРИМЕЧАНИЕ: Это новый цвет. Предлагаю добавить в тему токен --color-surface-accent со значением #F7F2E5 */
+  background-color: #f7f2e5;
+  padding: var(--spacing-s);
+  border-radius: var(--radius-medium);
+}
+
+.card-tip__text {
+  font-size: var(--font-body2-font-size);
+  font-weight: var(--font-body2-font-weight);
+  line-height: var(--font-body2-line-height);
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.card-tip__svg-right {
+  width: 140px;
+  height: auto;
+  flex-shrink: 0; /* Не даем картинке сжиматься */
+  /* Оставляем отрицательные отступы для эффекта "вылезания" */
+  margin-bottom: -15px;
+  margin-right: -4px;
+}
