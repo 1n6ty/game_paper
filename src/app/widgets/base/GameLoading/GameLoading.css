@@ -1,0 +1,79 @@
+@import "../../styles/variables.css";
+
+.game-loading {
+  position: fixed; 
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* z-index: 999; */
+}
+
+.game-loading__bg {
+  position: absolute; 
+  inset: 0;
+  background: linear-gradient(#E5F2FF, var(--color-primary-light-blue));
+  z-index: 0;
+}
+
+.game-loading__circle {
+  position: relative; 
+  z-index: 1;
+  width: 232.26px; 
+  height: 232.26px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 3.8px 1px white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-loading__bottle-container {
+  position: relative;
+  width: 83.45px;
+  height: 248.6px;
+  margin-bottom: 44px;
+}
+
+.game-loading__fill {
+  position: absolute;
+  bottom: 5px; 
+  left: 7px;
+  width: 84%;
+  height: var(--progress);
+  background-color: #fff7e7; 
+
+  mask-image: var(--mask-image-loading-fill);
+  mask-mode: alpha;
+  mask-repeat: no-repeat;
+  mask-position: bottom center;
+  mask-size: 100% auto;
+
+  -webkit-mask-image: var(--mask-image-loading-fill);
+  -webkit-mask-mode: alpha;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: bottom center;
+  -webkit-mask-size: 100% auto;
+
+  transition: height 0.5s ease-in-out;
+  z-index: 3;
+}
+
+.game-loading__bottle {
+  position: relative;
+  width: 100%;
+  height: auto;
+  z-index: 2;
+}
+
+.game-loading__percent {
+  position: absolute;
+  top: 56%;
+  left: 50%;
+  transform: translate(-50%, -10%);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-primary-blue);
+  z-index: 3;
+}

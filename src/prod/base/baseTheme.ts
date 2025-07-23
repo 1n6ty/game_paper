@@ -28,4 +28,13 @@ export const baseTheme: Theme = {
     fontUrl:
       "'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap'",
   },
+  shadows: {
+    medium: {
+      offsetX: "0px",
+      offsetY: "0px",
+      blurRadius: "4px",
+      spreadRadius: "0px",
+      color: "rgba(151, 194, 236, 0.21)", // #97c2ec с прозрачностью
+    },
+  },
 };

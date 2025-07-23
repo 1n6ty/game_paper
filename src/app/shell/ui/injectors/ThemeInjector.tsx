@@ -1,17 +1,32 @@
 import { useLayoutEffect } from "react";
 import { Theme } from "@/app/themes/Theme";
 
+const toKebab = (str: string): string =>
+  str
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2") // вставляем дефис перед заглавными
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2") // обрабатываем последовательности заглавных
+    .toLowerCase();
+
 // Рекурсивная функция для преобразования вложенного объекта темы
 // в плоский список CSS-переменных.
 // Например, { color: { primary: '#000' } } -> { 'color-primary': '#000' }
-const flattenTheme = (obj: object, prefix = ""): Record<string, string> => {
+const flattenTheme = <T extends object>(
+  obj: T,
+  prefix = ""
+): Record<string, string> => {
   return Object.keys(obj).reduce((acc, k) => {
-    const pre = prefix.length ? prefix + "-" : "";
+    const kebabKey = toKebab(k);
+    // если у нас уже есть префикс, добавляем между ними дефис
+    const newPrefix = prefix ? `${prefix}-${kebabKey}` : kebabKey;
+    const value = obj[k];
 
-    if (typeof obj[k] === "object" && obj[k] !== null) {
-      Object.assign(acc, flattenTheme(obj[k], pre + k));
+    if (value !== null && typeof value === "object") {
+      Object.assign(
+        acc,
+        flattenTheme(value as Record<string, unknown>, newPrefix)
+      );
     } else {
-      acc[pre + k] = obj[k];
+      acc[newPrefix] = String(value);
     }
 
     return acc;
