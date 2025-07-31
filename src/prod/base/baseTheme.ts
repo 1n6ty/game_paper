@@ -29,7 +29,7 @@ export const baseTheme: Theme = {
     small: "4px",
     medium: "8px",
     large: "16px",
-    full: "9999px",
+    full: "50%",
   },
   shadows: {
     medium: {

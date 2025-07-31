@@ -34,7 +34,7 @@ q:after {
 
 /* --- Base Styles --- */
 body {
-  font-family: var(--typography-fontFamily, sans-serif);
+  font-family: var(--typography-font-family, sans-serif);
   line-height: 1;
   -webkit-font-smoothing: antialiased;
 

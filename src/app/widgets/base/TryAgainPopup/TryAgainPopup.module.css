@@ -1,0 +1,33 @@
+.try-again-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1001; /* Выше, чем у других модалок */
+  backdrop-filter: blur(2px);
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.try-again-container {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-large);
+  text-align: center;
+  margin: 0 var(--spacing-xl);
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-l);
+}
+
+.try-again-text {
+  font-size: var(--font-h2-font-size);
+  font-weight: var(--font-h2-font-weight);
+  color: var(--color-error);
+  margin: 0 0 var(--spacing-m);
+}
+
+.try-again-button {
+  border: none;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+  color: var(--color-text-on-primary);
+  background-color: var(--color-error);
+  padding: var(--spacing-s) var(--spacing-l);
+  font-size: var(--font-h2-font-size);
+  font-weight: var(--font-h2-font-weight);
+}

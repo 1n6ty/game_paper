@@ -14,20 +14,13 @@ export const mockConfig: AppConfig = {
       showInMenu: true,
       layout: {
         gap: "m",
-        header: "HEADER_DEFAULT", // Эта страница имеет шапку
+        header: "PROFILE", // Эта страница имеет шапку
         footer: "FOOTER_DEFAULT", // и подвал
         widgets: [
+          "SCORE_BAR",
+          "SCANNABLE_PRODUCTS_CARD",
           "PRIZE_DRAW_CARD",
           "CARD_TIP",
-          "GAME_PROMO",
-          "SCANNABLE_PRODUCTS_CARD",
-          "GAME_PROMO",
-          "GAME_PROMO",
-          "GAME_PROMO",
-          "GAME_PROMO",
-          "GAME_PROMO",
-          "GAME_PROMO",
-          "GAME_PROMO",
         ],
       },
     },
@@ -36,13 +29,14 @@ export const mockConfig: AppConfig = {
       label: "Игра",
       showInMenu: true,
       layout: {
-        header: "HEADER_DEFAULT",
-        footer: null,
-        widgets: [],
+        gap: "m",
+        header: "PROFILE",
+        footer: "FOOTER_DEFAULT",
+        widgets: ["SCORE_BAR", "GAME_PROMO", "GAMES_LIST"],
       },
     },
   ],
-  bottomNav: "BOTTOM_NAV_DEFAULT",
+  bottomNav: "BOTTOM_NAV",
   createDIContainer: createMockDIContainer,
   localeOverrides: mockOverrides,
 };

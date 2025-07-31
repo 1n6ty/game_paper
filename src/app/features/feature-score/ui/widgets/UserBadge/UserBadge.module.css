@@ -1,0 +1,25 @@
+.user-badge {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--color-surface-secondary);
+  padding: var(--spacing-s) var(--spacing-m);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadows-medium);
+  gap: var(--spacing-m);
+}
+
+.user-badge__icon {
+  min-width: 23px;
+}
+
+.user-badge__name {
+  font-size: var(--font-body2-font-size);
+  font-weight: var(--font-body2-font-weight);
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+
+.user-badge__tickets {
+  font-size: 20px;
+  color: var(--color-text-secondary);
+}

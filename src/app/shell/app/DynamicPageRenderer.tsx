@@ -17,11 +17,18 @@ export const DynamicPageRenderer = ({
   const HeaderComponent = layout.header ? registry[layout.header] : null;
   const FooterComponent = layout.footer ? registry[layout.footer] : null;
   const gap = layout.gap ? theme.spacing[layout.gap] : "0px";
+  const padding = layout.padding;
+  const paddingVar = { x: "", y: "" };
+
+  if (padding) {
+    paddingVar.x = theme.spacing[padding.x];
+    paddingVar.y = theme.spacing[padding.y];
+  }
 
   return (
     <Flex direction="column" gap={gap} style={{ flexGrow: 1 }}>
       {HeaderComponent && <HeaderComponent />}
-      <Flex as="main" direction="column" gap={gap}>
+      <Flex as="main" direction="column" gap={gap} style={{ padding: "0px" }}>
         {layout.widgets.map((widgetKey, index) => {
           const WidgetComponent = registry[widgetKey];
 

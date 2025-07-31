@@ -12,19 +12,26 @@ export const baseConfig: AppConfig = {
       label: "Главная",
       showInMenu: true,
       layout: {
-        header: "HEADER_DEFAULT", // Эта страница имеет шапку
+        gap: "m",
+        header: "PROFILE", // Эта страница имеет шапку
         footer: "FOOTER_DEFAULT", // и подвал
-        widgets: ["BOTTOM_NAV_DEFAULT", ["BOTTOM_NAV_DEFAULT"]],
+        widgets: [
+          "SCORE_BAR",
+          "SCANNABLE_PRODUCTS_CARD",
+          "PRIZE_DRAW_CARD",
+          "CARD_TIP",
+        ],
       },
     },
     {
       path: "/games/",
       label: "Игра",
-      showInMenu: false,
+      showInMenu: true,
       layout: {
-        header: null, // А эта страница (полноэкранная игра) не имеет ни шапки,
-        footer: null, // ни подвала
-        widgets: [],
+        gap: "m",
+        header: "PROFILE",
+        footer: "FOOTER_DEFAULT",
+        widgets: ["SCORE_BAR", "GAME_PROMO", "GAMES_LIST"],
       },
     },
   ],

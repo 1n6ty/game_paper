@@ -1,0 +1,8 @@
+.games-list {
+  display: grid;
+  /* Создаем сетку с колонками по 173px, которая автоматически
+     подстраивается под ширину экрана */
+  grid-template-columns: repeat(auto-fit, 173px);
+  gap: var(--spacing-m);
+  justify-content: center; /* Центрируем сетку, если место остается */
+}

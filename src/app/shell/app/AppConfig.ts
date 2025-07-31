@@ -12,6 +12,10 @@ export interface PageLayout {
   widgets: WidgetKey[];
 
   gap?: keyof Spacing;
+  padding?: {
+    x: keyof Spacing;
+    y: keyof Spacing;
+  };
 }
 
 export interface RouteConfig {

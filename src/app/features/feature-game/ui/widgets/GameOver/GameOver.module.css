@@ -1,0 +1,61 @@
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-overlay);
+  z-index: 1000;
+}
+
+.game-over-container {
+  background-color: #eff7fe; /* Новый цвет, кандидат в тему: --color-surface-accent-3 */
+  padding: 36px 31px;
+  border-radius: var(--radius-large);
+  text-align: center;
+  margin: 0 var(--spacing-xxl);
+}
+
+.game-over-title {
+  font-size: var(--font-h1-font-size);
+  font-weight: var(--font-h1-font-weight);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-l);
+}
+
+.game-over-score-label {
+  font-size: var(--font-h2-font-size);
+  font-weight: var(--font-h2-font-weight);
+  color: var(--color-text-primary);
+  text-align: left;
+  line-height: 1.2;
+}
+
+.game-over-score-value {
+  font-family: "Roboto Mono", monospace;
+  font-size: 48px;
+  color: var(--color-text-primary);
+}
+
+.game-over-buttons {
+  margin-top: var(--spacing-l);
+  gap: var(--spacing-s);
+}
+
+[class*="game-over-button"] {
+  border: none;
+  border-radius: var(--radius-medium);
+  cursor: pointer;
+  height: 35px;
+  padding: 0 var(--spacing-m);
+  font-size: var(--font-button-font-size);
+  font-weight: var(--font-button-font-weight);
+}
+
+.game-over-button--exit {
+  background-color: var(--color-on-error);
+  color: var(--color-error);
+}
+
+.game-over-button--restart {
+  background-color: var(--color-on-success);
+  color: var(--color-success);
+  flex: 1;
+}

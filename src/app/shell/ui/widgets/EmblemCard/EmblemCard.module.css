@@ -1,0 +1,19 @@
+.emblem-card {
+  position: relative; /* Для центрирования картинки */
+  flex: 1; /* Растягиваем на доступное место */
+  min-width: 0;
+  text-align: center;
+  background-color: var(--color-surface);
+  padding: var(--spacing-s);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadows-medium);
+  min-height: 60px; /* Чтобы карточка не схлопывалась */
+}
+
+.emblem-card__image {
+  width: 123px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}

@@ -1,0 +1,57 @@
+.game-item-skeleton {
+  width: 173px;
+  height: 210px;
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadows-medium);
+  background-color: var(--color-surface);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Необходимо для позиционирования псевдо-элемента */
+}
+
+.game-item-skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  /* Вынести отдельно */
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 80%
+  );
+
+  transform: translateX(-100%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-image {
+  height: 167px;
+  background-color: var(--color-surface-secondary);
+}
+
+.skeleton-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-s);
+}
+
+.skeleton-text {
+  width: 80%;
+  height: 21px;
+  background-color: var(--color-surface-secondary);
+  border-radius: var(--radius-small);
+}

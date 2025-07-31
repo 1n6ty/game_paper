@@ -1,0 +1,48 @@
+.score-bar {
+  background-color: var(--color-surface);
+  padding: var(--spacing-s) var(--spacing-m);
+  gap: var(--spacing-m);
+  border-radius: var(--radius-medium); /* Был 9px, стал системным */
+  box-shadow: var(--shadows-medium);
+}
+
+.score-bar__icon {
+  width: 31px;
+  height: 45px;
+}
+
+.score-bar__info {
+  flex: 1;
+}
+
+.score-bar__title {
+  font-size: var(--font-body1-font-size);
+  font-weight: var(--font-body1-font-weight);
+  color: var(--color-text-secondary); /* был --color-primary-dark-blue */
+}
+
+.score-bar__value {
+  /* ПРИМЕЧАНИЕ: Здесь используется Roboto Mono. Это можно оставить как кастомный стиль */
+  font-family: "Roboto Mono", monospace;
+  font-size: 20px;
+  color: var(--color-text-secondary);
+}
+
+.score-bar__progress-bg {
+  margin-top: 4px; /* Используем системный токен */
+  width: 100%;
+  height: 13px;
+  /* ПРИМЕЧАНИЕ: Этот цвет нужно будет добавить в тему, например, --color-surface-accent-2 */
+  background-color: #fff5e0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.score-bar__progress-fill {
+  height: 100%;
+  background-color: var(
+    --color-text-secondary
+  ); /* был --color-primary-dark-blue */
+  transition: width 0.3s ease;
+  border-radius: 10px;
+}

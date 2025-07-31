@@ -1,0 +1,62 @@
+.game-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+.game-loading__bg {
+  position: absolute;
+  inset: 0;
+  /* Уникальный градиент, который живет только здесь */
+  background: linear-gradient(#e5f2ff, var(--color-surface-secondary));
+}
+
+.game-loading__circle {
+  position: relative;
+  width: 232px;
+  height: 232px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 4px 1px var(--color-surface);
+}
+
+.game-loading__bottle-container {
+  position: relative;
+  width: 84px;
+  height: 249px;
+  margin-bottom: 44px; /* Корректировка для визуального центрирования */
+}
+
+.game-loading__fill {
+  position: absolute;
+  bottom: 5px;
+  left: 7px;
+  width: 84%;
+  background-color: #fff7e7; /* ПРИМЕЧАНИЕ: кандидат в тему, --color-accent-warning */
+
+  mask-mode: alpha;
+  mask-repeat: no-repeat;
+  mask-position: bottom center;
+  mask-size: 100% auto;
+
+  transition: height 0.5s ease-in-out;
+  z-index: 3;
+}
+
+.game-loading__bottle {
+  position: relative;
+  width: 100%;
+  height: auto;
+  z-index: 2;
+}
+
+.game-loading__percent {
+  position: absolute;
+  top: 56%;
+  left: 50%;
+  transform: translate(-50%, -10%);
+  font-size: 28px; /* Кандидат в типографику, если используется еще где-то */
+  font-weight: 600;
+  color: var(--color-primary);
+  z-index: 3;
+}

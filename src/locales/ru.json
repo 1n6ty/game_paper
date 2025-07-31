@@ -1,11 +1,6 @@
 {
   "translation": {
     "widgets": {
-      "userProfile": {
-        "title": "Ваш Профиль",
-        "scoreText": "Накоплено баллов: {{score}}",
-        "ticketsText": "Доступно купонов: {{count}} шт."
-      },
       "prizeDrawCard": {
         "title": "Выигрывай призы",
         "ticketsText": "Ваши билеты: {{count}}"
@@ -20,8 +15,26 @@
       },
       "scannableProductsCard": {
         "title": "Сканируйте наши продукты и получайте ламбиксы!"
+      },
+      "scoreBar": {
+        "title": "Ламбиксы"
+      },
+      "gameOver": {
+        "title": "Игра окончена!",
+        "scoreLabel": "Количество\nнабранных ламбиксов:",
+        "exitButton": "Выйти",
+        "restartButton": "Начать заново"
+      },
+      "tryAgainPopup": {
+        "buttonText": "Повторить попытку"
       }
     },
+    "nav": {
+      "home": "Главная",
+      "games": "Игры",
+      "profile": "Профиль"
+    },
+
     "errors": {
       "network": "Произошла ошибка сети. Пожалуйста, попробуйте позже.",
       "user": "Ошибка загрузки данных пользователя.",
