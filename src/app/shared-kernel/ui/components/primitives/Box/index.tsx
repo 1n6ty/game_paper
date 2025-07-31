@@ -15,8 +15,6 @@ export const Box = forwardRef(
   ) => {
     const Component = as || "div";
 
-    console.log(props.style);
-
     return <Component ref={ref} {...props} />;
   }
 );

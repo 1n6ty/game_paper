@@ -26,9 +26,13 @@ export const DynamicPageRenderer = ({
   }
 
   return (
-    <Flex direction="column" gap={gap} style={{ flexGrow: 1 }}>
+    <Flex
+      direction="column"
+      gap={gap}
+      style={{ flexGrow: 1, padding: Object.values(paddingVar).join(" ") }}
+    >
       {HeaderComponent && <HeaderComponent />}
-      <Flex as="main" direction="column" gap={gap} style={{ padding: "0px" }}>
+      <Flex as="main" direction="column" gap={gap} style={{}}>
         {layout.widgets.map((widgetKey, index) => {
           const WidgetComponent = registry[widgetKey];
 

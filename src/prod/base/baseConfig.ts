@@ -13,6 +13,10 @@ export const baseConfig: AppConfig = {
       showInMenu: true,
       layout: {
         gap: "m",
+        padding: {
+          x: "m",
+          y: "m",
+        },
         header: "PROFILE", // Эта страница имеет шапку
         footer: "FOOTER_DEFAULT", // и подвал
         widgets: [
@@ -29,11 +33,16 @@ export const baseConfig: AppConfig = {
       showInMenu: true,
       layout: {
         gap: "m",
+        padding: {
+          x: "m",
+          y: "m",
+        },
         header: "PROFILE",
         footer: "FOOTER_DEFAULT",
         widgets: ["SCORE_BAR", "GAME_PROMO", "GAMES_LIST"],
       },
     },
   ],
+  bottomNav: "BOTTOM_NAV",
   createDIContainer: createBaseDIContainer,
 };
